@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_margin="@dimen/activity_margin">
+
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="@string/trust_certificate_unknown_certificate_found"
+            android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+        <android.support.v7.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardElevation="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/TextView.Heading"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/trust_certificate_x509_certificate_details"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:text="@string/trust_certificate_issued_for"/>
+                <TextView
+                    android:id="@+id/issuedFor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    tools:text="CN=example.com"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:text="@string/trust_certificate_issued_by"/>
+                <TextView
+                    android:id="@+id/issuedBy"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    tools:text="CN=example.com"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:text="@string/trust_certificate_validity_period"/>
+                <TextView
+                    android:id="@+id/validity_period"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    tools:text="1.1.1000 – 2.2.2000"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:text="@string/trust_certificate_fingerprints"/>
+                <TextView
+                    android:id="@+id/fingerprint_sha1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="SHA-1: abcdef"/>
+                <TextView
+                    android:id="@+id/fingerprint_sha256"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    tools:text="SHA-256: abcdef"/>
+
+                <CheckBox
+                    android:id="@+id/fingerprint_ok"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/trust_certificate_fingerprint_verified"/>
+
+                <android.support.v7.widget.ButtonBarLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <Button
+                        android:id="@+id/accept"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                        android:text="@string/trust_certificate_accept"
+                        android:onClick="acceptCertificate"
+                        android:enabled="false"/>
+
+                    <Button
+                        android:id="@+id/reject"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.AppCompat.Button.Borderless"
+                        android:text="@string/trust_certificate_reject"
+                        android:onClick="rejectCertificate"/>
+
+                </android.support.v7.widget.ButtonBarLayout>
+
+            </LinearLayout>
+
+        </android.support.v7.widget.CardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/trust_certificate_reset_info"/>
+
+    </LinearLayout>
+</ScrollView>
