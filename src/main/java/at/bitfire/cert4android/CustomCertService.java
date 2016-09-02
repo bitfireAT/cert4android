@@ -9,7 +9,6 @@
 package at.bitfire.cert4android;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -121,7 +120,7 @@ public class CustomCertService extends Service {
 
     protected void onReceiveDecision(X509Certificate cert, boolean trusted) {
         // remove notification
-        NotificationManager nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        NotificationManagerCompat nm = NotificationManagerCompat.from(this);
         nm.cancel(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION);
 
         // put into trust store, if trusted

@@ -65,7 +65,7 @@ public class CustomCertManager implements X509TrustManager, Closeable {
     final X509TrustManager systemTrustManager;
 
     /** Whether to launch {@link TrustCertificateActivity} directly. The notification will always be shown. */
-    public boolean appInForeground = true;
+    public boolean appInForeground = false;
 
     ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
