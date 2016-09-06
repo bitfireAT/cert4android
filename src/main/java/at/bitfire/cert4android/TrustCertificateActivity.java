@@ -94,12 +94,6 @@ public class TrustCertificateActivity extends AppCompatActivity {
     }
 
 
-    @Override
-    public void onBackPressed() {
-        rejectCertificate(null);
-    }
-
-
     public void acceptCertificate(View view) {
         sendDecision(true);
         finish();

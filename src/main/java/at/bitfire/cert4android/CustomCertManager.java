@@ -54,7 +54,9 @@ public class CustomCertManager implements X509TrustManager, Closeable {
 
     /** for sending requests to {@link CustomCertService} */
     Messenger service;
-    /** to receive replies from {@link CustomCertService} */
+    /** thread to receive replies from {@link CustomCertService} */
+    final HandlerThread messengerThread;
+    /** messenger to receive replies from {@link CustomCertService} */
     final Messenger messenger;
 
     final AtomicInteger nextDecisionID = new AtomicInteger();
@@ -91,9 +93,9 @@ public class CustomCertManager implements X509TrustManager, Closeable {
 
         systemTrustManager = trustSystemCerts ? CertUtils.getTrustManager(null) : null;
 
-        HandlerThread thread = new HandlerThread("CustomCertificateManagerMessenger");
-        thread.start();
-        messenger = new Messenger(new Handler(thread.getLooper(), new MessageHandler()));
+        messengerThread = new HandlerThread("CustomCertificateManager.Messenger");
+        messengerThread.start();
+        messenger = new Messenger(new Handler(messengerThread.getLooper(), new MessageHandler()));
 
         if (!context.bindService(new Intent(context, CustomCertService.class), serviceConnection, Context.BIND_AUTO_CREATE))
             throw new IllegalArgumentException("Couldn't bind service to this context");
@@ -101,6 +103,8 @@ public class CustomCertManager implements X509TrustManager, Closeable {
 
     @Override
     public void close() {
+        messengerThread.quit();
+
         if (serviceConnection != null)
             context.unbindService(serviceConnection);
     }

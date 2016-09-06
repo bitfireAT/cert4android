@@ -3,12 +3,19 @@
 
 cert4android is an Android library for managing custom certificates which has
 been developed for [DAVdroid](https://davdroid.bitfire.at). Feel free to use
-it on your own open-source app.
+it in your own open-source app.
 
 Discussion: https://forums.bitfire.at/category/7/transport-level-security
 
 
-## License 
+# Features
+
+* uses a service to manage custom certificates
+* supports multiple threads and multiple processes (for instance, if you have an UI
+  and a separate `:sync` process which should share the certificate information)
+
+
+# License 
 
 Copyright (C) bitfire web engineering (Ricki Hirner, Bernhard Stockmann).
 
