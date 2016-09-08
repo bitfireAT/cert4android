@@ -38,6 +38,9 @@ import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -62,7 +65,7 @@ public class CustomCertService extends Service {
 
     Set<X509Certificate> untrustedCerts = new HashSet<>();
 
-    final Map<X509Certificate, Set<ReplyInfo>> pendingDecisions = new HashMap<>();
+    final Map<X509Certificate, List<ReplyInfo>> pendingDecisions = new HashMap<>();
 
     @Override
     public void onCreate() {
@@ -137,7 +140,7 @@ public class CustomCertService extends Service {
             untrustedCerts.add(cert);
 
         // notify receivers which are waiting for a decision
-        Set<ReplyInfo> receivers = pendingDecisions.get(cert);
+        List<ReplyInfo> receivers = pendingDecisions.get(cert);
         if (receivers != null) {
             for (ReplyInfo receiver : receivers) {
                 Message message = Message.obtain();
@@ -172,6 +175,7 @@ public class CustomCertService extends Service {
     public static final String
             MSG_DATA_CERTIFICATE = "certificate",
             MSG_DATA_APP_IN_FOREGROUND ="appInForeground";
+    public static final int MSG_CHECK_TRUSTED_ABORT = 2;
 
     final Messenger messenger = new Messenger(new MessageHandler(this));
 
@@ -197,15 +201,16 @@ public class CustomCertService extends Service {
 
             Constants.log.info("Handling request: " + msg);
             int id = msg.arg1;
+
             Bundle data = msg.getData();
+            X509Certificate cert = (X509Certificate)data.getSerializable(MSG_DATA_CERTIFICATE);
 
             ReplyInfo replyInfo = new ReplyInfo(msg.replyTo, id);
 
             switch (msg.what) {
                 case MSG_CHECK_TRUSTED:
-                    X509Certificate cert = (X509Certificate)data.getSerializable(MSG_DATA_CERTIFICATE);
 
-                    Set<ReplyInfo> reply = service.pendingDecisions.get(cert);
+                    List<ReplyInfo> reply = service.pendingDecisions.get(cert);
                     if (reply != null) {
                         // there's already a pending decision for this certificate, just add this reply messenger
                         reply.add(replyInfo);
@@ -232,7 +237,7 @@ public class CustomCertService extends Service {
                             }
 
                         } else {
-                            Set<ReplyInfo> receivers = new HashSet<>();
+                            List<ReplyInfo> receivers = new LinkedList<>();
                             receivers.add(replyInfo);
                             service.pendingDecisions.put(cert, receivers);
 
@@ -258,6 +263,24 @@ public class CustomCertService extends Service {
                         }
                     }
                     break;
+
+                case MSG_CHECK_TRUSTED_ABORT:
+                    List<ReplyInfo> replyInfos = service.pendingDecisions.get(cert);
+
+                    // remove decision receivers from pending decision
+                    Iterator<ReplyInfo> it = replyInfos.iterator();
+                    while (it.hasNext())
+                        if (replyInfo.equals(it.next()))
+                            it.remove();
+
+                    if (replyInfos.isEmpty()) {
+                        // no more decision receivers, remove pending decision
+                        service.pendingDecisions.remove(cert);
+
+                        NotificationManagerCompat nm = NotificationManagerCompat.from(service);
+                        nm.cancel(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION);
+                    }
+                    break;
             }
         }
     }
@@ -274,6 +297,16 @@ public class CustomCertService extends Service {
             this.messenger = messenger;
             this.id = id;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof ReplyInfo) {
+                ReplyInfo replyInfo = (ReplyInfo)obj;
+                return replyInfo.messenger.equals(messenger) && replyInfo.id == id;
+            } else
+                return false;
+        }
+
     }
 
 }

@@ -16,7 +16,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -181,6 +180,21 @@ public class CustomCertManager implements X509TrustManager, Closeable {
             }
 
             // timeout occurred
+            msg = Message.obtain();
+            msg.what = CustomCertService.MSG_CHECK_TRUSTED_ABORT;
+            msg.arg1 = id;
+            msg.replyTo = messenger;
+
+            data = new Bundle();
+            data.putSerializable(CustomCertService.MSG_DATA_CERTIFICATE, cert);
+            msg.setData(data);
+
+            try {
+                service.send(msg);
+            } catch(RemoteException e) {
+                Constants.log.log(Level.WARNING, "Couldn't abort trustworthiness check", e);
+            }
+
             throw new CertificateException("Timeout when waiting for certificate trustworthiness decision");
         }
     }

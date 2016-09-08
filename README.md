@@ -15,6 +15,22 @@ Discussion: https://forums.bitfire.at/category/7/transport-level-security
   and a separate `:sync` process which should share the certificate information)
 
 
+# How to use
+
+1. Clone cert4android as a submodule.
+1. Add the submodule to `settings.gradle` / `app/build.gradle`.
+1. Create an instance of `CustomCertManager` (`Context` is required to connect to the
+   `CustomCertService`, which manages the custom certificates).
+1. Use this instance as `X509TrustManager` in your calls (for instance, when setting up your HTTP client).
+   Don't forget to get and use the `hostnameVerifier()`, too.
+1. Close the instance when it's not required anymore (will disconnect from the
+   `CustomCertService`, thus allowing it to be destroyed).
+
+You can overwrite resources when you want, just have a look at the `res/strings`
+directory. Especially `certificate_notification_connection_security` and
+`trust_certificate_unknown_certificate_found` should contain your app name.
+
+
 # License 
 
 Copyright (C) bitfire web engineering (Ricki Hirner, Bernhard Stockmann).
