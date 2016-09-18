@@ -41,7 +41,7 @@ public class CertUtils {
     public static String getTag(@NonNull X509Certificate cert) {
         StringBuilder sb = new StringBuilder();
         for (byte b: cert.getSignature())
-            sb.append(Integer.toHexString(b & 0xFF));
+            sb.append(String.format("%02x", b & 0xFF));
         return sb.toString();
     }
 
