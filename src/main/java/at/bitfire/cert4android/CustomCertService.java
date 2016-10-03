@@ -101,6 +101,11 @@ public class CustomCertService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int id) {
         Constants.log.fine("Received command:" + intent);
+
+        if (intent.getAction() == null)
+            // should not happen, but happens
+            return START_NOT_STICKY;
+
         switch (intent.getAction()) {
             case CMD_CERTIFICATION_DECISION:
                 onReceiveDecision(
