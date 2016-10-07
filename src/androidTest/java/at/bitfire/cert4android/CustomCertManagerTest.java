@@ -8,15 +8,26 @@
 
 package at.bitfire.cert4android;
 
-import android.app.ActivityManager;
 import android.content.Intent;
-import android.os.Message;
 import android.test.InstrumentationTestCase;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Principal;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.Date;
+import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -92,7 +103,12 @@ public class CustomCertManagerTest extends InstrumentationTestCase {
         HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
         try {
             conn.getInputStream().read();
-            return (X509Certificate[])conn.getServerCertificates();
+
+            Certificate[] certs = conn.getServerCertificates();
+            X509Certificate[] x509 = new X509Certificate[certs.length];
+            System.arraycopy(certs, 0, x509, 0, certs.length);
+            return x509;
+
         } finally {
             conn.disconnect();
         }
