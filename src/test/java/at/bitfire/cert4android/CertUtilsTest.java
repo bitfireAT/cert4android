@@ -8,22 +8,22 @@
 
 package at.bitfire.cert4android;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyStoreException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class CertUtilsTest {
 
     @Test
     public void getTrustManagerSystem() {
-        Assert.assertNotNull(CertUtils.getTrustManager(null));
+        assertNotNull(CertUtils.getTrustManager(null));
     }
 
     @Test
@@ -33,9 +33,9 @@ public class CertUtilsTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("davdroid-web.crt");
         try {
             X509Certificate cert = (X509Certificate)factory.generateCertificate(is);
-            Assert.assertNotNull(cert);
+            assertNotNull(cert);
 
-            Assert.assertEquals("276126a80783ee16b84811e1e96e977a"+
+            assertEquals("276126a80783ee16b84811e1e96e977a"+
                     "05ac0f980c586cc9784d95a804260c6d"+
                     "ddea1172266f210ef2d9463fee60afe7"+
                     "875274bdc65b91838f65ba566a51e55e"+

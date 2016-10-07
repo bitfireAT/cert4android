@@ -8,6 +8,7 @@
 
 package at.bitfire.cert4android;
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +22,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.test.InstrumentationTestCase;
 import android.util.SparseArray;
 
 import java.io.Closeable;
@@ -47,7 +49,7 @@ import javax.net.ssl.X509TrustManager;
 public class CustomCertManager implements X509TrustManager, Closeable {
 
     /** how log to wait for a decision from {@link CustomCertService} */
-    protected static final int SERVICE_TIMEOUT = 5*60*1000;
+    protected static int SERVICE_TIMEOUT = 5*60*1000;
 
     final Context context;
 
