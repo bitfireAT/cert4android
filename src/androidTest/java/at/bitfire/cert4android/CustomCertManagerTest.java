@@ -8,98 +8,136 @@
 
 package at.bitfire.cert4android;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.test.InstrumentationTestCase;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.os.Messenger;
+import android.support.test.rule.ServiceTestRule;
+import android.support.test.runner.AndroidJUnit4;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+
+import static android.support.test.InstrumentationRegistry.getContext;
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URL;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Principal;
-import java.security.PublicKey;
-import java.security.SignatureException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
-import java.util.Date;
-import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class CustomCertManagerTest extends InstrumentationTestCase {
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static junit.framework.Assert.fail;
+
+@RunWith(AndroidJUnit4.class)
+public class CustomCertManagerTest {
 
     CustomCertManager certManager, paranoidCertManager;
     static {
         CustomCertManager.SERVICE_TIMEOUT = 1000;
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        certManager = new CustomCertManager(getInstrumentation().getContext(), true);
+    @Rule
+    public ServiceTestRule serviceTestRule = new ServiceTestRule();
+
+    Messenger service;
+
+    static X509Certificate[] siteCerts;
+    static {
+        try {
+            siteCerts = getSiteCertificates(new URL("https://davdroid.bitfire.at"));
+        } catch(IOException e) {
+        }
+        assertNotNull(siteCerts);
+    }
+
+
+    @Before
+    public void initCertManager() throws TimeoutException, InterruptedException {
+        // prepare a bound and ready service for testing
+        // loop required because of https://code.google.com/p/android/issues/detail?id=180396
+        IBinder binder = null;
+        int it = 0;
+        while ((binder = serviceTestRule.bindService(new Intent(getTargetContext(), CustomCertService.class))) == null && it++ <10) {
+            System.err.println("Waiting for ServiceTestRule.bindService");
+            Thread.sleep(50);
+        }
+        assertNotNull(binder);
+        service = new Messenger(binder);
+
+        certManager = new CustomCertManager(getContext(), true, service);
+        assertNotNull(certManager);
         certManager.resetCertificates();
 
-        paranoidCertManager = new CustomCertManager(getInstrumentation().getContext(), false);
+        paranoidCertManager = new CustomCertManager(getContext(), false, service);
+        assertNotNull(paranoidCertManager);
         paranoidCertManager.resetCertificates();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void closeCertManager() {
         paranoidCertManager.close();
         certManager.close();
     }
 
 
-    public void testCheckClientCertificate() {
-        try {
-            certManager.checkClientTrusted(null, null);
-            fail();
-        } catch(CertificateException ignored) {
-        }
+    @Test(expected = CertificateException.class)
+    public void testCheckClientCertificate() throws CertificateException {
+        certManager.checkClientTrusted(null, null);
     }
 
-    public void testTrustedCertificate() throws IOException, CertificateException, InterruptedException {
-        X509Certificate[] certs = getSiteCertificates(new URL("https://davdroid.bitfire.at"));
+    @Test
+    public void testTrustedCertificate() throws CertificateException, TimeoutException {
+        certManager.checkServerTrusted(siteCerts, "RSA");
+    }
 
-        // check with trusting system certificates
-        certManager.checkServerTrusted(certs, "RSA");
+    @Test(expected = CertificateException.class)
+    public void testParanoidCertificate() throws CertificateException {
+        paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
+    }
 
-        // check without trusting system certificates
-        try {
-            paranoidCertManager.checkServerTrusted(certs, "RSA");
-            fail();
-        } catch(CertificateException e) {
-            assertTrue(e.getMessage().contains("Timeout"));
-        }
+    @Test
+    public void testAddCustomCertificate() throws CertificateException, TimeoutException, InterruptedException {
+        addCustomCertificate();
+        paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
+    }
 
-        // add certificate and check again
-        Intent intent = new Intent(getInstrumentation().getContext(), CustomCertService.class);
-        intent.setAction(CustomCertService.CMD_CERTIFICATION_DECISION);
-        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, certs[0]);
-        intent.putExtra(CustomCertService.EXTRA_TRUSTED, true);
-        Thread.sleep(1000);
-        getInstrumentation().getContext().startService(intent);
-        paranoidCertManager.checkServerTrusted(certs, "RSA");
+    @Test(expected = CertificateException.class)
+    public void testRemoveCustomCertificate() throws CertificateException, TimeoutException, InterruptedException {
+        addCustomCertificate();
 
         // remove certificate and check again
         // should now be rejected for the whole session, i.e. no timeout anymore
+        Intent intent = new Intent(getContext(), CustomCertService.class);
+        intent.setAction(CustomCertService.CMD_CERTIFICATION_DECISION);
+        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0]);
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, false);
-        getInstrumentation().getContext().startService(intent);
-        Thread.sleep(1000);
-        try {
-            paranoidCertManager.checkServerTrusted(certs, "RSA");
-            fail();
-        } catch(CertificateException e) {
-            assertTrue(e.getMessage().contains("not trusted"));
-        }
+        serviceTestRule.startService(intent);
+        paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
+    }
+
+    private void addCustomCertificate() throws TimeoutException {
+        // add certificate and check again
+        Intent intent = new Intent(getContext(), CustomCertService.class);
+        intent.setAction(CustomCertService.CMD_CERTIFICATION_DECISION);
+        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0]);
+        intent.putExtra(CustomCertService.EXTRA_TRUSTED, true);
+        serviceTestRule.startService(intent);
     }
 
 
-    private X509Certificate[] getSiteCertificates(URL url) throws IOException {
+    private static X509Certificate[] getSiteCertificates(URL url) throws IOException {
         HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
         try {
             conn.getInputStream().read();

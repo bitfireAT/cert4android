@@ -69,6 +69,7 @@ public class CustomCertService extends Service {
 
     @Override
     public void onCreate() {
+        Constants.log.info("Creating CustomCertService");
         keyStoreFile = new File(getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME);
         try {
             trustedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -82,8 +83,13 @@ public class CustomCertService extends Service {
             }
             trustedKeyStore.load(is, null);
             customTrustManager = CertUtils.getTrustManager(trustedKeyStore);
-        } catch(KeyStoreException|NoSuchAlgorithmException|CertificateException|IOException e) {
-            Constants.log.log(Level.SEVERE, "Couldn't initialize key store", e);
+        } catch(IOException|KeyStoreException|NoSuchAlgorithmException|CertificateException e) {
+            Constants.log.log(Level.SEVERE, "Couldn't initialize key store, creating in-memory key store", e);
+            try {
+                trustedKeyStore.load(null, null);
+            } catch(NoSuchAlgorithmException|CertificateException|IOException e2) {
+                Constants.log.log(Level.SEVERE, "Couldn't initialize in-memory key store", e2);
+            }
         }
     }
 

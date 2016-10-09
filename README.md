@@ -1,4 +1,7 @@
 
+[![build status](https://gitlab.com/bitfireAT/cert4android/badges/master/build.svg)](https://gitlab.com/bitfireAT/cert4android/commits/master)
+
+
 # cert4android
 
 cert4android is an Android library for managing custom certificates which has

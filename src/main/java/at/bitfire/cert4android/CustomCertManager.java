@@ -90,6 +90,16 @@ public class CustomCertManager implements X509TrustManager, Closeable {
      * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
      */
     public CustomCertManager(@NonNull Context context, boolean trustSystemCerts) {
+        this(context, trustSystemCerts, null);
+    }
+
+    /**
+     * Creates a new instance, using a certain {@link CustomCertService} messenger (for testing)
+     * @param context used to bind to {@link CustomCertService}
+     * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
+     * @param service          messenger connected with {@link CustomCertService}
+     */
+    CustomCertManager(@NonNull Context context, boolean trustSystemCerts, @Nullable Messenger service) {
         this.context = context;
 
         systemTrustManager = trustSystemCerts ? CertUtils.getTrustManager(null) : null;
@@ -98,7 +108,10 @@ public class CustomCertManager implements X509TrustManager, Closeable {
         messengerThread.start();
         messenger = new Messenger(new Handler(messengerThread.getLooper(), new MessageHandler()));
 
-        if (!context.bindService(new Intent(context, CustomCertService.class), serviceConnection, Context.BIND_AUTO_CREATE))
+        if (service != null) {
+            this.service = service;
+            serviceConnection = null;
+        } else if (!context.bindService(new Intent(context, CustomCertService.class), serviceConnection, Context.BIND_AUTO_CREATE))
             throw new IllegalArgumentException("Couldn't bind service to this context");
     }
 
