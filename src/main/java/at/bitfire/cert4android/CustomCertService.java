@@ -279,12 +279,14 @@ public class CustomCertService extends Service {
                     List<ReplyInfo> replyInfos = service.pendingDecisions.get(cert);
 
                     // remove decision receivers from pending decision
-                    Iterator<ReplyInfo> it = replyInfos.iterator();
-                    while (it.hasNext())
-                        if (replyInfo.equals(it.next()))
-                            it.remove();
+                    if (replyInfos != null) {
+                        Iterator<ReplyInfo> it = replyInfos.iterator();
+                        while (it.hasNext())
+                            if (replyInfo.equals(it.next()))
+                                it.remove();
+                    }
 
-                    if (replyInfos.isEmpty()) {
+                    if (replyInfos == null || replyInfos.isEmpty()) {
                         // no more decision receivers, remove pending decision
                         service.pendingDecisions.remove(cert);
 

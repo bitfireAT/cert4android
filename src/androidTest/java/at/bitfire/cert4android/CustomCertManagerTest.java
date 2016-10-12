@@ -8,10 +8,7 @@
 
 package at.bitfire.cert4android;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.support.test.rule.ServiceTestRule;
@@ -20,11 +17,6 @@ import android.support.test.runner.AndroidJUnit4;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
-
-import static android.support.test.InstrumentationRegistry.getContext;
-import static android.support.test.InstrumentationRegistry.getTargetContext;
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,8 +29,9 @@ import java.util.concurrent.TimeoutException;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
-import static junit.framework.Assert.fail;
+import static android.support.test.InstrumentationRegistry.getContext;
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(AndroidJUnit4.class)
 public class CustomCertManagerTest {
@@ -67,12 +60,7 @@ public class CustomCertManagerTest {
     public void initCertManager() throws TimeoutException, InterruptedException {
         // prepare a bound and ready service for testing
         // loop required because of https://code.google.com/p/android/issues/detail?id=180396
-        IBinder binder = null;
-        int it = 0;
-        while ((binder = serviceTestRule.bindService(new Intent(getTargetContext(), CustomCertService.class))) == null && it++ <10) {
-            System.err.println("Waiting for ServiceTestRule.bindService");
-            Thread.sleep(50);
-        }
+        IBinder binder = bindService(CustomCertService.class);
         assertNotNull(binder);
         service = new Messenger(binder);
 
@@ -123,19 +111,34 @@ public class CustomCertManagerTest {
         intent.setAction(CustomCertService.CMD_CERTIFICATION_DECISION);
         intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0]);
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, false);
-        serviceTestRule.startService(intent);
+        startService(intent, CustomCertService.class);
         paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
     }
 
-    private void addCustomCertificate() throws TimeoutException {
+    private void addCustomCertificate() throws TimeoutException, InterruptedException {
         // add certificate and check again
         Intent intent = new Intent(getContext(), CustomCertService.class);
         intent.setAction(CustomCertService.CMD_CERTIFICATION_DECISION);
         intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0]);
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, true);
-        serviceTestRule.startService(intent);
+        startService(intent, CustomCertService.class);
     }
 
+
+    private IBinder bindService(Class clazz) throws TimeoutException, InterruptedException {
+        IBinder binder = null;
+        int it = 0;
+        while ((binder = serviceTestRule.bindService(new Intent(getTargetContext(), clazz))) == null && it++ <10) {
+            System.err.println("Waiting for ServiceTestRule.bindService");
+            Thread.sleep(50);
+        }
+        return binder;
+    }
+
+    private void startService(Intent intent, Class clazz) throws TimeoutException, InterruptedException {
+        serviceTestRule.startService(intent);
+        bindService(clazz);
+    }
 
     private static X509Certificate[] getSiteCertificates(URL url) throws IOException {
         HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
