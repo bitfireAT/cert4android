@@ -8,7 +8,6 @@
 
 package at.bitfire.cert4android;
 
-import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +21,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.test.InstrumentationTestCase;
 import android.util.SparseArray;
 
 import java.io.Closeable;
@@ -55,14 +53,18 @@ public class CustomCertManager implements X509TrustManager, Closeable {
 
     /** for sending requests to {@link CustomCertService} */
     Messenger service;
-    /** thread to receive replies from {@link CustomCertService} */
-    final HandlerThread messengerThread;
-    /** messenger to receive replies from {@link CustomCertService} */
-    final Messenger messenger;
 
-    final AtomicInteger nextDecisionID = new AtomicInteger();
-    final SparseArray<Boolean> decisions = new SparseArray<>();
-    final Object decisionLock = new Object();
+    /** thread to receive replies from {@link CustomCertService} */
+    final static HandlerThread messengerThread = new HandlerThread("CustomCertificateManager.Messenger");
+    static {
+        messengerThread.start();
+    }
+    /** messenger to receive replies from {@link CustomCertService} */
+    final static Messenger messenger = new Messenger(new Handler(messengerThread.getLooper(), new MessageHandler()));
+
+    final static AtomicInteger nextDecisionID = new AtomicInteger();
+    final static SparseArray<Boolean> decisions = new SparseArray<>();
+    final static Object decisionLock = new Object();
 
     /** system-default trust store */
     final X509TrustManager systemTrustManager;
@@ -104,10 +106,6 @@ public class CustomCertManager implements X509TrustManager, Closeable {
 
         systemTrustManager = trustSystemCerts ? CertUtils.getTrustManager(null) : null;
 
-        messengerThread = new HandlerThread("CustomCertificateManager.Messenger");
-        messengerThread.start();
-        messenger = new Messenger(new Handler(messengerThread.getLooper(), new MessageHandler()));
-
         if (service != null) {
             this.service = service;
             serviceConnection = null;
@@ -117,8 +115,6 @@ public class CustomCertManager implements X509TrustManager, Closeable {
 
     @Override
     public void close() {
-        messengerThread.quit();
-
         if (serviceConnection != null)
             context.unbindService(serviceConnection);
     }
@@ -239,7 +235,7 @@ public class CustomCertManager implements X509TrustManager, Closeable {
     // arg1: id
     // arg2: 1: trusted, 0: not trusted
 
-    private class MessageHandler implements Handler.Callback {
+    private static class MessageHandler implements Handler.Callback {
 
         @Override
         public boolean handleMessage(Message msg) {
