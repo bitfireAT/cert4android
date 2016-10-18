@@ -128,10 +128,12 @@ public class CustomCertManagerTest {
     private IBinder bindService(Class clazz) throws TimeoutException, InterruptedException {
         IBinder binder = null;
         int it = 0;
-        while ((binder = serviceTestRule.bindService(new Intent(getTargetContext(), clazz))) == null && it++ <10) {
+        while ((binder = serviceTestRule.bindService(new Intent(getTargetContext(), clazz))) == null && it++ <100) {
             System.err.println("Waiting for ServiceTestRule.bindService");
             Thread.sleep(50);
         }
+        if (binder == null)
+            throw new IllegalStateException("Couldn't bind to service");
         return binder;
     }
 
