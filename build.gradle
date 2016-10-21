@@ -32,6 +32,7 @@ android {
 
     lintOptions {
         disable "GradleDynamicVersion"
+        disable "ExtraTranslation","MissingTranslation"
     }
 
     defaultConfig {
