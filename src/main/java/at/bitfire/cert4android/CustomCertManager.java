@@ -110,7 +110,7 @@ public class CustomCertManager implements X509TrustManager, Closeable {
             this.service = service;
             serviceConnection = null;
         } else if (!context.bindService(new Intent(context, CustomCertService.class), serviceConnection, Context.BIND_AUTO_CREATE))
-            throw new IllegalArgumentException("Couldn't bind service to this context");
+            Constants.log.severe("Couldn't bind CustomCertService to context");
     }
 
     @Override
@@ -152,6 +152,9 @@ public class CustomCertManager implements X509TrustManager, Closeable {
 
     protected void checkCustomTrusted(X509Certificate cert) throws CertificateException {
         Constants.log.fine("Querying custom certificate trustworthiness");
+
+        if (service == null)
+            throw new CertificateException("Custom certificate service not available");
 
         Message msg = Message.obtain();
         msg.what = CustomCertService.MSG_CHECK_TRUSTED;
