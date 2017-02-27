@@ -5,7 +5,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.+'
+        classpath 'com.android.tools.build:gradle:2.2.+'
     }
 }
 
@@ -33,7 +33,6 @@ android {
     lintOptions {
         disable "GradleDynamicVersion"
         disable "ExtraTranslation","MissingTranslation"
-        disable "RestrictedApi"		// https://code.google.com/p/android/issues/detail?id=230387
     }
 
     defaultConfig {
