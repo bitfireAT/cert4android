@@ -101,7 +101,7 @@ public class CustomCertManagerTest {
         paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
     }
 
-    /* fails randomly (in about 1 of 3 cases) for unknown reason:
+    // fails randomly (in about 1 of 3 cases) for unknown reason:
     @Test(expected = CertificateException.class)
     public void testRemoveCustomCertificate() throws CertificateException, TimeoutException, InterruptedException {
         addCustomCertificate();
@@ -115,7 +115,6 @@ public class CustomCertManagerTest {
         startService(intent, CustomCertService.class);
         paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
     }
-    */
 
     private void addCustomCertificate() throws TimeoutException, InterruptedException {
         // add certificate and check again

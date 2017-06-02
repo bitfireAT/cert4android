@@ -6,14 +6,18 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.cert4android;
+package at.bitfire.cert4android
 
-import java.util.logging.Logger;
+import java.util.logging.Logger
 
-public class Constants {
+class Constants {
+    companion object {
 
-    public static Logger log = Logger.getLogger("cert4android");
+        @JvmField
+        var log: Logger = Logger.getLogger("cert4android")
 
-    public static int NOTIFICATION_CERT_DECISION = 88809;
+        @JvmField
+        val NOTIFICATION_CERT_DECISION = 88809
 
+    }
 }
