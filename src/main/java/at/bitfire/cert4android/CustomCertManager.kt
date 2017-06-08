@@ -133,6 +133,7 @@ class CustomCertManager: X509TrustManager, Closeable {
     }
 
 
+    @Throws(CertificateException::class)
     override fun checkClientTrusted(chain: Array<X509Certificate>?, authType: String?) {
         throw CertificateException("cert4android doesn't validate client certificates")
     }
@@ -146,6 +147,7 @@ class CustomCertManager: X509TrustManager, Closeable {
      * @param authType     authentication type (ignored)
      * @throws CertificateException in case of an untrusted or questionable certificate
      */
+    @Throws(CertificateException::class)
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType : String) {
         var trusted = false
 
@@ -187,7 +189,10 @@ class CustomCertManager: X509TrustManager, Closeable {
         val startTime = System.currentTimeMillis()
         synchronized(decisionLock) {
             while (System.currentTimeMillis() < startTime + SERVICE_TIMEOUT) {
-                decisionLock.wait(SERVICE_TIMEOUT)
+                try {
+                    decisionLock.wait(SERVICE_TIMEOUT)
+                } catch(e: InterruptedException) {
+                }
                 val decision = decisions.get(id)
                 if (decision != null) {
                     decisions.delete(id)
