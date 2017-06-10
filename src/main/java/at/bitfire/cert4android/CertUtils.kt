@@ -15,30 +15,28 @@ import java.util.logging.Level
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
-class CertUtils {
-    companion object {
+object CertUtils {
 
-        @JvmStatic
-        fun getTrustManager(keyStore: KeyStore?): X509TrustManager? {
-            try {
-                val tmf = TrustManagerFactory.getInstance("X509")
-                tmf.init(keyStore)
-                for (trustManager in tmf.trustManagers)
-                    if (trustManager is X509TrustManager)
-                        return trustManager
-            } catch(e: GeneralSecurityException) {
-                Constants.log.log(Level.SEVERE, "Couldn't initialize trust manager", e)
-            }
-            return null;
+    @JvmStatic
+    fun getTrustManager(keyStore: KeyStore?): X509TrustManager? {
+        try {
+            val tmf = TrustManagerFactory.getInstance("X509")
+            tmf.init(keyStore)
+            for (trustManager in tmf.trustManagers)
+                if (trustManager is X509TrustManager)
+                    return trustManager
+        } catch(e: GeneralSecurityException) {
+            Constants.log.log(Level.SEVERE, "Couldn't initialize trust manager", e)
         }
-
-        @JvmStatic
-        fun getTag(cert: X509Certificate): String {
-            val str = StringBuilder()
-            for (b in cert.signature)
-                str.append(String.format("%02x", b))
-            return str.toString()
-        }
-
+        return null;
     }
+
+    @JvmStatic
+    fun getTag(cert: X509Certificate): String {
+        val str = StringBuilder()
+        for (b in cert.signature)
+            str.append(String.format("%02x", b))
+        return str.toString()
+    }
+
 }
