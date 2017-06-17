@@ -11,7 +11,6 @@ package at.bitfire.cert4android
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.text.TextUtils
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
@@ -97,9 +96,11 @@ class TrustCertificateActivity: AppCompatActivity() {
 
     private fun sendDecision(trusted: Boolean) {
         val intent = Intent(this, CustomCertService::class.java)
-        intent.action = CustomCertService.CMD_CERTIFICATION_DECISION
-        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, getIntent().getSerializableExtra(EXTRA_CERTIFICATE))
-        intent.putExtra(CustomCertService.EXTRA_TRUSTED, trusted)
+        with(intent) {
+            action = CustomCertService.CMD_CERTIFICATION_DECISION
+            putExtra(CustomCertService.EXTRA_CERTIFICATE, getIntent().getSerializableExtra(EXTRA_CERTIFICATE))
+            putExtra(CustomCertService.EXTRA_TRUSTED, trusted)
+        }
         startService(intent)
     }
 
@@ -115,7 +116,7 @@ class TrustCertificateActivity: AppCompatActivity() {
 
     private fun hexString(data: ByteArray): String {
         val str = data.mapTo(LinkedList<String>()) { String.format("%02x", it) }
-        return TextUtils.join(":", str)
+        return str.joinToString(":")
     }
 
 }

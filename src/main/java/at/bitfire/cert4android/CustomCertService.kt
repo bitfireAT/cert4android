@@ -53,7 +53,7 @@ class CustomCertService: Service() {
 
     var keyStoreFile: File? = null
 
-    val trustedKeyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+    val trustedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
     var customTrustManager: X509TrustManager? = null
 
     var untrustedCerts = HashSet<X509Certificate>()
@@ -66,9 +66,7 @@ class CustomCertService: Service() {
         // initialize trustedKeyStore
         keyStoreFile = File(getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
         try {
-            FileInputStream(keyStoreFile).use { input ->
-                trustedKeyStore.load(input, null)
-            }
+            FileInputStream(keyStoreFile).use { trustedKeyStore.load(it, null) }
         } catch(e: Exception) {
             Constants.log.log(Level.SEVERE, "Couldn't initialize key store, creating in-memory key store", e)
             try {
@@ -82,14 +80,13 @@ class CustomCertService: Service() {
         customTrustManager = CertUtils.getTrustManager(trustedKeyStore)
     }
 
-    private fun inTrustStore(cert: X509Certificate): Boolean {
+    private fun inTrustStore(cert: X509Certificate) =
         try {
-            return trustedKeyStore.getCertificateAlias(cert) != null
+            trustedKeyStore.getCertificateAlias(cert) != null
         } catch(e: KeyStoreException) {
             Constants.log.log(Level.WARNING, "Couldn't query custom key store", e)
-            return false
+            false
         }
-    }
 
 
     // started service
@@ -127,16 +124,15 @@ class CustomCertService: Service() {
 
             try {
                 trustedKeyStore.setCertificateEntry(cert.subjectDN.name, cert)
+                saveKeyStore()
             } catch(e: KeyStoreException) {
                 Constants.log.log(Level.SEVERE, "Couldn't add certificate into key store", e)
             }
-            saveKeyStore()
         } else
             untrustedCerts.add(cert)
 
         // notify receivers which are waiting for a decision
-        val receivers = pendingDecisions[cert]
-        if (receivers != null) {
+        pendingDecisions[cert]?.let { receivers ->
             for ((messenger, id) in receivers) {
                 val message = Message.obtain()
                 message.what = CustomCertManager.MSG_CERTIFICATE_DECISION
@@ -153,11 +149,9 @@ class CustomCertService: Service() {
     }
 
     private fun saveKeyStore() {
-        Constants.log.fine("Saving custom certificate key store to " + keyStoreFile)
+        Constants.log.fine("Saving custom certificate key store to $keyStoreFile")
         try {
-            FileOutputStream(keyStoreFile).use { output ->
-                trustedKeyStore.store(output, null)
-            }
+            FileOutputStream(keyStoreFile).use { trustedKeyStore.store(it, null) }
         } catch(e: Exception) {
             Constants.log.log(Level.SEVERE, "Couldn't save custom certificate key store", e)
         }
@@ -167,10 +161,7 @@ class CustomCertService: Service() {
     // bound service; Messenger for IPC
 
     val messenger = Messenger(MessageHandler(this))
-
-    override fun onBind(intent: Intent?): IBinder {
-        return messenger.binder
-    }
+    override fun onBind(intent: Intent?) = messenger.binder!!
 
     private class MessageHandler(
             service: CustomCertService
@@ -184,7 +175,7 @@ class CustomCertService: Service() {
                 return
             }
 
-            Constants.log.info("Handling request: " + msg)
+            Constants.log.info("Handling request: $msg")
             val id = msg.arg1
 
             val data = msg.data
@@ -194,8 +185,7 @@ class CustomCertService: Service() {
 
             when (msg.what) {
                 MSG_CHECK_TRUSTED -> {
-                    val reply = service.pendingDecisions[cert]
-                    if (reply != null) {
+                    service.pendingDecisions[cert]?.let { reply ->
                         // there's already a pending decision for this certificate, just add this reply messenger
                         reply.add(replyInfo)
                         return
@@ -280,6 +270,8 @@ class CustomCertService: Service() {
             val messenger: Messenger,
             val id: Int
     ) {
+
+        override fun hashCode() = messenger.hashCode() xor id
 
         override fun equals(other: Any?): Boolean {
             return if (other is ReplyInfo) {

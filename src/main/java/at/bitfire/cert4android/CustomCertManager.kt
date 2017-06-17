@@ -55,18 +55,18 @@ class CustomCertManager: X509TrustManager, Closeable {
         val MSG_CERTIFICATE_DECISION = 0
 
         // Messenger for receiving replies from CustomCertificateService
-        private class MessageHandler : Handler.Callback {
+        private class MessageHandler: Handler.Callback {
             override fun handleMessage(msg: Message): Boolean {
                 Constants.log.fine("Received reply from CustomCertificateService: " + msg)
-                when (msg.what) {
+                return when (msg.what) {
                     MSG_CERTIFICATE_DECISION ->
                         synchronized(decisionLock) {
                             decisions.put(msg.arg1, msg.arg2 != 0)
                             decisionLock.notifyAll()
-                            return true
+                            true
                         }
                     else ->
-                        return false
+                        false
                 }
             }
         }
@@ -124,12 +124,10 @@ class CustomCertManager: X509TrustManager, Closeable {
      * @param context used to bind to {@link CustomCertService}
      * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
      */
-    constructor(context: Context, trustSystemCerts: Boolean)
-            : this(context, trustSystemCerts, null)
+    constructor(context: Context, trustSystemCerts: Boolean): this(context, trustSystemCerts, null)
 
     override fun close() {
-        if (serviceConnection != null)
-            context.unbindService(serviceConnection)
+        serviceConnection?.let(context::unbindService)
     }
 
 
@@ -151,15 +149,17 @@ class CustomCertManager: X509TrustManager, Closeable {
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType : String) {
         var trusted = false
 
-        if (systemTrustManager != null)
+        systemTrustManager?.let {
             try {
-                systemTrustManager.checkServerTrusted(chain, authType)
+                it.checkServerTrusted(chain, authType)
                 trusted = true
             } catch(ignored: CertificateException) {
                 Constants.log.fine("Certificate not trusted by system")
             }
+        }
 
         if (!trusted)
+            // not trusted by system, let's check ourselves
             checkCustomTrusted(chain[0])
     }
 
@@ -193,11 +193,10 @@ class CustomCertManager: X509TrustManager, Closeable {
                     decisionLock.wait(SERVICE_TIMEOUT)
                 } catch(e: InterruptedException) {
                 }
-                val decision = decisions.get(id)
-                if (decision != null) {
+                decisions.get(id)?.let { decision ->
                     decisions.delete(id)
                     if (decision)
-                    // certificate trusted
+                        // certificate trusted
                         return
                     else
                         throw CertificateException("Certificate not trusted")
@@ -205,7 +204,7 @@ class CustomCertManager: X509TrustManager, Closeable {
             }
         }
 
-        // timeout occurred
+        // timeout occurred, send cancellation
         msg = Message.obtain()
         msg.what = CustomCertService.MSG_CHECK_TRUSTED_ABORT
         msg.arg1 = id
@@ -224,16 +223,14 @@ class CustomCertManager: X509TrustManager, Closeable {
         throw CertificateException("Timeout when waiting for certificate trustworthiness decision")
     }
 
-    override fun getAcceptedIssuers() : Array<X509Certificate> {
+    override fun getAcceptedIssuers(): Array<X509Certificate> {
         return arrayOf()
     }
 
 
     // custom methods
 
-    fun hostnameVerifier(defaultVerifier: HostnameVerifier?) : HostnameVerifier {
-        return CustomHostnameVerifier(defaultVerifier)
-    }
+    fun hostnameVerifier(defaultVerifier: HostnameVerifier?) = CustomHostnameVerifier(defaultVerifier)
 
     fun resetCertificates() {
         val intent = Intent(context, CustomCertService::class.java)
@@ -244,7 +241,7 @@ class CustomCertManager: X509TrustManager, Closeable {
 
     // hostname verifier
 
-    private inner class CustomHostnameVerifier(
+    inner class CustomHostnameVerifier(
             val defaultVerifier: HostnameVerifier?
     ): HostnameVerifier {
 

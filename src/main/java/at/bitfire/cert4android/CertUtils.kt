@@ -22,13 +22,13 @@ object CertUtils {
         try {
             val tmf = TrustManagerFactory.getInstance("X509")
             tmf.init(keyStore)
-            for (trustManager in tmf.trustManagers)
-                if (trustManager is X509TrustManager)
-                    return trustManager
+            tmf.trustManagers
+                    .filterIsInstance<X509TrustManager>()
+                    .forEach { return it }
         } catch(e: GeneralSecurityException) {
             Constants.log.log(Level.SEVERE, "Couldn't initialize trust manager", e)
         }
-        return null;
+        return null
     }
 
     @JvmStatic
