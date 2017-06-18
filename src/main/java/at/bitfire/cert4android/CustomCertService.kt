@@ -187,7 +187,7 @@ class CustomCertService: Service() {
                 MSG_CHECK_TRUSTED -> {
                     service.pendingDecisions[cert]?.let { reply ->
                         // there's already a pending decision for this certificate, just add this reply messenger
-                        reply.add(replyInfo)
+                        reply += replyInfo
                         return
                     }
 
@@ -214,7 +214,7 @@ class CustomCertService: Service() {
                         }
                         else -> {
                             val receivers = LinkedList<ReplyInfo>()
-                            receivers.add(replyInfo)
+                            receivers += replyInfo
                             service.pendingDecisions.put(cert, receivers)
 
                             val decisionIntent = Intent(service, TrustCertificateActivity::class.java)
