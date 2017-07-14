@@ -68,7 +68,7 @@ class CustomCertService: Service() {
         try {
             FileInputStream(keyStoreFile).use { trustedKeyStore.load(it, null) }
         } catch(e: Exception) {
-            Constants.log.log(Level.SEVERE, "Couldn't initialize key store, creating in-memory key store", e)
+            Constants.log.log(Level.INFO, "No persisent key store (yet), creating in-memory key store", e)
             try {
                 trustedKeyStore.load(null, null)
             } catch(e: Exception) {
