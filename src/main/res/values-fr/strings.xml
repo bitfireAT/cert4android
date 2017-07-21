@@ -6,7 +6,7 @@
 
     <string name="trust_certificate_unknown_certificate_found">cert4android a rencontré un certificat inconnu. Voulez-vous lui faire confiance?</string>
     <string name="trust_certificate_x509_certificate_details">X509 détails du certificat</string>
-    <string name="trust_certificate_issued_for">Délivré par</string>
+    <string name="trust_certificate_issued_for">Délivré pour</string>
     <string name="trust_certificate_issued_by">Délivré par</string>
     <string name="trust_certificate_validity_period">Période de validité</string>
     <string name="trust_certificate_validity_period_value">%1$s – %2$s (ne sera pas appliquée)</string>

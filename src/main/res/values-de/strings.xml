@@ -4,6 +4,8 @@
     <string name="certificate_notification_connection_security">Verbindungssicherheit</string>
     <string name="certificate_notification_user_interaction">Bitte Zertifikat überprüfen</string>
 
+    <string name="service_rejected_temporarily">Zertifikat vorübergehend abgelehnt</string>
+
     <string name="trust_certificate_unknown_certificate_found">cert4android ist auf ein unbekanntes Zertifikat gestoßen. Wollen Sie diesem vertrauen?</string>
     <string name="trust_certificate_x509_certificate_details">X509-Zertifikat</string>
     <string name="trust_certificate_issued_for">Ausgestellt für</string>
