@@ -15,6 +15,7 @@ import android.content.Intent
 import android.os.*
 import android.support.v4.app.NotificationManagerCompat
 import android.support.v7.app.NotificationCompat
+import android.widget.Toast
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -128,8 +129,10 @@ class CustomCertService: Service() {
             } catch(e: KeyStoreException) {
                 Constants.log.log(Level.SEVERE, "Couldn't add certificate into key store", e)
             }
-        } else
+        } else {
             untrustedCerts.add(cert)
+            Toast.makeText(this, R.string.service_rejected_temporarily, Toast.LENGTH_LONG).show()
+        }
 
         // notify receivers which are waiting for a decision
         pendingDecisions[cert]?.let { receivers ->
@@ -220,14 +223,22 @@ class CustomCertService: Service() {
                             val decisionIntent = Intent(service, TrustCertificateActivity::class.java)
                             decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, cert)
 
+                            val rejectIntent = Intent(service, CustomCertService::class.java)
+                            with(rejectIntent) {
+                                action = at.bitfire.cert4android.CustomCertService.CMD_CERTIFICATION_DECISION
+                                putExtra(at.bitfire.cert4android.CustomCertService.EXTRA_CERTIFICATE, cert)
+                                putExtra(at.bitfire.cert4android.CustomCertService.EXTRA_TRUSTED, false)
+                            }
+
                             val notify = NotificationCompat.Builder(service)
                                     .setSmallIcon(R.drawable.ic_lock_open_white)
                                     .setContentTitle(service.getString(R.string.certificate_notification_connection_security))
                                     .setContentText(service.getString(R.string.certificate_notification_user_interaction))
+                                    .setSubText(cert.subjectDN.name)
                                     .setCategory(NotificationCompat.CATEGORY_SERVICE)
                                     .setPriority(NotificationCompat.PRIORITY_HIGH)
-                                    .setOngoing(true)
                                     .setContentIntent(PendingIntent.getActivity(service, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                                    .setDeleteIntent(PendingIntent.getService(service, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                                     .build()
                             val nm = NotificationManagerCompat.from(service)
                             nm.notify(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION, notify)
@@ -254,9 +265,6 @@ class CustomCertService: Service() {
                     if (replyInfos == null || replyInfos.isEmpty()) {
                         // no more decision receivers, remove pending decision
                         service.pendingDecisions.remove(cert)
-
-                        val nm = NotificationManagerCompat.from(service)
-                        nm.cancel(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION)
                     }
                 }
             }

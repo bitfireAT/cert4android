@@ -36,7 +36,7 @@ class CustomCertManager: X509TrustManager, Closeable {
     companion object {
         /** how log to wait for a decision from {@link CustomCertService} */
         @JvmField
-        var SERVICE_TIMEOUT: Long = 5 * 60 * 1000
+        var SERVICE_TIMEOUT: Long = 5*60*1000
 
         val nextDecisionID = AtomicInteger()
         val decisions = SparseArray<Boolean?>()
