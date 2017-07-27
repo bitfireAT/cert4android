@@ -4,6 +4,8 @@
     <string name="certificate_notification_connection_security">接続セキュリティ</string>
     <string name="certificate_notification_user_interaction">証明書を確認してください</string>
 
+    <string name="service_rejected_temporarily">証明書は一時的に拒否されました</string>
+
     <string name="trust_certificate_unknown_certificate_found">cert4androidは、未知の証明書を検出しました。それを信頼しますか?</string>
     <string name="trust_certificate_x509_certificate_details">X509 証明書の詳細</string>
     <string name="trust_certificate_issued_for">発行先</string>
