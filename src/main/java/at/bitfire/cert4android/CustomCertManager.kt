@@ -13,7 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
-import android.util.SparseArray
+import android.util.SparseBooleanArray
 import java.io.Closeable
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -39,7 +39,8 @@ class CustomCertManager: X509TrustManager, Closeable {
         var SERVICE_TIMEOUT: Long = 5*60*1000
 
         val nextDecisionID = AtomicInteger()
-        val decisions = SparseArray<Boolean?>()
+
+        val decisions = SparseBooleanArray()
         val decisionLock = Object()
 
         /** thread to receive replies from {@link CustomCertService} */
@@ -51,15 +52,12 @@ class CustomCertManager: X509TrustManager, Closeable {
         /** messenger to receive replies from {@link CustomCertService} */
         val messenger = Messenger(Handler(messengerThread.looper, MessageHandler()))
 
-        @JvmField
-        val MSG_CERTIFICATE_DECISION = 0
-
         // Messenger for receiving replies from CustomCertificateService
         private class MessageHandler: Handler.Callback {
             override fun handleMessage(msg: Message): Boolean {
                 Constants.log.fine("Received reply from CustomCertificateService: " + msg)
                 return when (msg.what) {
-                    MSG_CERTIFICATE_DECISION ->
+                    CustomCertService.MSG_CERTIFICATE_DECISION ->
                         synchronized(decisionLock) {
                             decisions.put(msg.arg1, msg.arg2 != 0)
                             decisionLock.notifyAll()
@@ -127,7 +125,7 @@ class CustomCertManager: X509TrustManager, Closeable {
     constructor(context: Context, trustSystemCerts: Boolean): this(context, trustSystemCerts, null)
 
     override fun close() {
-        serviceConnection?.let(context::unbindService)
+        serviceConnection?.let { context.unbindService(it) }
     }
 
 
@@ -164,13 +162,14 @@ class CustomCertManager: X509TrustManager, Closeable {
     }
 
     internal fun checkCustomTrusted(cert: X509Certificate) {
-        Constants.log.fine("Querying custom certificate trustworthiness")
+        val decisionID = nextDecisionID.getAndIncrement()
+        Constants.log.fine("Querying custom certificate trustworthiness (expecting decision $decisionID)")
 
         val service : Messenger = this.service ?: throw CertificateException("Custom certificate service not available")
 
         var msg = Message.obtain()
         msg.what = CustomCertService.MSG_CHECK_TRUSTED
-        msg.arg1 = nextDecisionID.getAndIncrement()
+        msg.arg1 = decisionID
         val id = msg.arg1
         msg.replyTo = messenger
 
@@ -185,15 +184,23 @@ class CustomCertManager: X509TrustManager, Closeable {
             throw CertificateException("Couldn't query custom certificate trustworthiness", e)
         }
 
-        // wait for a reply
-        val startTime = System.currentTimeMillis()
         synchronized(decisionLock) {
-            while (System.currentTimeMillis() < startTime + SERVICE_TIMEOUT) {
+            var idx = decisions.indexOfKey(id)
+
+            // wait for a reply for up to SERVICE_TIMEOUT milliseconds, if necessary
+            val startTime = System.currentTimeMillis()
+            while (idx < 0 && System.currentTimeMillis() < startTime + SERVICE_TIMEOUT) {
+                Constants.log.finer("Waiting for reply from service (decision $id)")
                 try {
                     decisionLock.wait(SERVICE_TIMEOUT)
                 } catch(e: InterruptedException) {
                 }
-                decisions.get(id)?.let { decision ->
+                idx = decisions.indexOfKey(id)
+            }
+
+            if (idx >= 0) {
+                Constants.log.finer("Decision $id received from service")
+                decisions.valueAt(idx).let { decision ->
                     decisions.delete(id)
                     if (decision)
                         // certificate trusted
@@ -204,7 +211,7 @@ class CustomCertManager: X509TrustManager, Closeable {
             }
         }
 
-        // timeout occurred, send cancellation
+        Constants.log.finer("Timeout for decision $id, sending cancellation to service")
         msg = Message.obtain()
         msg.what = CustomCertService.MSG_CHECK_TRUSTED_ABORT
         msg.arg1 = id

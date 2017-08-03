@@ -12,7 +12,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.*
+import android.os.Handler
+import android.os.Message
+import android.os.Messenger
+import android.os.RemoteException
 import android.support.v4.app.NotificationManagerCompat
 import android.support.v7.app.NotificationCompat
 import android.widget.Toast
@@ -44,12 +47,15 @@ class CustomCertService: Service() {
 
 
         // bound service; Messenger for IPC
-
         val MSG_CHECK_TRUSTED = 1
         val MSG_DATA_CERTIFICATE = "certificate"
         val MSG_DATA_APP_IN_FOREGROUND ="appInForeground"
 
         val MSG_CHECK_TRUSTED_ABORT = 2
+
+        // reply messages sent by service
+        val MSG_CERTIFICATE_DECISION = 0
+
     }
 
     var keyStoreFile: File? = null
@@ -69,7 +75,7 @@ class CustomCertService: Service() {
         try {
             FileInputStream(keyStoreFile).use { trustedKeyStore.load(it, null) }
         } catch(e: Exception) {
-            Constants.log.log(Level.INFO, "No persisent key store (yet), creating in-memory key store", e)
+            Constants.log.log(Level.INFO, "No persistent key store (yet), creating in-memory key store", e)
             try {
                 trustedKeyStore.load(null, null)
             } catch(e: Exception) {
@@ -138,10 +144,11 @@ class CustomCertService: Service() {
         pendingDecisions[cert]?.let { receivers ->
             for ((messenger, id) in receivers) {
                 val message = Message.obtain()
-                message.what = CustomCertManager.MSG_CERTIFICATE_DECISION
+                message.what = MSG_CERTIFICATE_DECISION
                 message.arg1 = id
                 message.arg2 = if (trusted) 1 else 0
                 try {
+                    Constants.log.finer("Sending user decision $id (trusted: $trusted) to manager")
                     messenger.send(message)
                 } catch(e: RemoteException) {
                     Constants.log.log(Level.WARNING, "Couldn't forward decision to CustomCertManager", e)
@@ -200,9 +207,9 @@ class CustomCertService: Service() {
                      */
                     when {
                         service.untrustedCerts.contains(cert) -> {
-                            Constants.log.fine("Certificate is cached as untrusted")
+                            Constants.log.fine("Certificate is cached as untrusted, rejecting decision $id")
                             try {
-                                msg.replyTo.send(obtainMessage(CustomCertManager.MSG_CERTIFICATE_DECISION, id, 0))
+                                msg.replyTo.send(obtainMessage(MSG_CERTIFICATE_DECISION, id, 0))
                             } catch(e: RemoteException) {
                                 Constants.log.log(Level.WARNING, "Couldn't send distrust information to CustomCertManager", e)
                             }
@@ -210,12 +217,15 @@ class CustomCertService: Service() {
                         }
                         service.inTrustStore(cert) -> {
                             try {
-                                msg.replyTo.send(obtainMessage(CustomCertManager.MSG_CERTIFICATE_DECISION, id, 1))
+                                Constants.log.fine("Certificate is cached as trusted, accepting decision $id")
+                                msg.replyTo.send(obtainMessage(MSG_CERTIFICATE_DECISION, id, 1))
                             } catch(e: RemoteException) {
                                 Constants.log.log(Level.WARNING, "Couldn't send trust information to CustomCertManager", e)
                             }
                         }
                         else -> {
+                            Constants.log.fine("Certificate is not known, user decision required $id")
+
                             val receivers = LinkedList<ReplyInfo>()
                             receivers += replyInfo
                             service.pendingDecisions.put(cert, receivers)
