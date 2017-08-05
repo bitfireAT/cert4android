@@ -4,6 +4,8 @@
     <string name="certificate_notification_connection_security">Bezpieczeństwo połączenia</string>
     <string name="certificate_notification_user_interaction">Proszę zapoznać się z certyfikatem</string>
 
+    <string name="service_rejected_temporarily">Certyfikat tymczasowo odrzucony</string>
+
     <string name="trust_certificate_unknown_certificate_found">cert4Android napotkał nieznany certyfikat. Czy chcesz go dodać?</string>
     <string name="trust_certificate_x509_certificate_details">Szczegóły certyfikatu X509</string>
     <string name="trust_certificate_issued_for">Wydane dla</string>
