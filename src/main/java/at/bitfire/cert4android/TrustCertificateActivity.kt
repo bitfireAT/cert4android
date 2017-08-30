@@ -58,28 +58,28 @@ class TrustCertificateActivity: AppCompatActivity() {
             } else
                 subject = cert.subjectDN.name
 
-            var tv = findViewById(R.id.issuedFor) as TextView
+            var tv = findViewById<TextView>(R.id.issuedFor)
             tv.text = subject
 
-            tv = findViewById(R.id.issuedBy) as TextView
+            tv = findViewById<TextView>(R.id.issuedBy)
             tv.text = cert.issuerDN.toString()
 
             val formatter = DateFormat.getDateInstance(DateFormat.LONG)
-            tv = findViewById(R.id.validity_period) as TextView
+            tv = findViewById<TextView>(R.id.validity_period)
             tv.text = getString(R.string.trust_certificate_validity_period_value,
                     formatter.format(cert.notBefore),
                     formatter.format(cert.notAfter))
 
-            tv = findViewById(R.id.fingerprint_sha1) as TextView
+            tv = findViewById<TextView>(R.id.fingerprint_sha1)
             tv.text = fingerprint(cert, "SHA-1")
-            tv = findViewById(R.id.fingerprint_sha256) as TextView
+            tv = findViewById<TextView>(R.id.fingerprint_sha256)
             tv.text = fingerprint(cert, "SHA-256")
         } catch(e: CertificateParsingException) {
             Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
         }
 
-        val btnAccept = findViewById(R.id.accept) as Button
-        val cb = findViewById(R.id.fingerprint_ok) as CheckBox
+        val btnAccept = findViewById<Button>(R.id.accept)
+        val cb = findViewById<CheckBox>(R.id.fingerprint_ok)
         cb.setOnCheckedChangeListener { _, state -> btnAccept.isEnabled = state }
     }
 

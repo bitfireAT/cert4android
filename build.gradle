@@ -14,7 +14,9 @@ buildscript {
 
 repositories {
     jcenter()
-    mavenCentral()
+    maven {
+        url "https://maven.google.com"
+    }
 }
 
 apply plugin: 'com.android.library'
@@ -41,10 +43,8 @@ android {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    //noinspection GradleDynamicVersion
-    compile 'com.android.support:appcompat-v7:26.+'
-    //noinspection GradleDynamicVersion
-    compile 'com.android.support:cardview-v7:26.+'
+    compile 'com.android.support:appcompat-v7:26.0.1'
+    compile 'com.android.support:cardview-v7:26.0.1'
 
     //noinspection GradleDynamicVersion
     androidTestCompile 'com.android.support.test:runner:+'
