@@ -2,9 +2,12 @@
 <resources>
 
     <string name="certificate_notification_connection_security">Sécurité de la connexion</string>
-    <string name="certificate_notification_user_interaction">S\'il vous plaît vérifier le certificat</string>
+    <string name="certificate_notification_user_interaction">Veuillez relire et vérifier le certificat</string>
 
-    <string name="trust_certificate_unknown_certificate_found">cert4android a rencontré un certificat inconnu. Voulez-vous lui faire confiance?</string>
+    <string name="service_rejected_temporarily">Certificat provisoirement rejeté</string>
+
+    <string name="trust_certificate_unknown_certificate_found">Ce certificat n\'est pas déjà référencé. 
+Lui faites vous confiance?</string>
     <string name="trust_certificate_x509_certificate_details">X509 détails du certificat</string>
     <string name="trust_certificate_issued_for">Délivré pour</string>
     <string name="trust_certificate_issued_by">Délivré par</string>
