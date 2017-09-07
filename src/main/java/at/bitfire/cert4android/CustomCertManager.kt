@@ -23,7 +23,6 @@ import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLPeerUnverifiedException
 import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
-import kotlin.concurrent.thread
 
 /**
  * TrustManager to handle custom certificates. Communicates with
@@ -79,7 +78,6 @@ class CustomCertManager(
     @Volatile var service: Messenger? = null
     private var serviceConnection: ServiceConnection?
     private var serviceLock = Object()
-    @Volatile private var serviceBindResult: Boolean? = null
 
     /** system-default trust store */
     private val systemTrustManager: X509TrustManager? =
@@ -92,10 +90,15 @@ class CustomCertManager(
 
 
     /**
-     * Creates a new instance, using a certain {@link CustomCertService} messenger (for testing)
-     * @param context used to bind to {@link CustomCertService}
+     * Creates a new instance, using a certain [CustomCertService] messenger (for testing).
+     * Must not be run from the main thread because this constructor may request binding to [CustomCertService].
+     * The actual binding code is called by the looper in the main thread, so waiting for the
+     * service would block forever.
+     *
+     * @param context used to bind to [CustomCertService]
      * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
-     * @param service          messenger connected with {@link CustomCertService}
+     * @param service          messenger connected with [CustomCertService]
+     * @throws IllegalStateException if run from main thread
      */
     init {
         if (initMessenger != null) {
@@ -120,26 +123,13 @@ class CustomCertManager(
                 }
             }
 
+            if (Looper.myLooper() == Looper.getMainLooper())
+                // service is actually created after bindService() by code running in looper, so this would block
+                throw IllegalStateException("must not be run on main thread")
+
             // bind service asynchronously
-            thread {
-                Constants.log.fine("Binding to service")
-                synchronized(serviceLock) {
-                    serviceBindResult = context.bindService(Intent(context, CustomCertService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)
-                    serviceLock.notify()
-                }
-            }
-
-            // wait for result of bindService()
-            synchronized(serviceLock) {
-                while (serviceBindResult == null) {
-                    try {
-                        serviceLock.wait()
-                    } catch(e: InterruptedException) {
-                    }
-                }
-            }
-
-            if (serviceBindResult == true) {
+            Constants.log.fine("Binding to service")
+            if (context.bindService(Intent(context, CustomCertService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)) {
                 Constants.log.fine("Waiting for service to be bound")
                 synchronized(serviceLock) {
                     while (this.service == null)
