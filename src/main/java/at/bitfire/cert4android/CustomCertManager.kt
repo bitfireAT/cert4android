@@ -23,6 +23,7 @@ import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLPeerUnverifiedException
 import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
+import kotlin.concurrent.thread
 
 /**
  * TrustManager to handle custom certificates. Communicates with
@@ -31,7 +32,11 @@ import javax.net.ssl.X509TrustManager
  * each of them with an own {@link CustomCertManager}, want to access a synchronized central
  * certificate trust store + UI (for accepting certificates etc.).
  */
-class CustomCertManager: X509TrustManager, Closeable {
+class CustomCertManager(
+        val context: Context,
+        trustSystemCerts: Boolean = true,
+        initMessenger: Messenger? = null
+): X509TrustManager, Closeable {
 
     companion object {
         /** how log to wait for a decision from {@link CustomCertService} */
@@ -44,7 +49,7 @@ class CustomCertManager: X509TrustManager, Closeable {
         val decisionLock = Object()
 
         /** thread to receive replies from {@link CustomCertService} */
-        val messengerThread = HandlerThread("CustomCertificateManager.Messenger")
+        private val messengerThread = HandlerThread("CustomCertificateManager.Messenger")
         init {
             messengerThread.start()
         }
@@ -70,14 +75,16 @@ class CustomCertManager: X509TrustManager, Closeable {
         }
     }
 
-    val context: Context
-
     /** for sending requests to {@link CustomCertService} */
-    var service: Messenger? = null
-    val serviceConnection : ServiceConnection?
+    @Volatile var service: Messenger? = null
+    private var serviceConnection: ServiceConnection?
+    private var serviceLock = Object()
+    @Volatile private var serviceBindResult: Boolean? = null
 
     /** system-default trust store */
-    val systemTrustManager : X509TrustManager?
+    private val systemTrustManager: X509TrustManager? =
+            if (trustSystemCerts) CertUtils.getTrustManager(null) else null
+
 
     /** Whether to launch {@link TrustCertificateActivity} directly. The notification will always be shown. */
     @JvmField
@@ -90,42 +97,71 @@ class CustomCertManager: X509TrustManager, Closeable {
      * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
      * @param service          messenger connected with {@link CustomCertService}
      */
-    constructor(context: Context, trustSystemCerts: Boolean, service: Messenger?) {
-        this.context = context
-
-        systemTrustManager = if (trustSystemCerts) CertUtils.getTrustManager(null) else null
-
-        if (service != null) {
+    init {
+        if (initMessenger != null) {
             // use a specific service, primarily for testing
-            this.service = service
+            this.service = initMessenger
             serviceConnection = null
 
         } else {
             serviceConnection = object: ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, binder: IBinder) {
                     Constants.log.fine("Connected to service")
-                    this@CustomCertManager.service = Messenger(binder)
+                    synchronized(serviceLock) {
+                        this@CustomCertManager.service = Messenger(binder)
+                        serviceLock.notify()
+                    }
                 }
 
                 override fun onServiceDisconnected(className: ComponentName) {
-                    this@CustomCertManager.service = null
+                    synchronized(serviceLock) {
+                        this@CustomCertManager.service = null
+                    }
                 }
             }
 
-            if (!context.bindService(Intent(context, CustomCertService::class.java), serviceConnection, Context.BIND_AUTO_CREATE))
+            // bind service asynchronously
+            thread {
+                Constants.log.fine("Binding to service")
+                synchronized(serviceLock) {
+                    serviceBindResult = context.bindService(Intent(context, CustomCertService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)
+                    serviceLock.notify()
+                }
+            }
+
+            // wait for result of bindService()
+            synchronized(serviceLock) {
+                while (serviceBindResult == null) {
+                    try {
+                        serviceLock.wait()
+                    } catch(e: InterruptedException) {
+                    }
+                }
+            }
+
+            if (serviceBindResult == true) {
+                Constants.log.fine("Waiting for service to be bound")
+                synchronized(serviceLock) {
+                    while (this.service == null)
+                        try {
+                            serviceLock.wait()
+                        } catch(e: InterruptedException) {
+                        }
+                }
+            } else
                 Constants.log.severe("Couldn't bind CustomCertService to context")
         }
     }
 
-    /**
-     * Creates a new instance.
-     * @param context used to bind to {@link CustomCertService}
-     * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
-     */
-    constructor(context: Context, trustSystemCerts: Boolean): this(context, trustSystemCerts, null)
-
     override fun close() {
-        serviceConnection?.let { context.unbindService(it) }
+        serviceConnection?.let {
+            try {
+                context.unbindService(it)
+                serviceConnection = null
+            } catch (e: Exception) {
+                Constants.log.log(Level.WARNING, "Couldn't unbind CustomCertService", e)
+            }
+        }
     }
 
 
