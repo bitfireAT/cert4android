@@ -68,7 +68,7 @@ class CustomCertService: Service() {
     private val pendingDecisions = HashMap<X509Certificate, MutableList<ReplyInfo>>()
 
     override fun onCreate() {
-        Constants.log.info("Creating CustomCertService")
+        Constants.log.info("CustomCertService created")
 
         // initialize trustedKeyStore
         keyStoreFile = File(getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
@@ -85,6 +85,10 @@ class CustomCertService: Service() {
 
         // create custom TrustManager based on trustedKeyStore
         customTrustManager = CertUtils.getTrustManager(trustedKeyStore)
+    }
+
+    override fun onDestroy() {
+        Constants.log.info("CustomCertService destroyed")
     }
 
     private fun inTrustStore(cert: X509Certificate) =
@@ -117,6 +121,7 @@ class CustomCertService: Service() {
                 }
             }
         }
+        stopSelf()
         return START_NOT_STICKY
     }
 

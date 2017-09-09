@@ -72,6 +72,12 @@ class CustomCertManager(
                 }
             }
         }
+
+        fun resetCertificates(context: Context): Boolean {
+            val intent = Intent(context, CustomCertService::class.java)
+            intent.action = CustomCertService.CMD_RESET_CERTIFICATES
+            return context.startService(intent) != null
+        }
     }
 
     /** for sending requests to {@link CustomCertService} */
@@ -264,12 +270,6 @@ class CustomCertManager(
     // custom methods
 
     fun hostnameVerifier(defaultVerifier: HostnameVerifier?) = CustomHostnameVerifier(defaultVerifier)
-
-    fun resetCertificates() {
-        val intent = Intent(context, CustomCertService::class.java)
-        intent.action = CustomCertService.CMD_RESET_CERTIFICATES
-        context.startService(intent)
-    }
 
 
     // hostname verifier
