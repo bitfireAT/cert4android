@@ -73,6 +73,7 @@ class CustomCertManager(
             }
         }
 
+        @JvmStatic
         fun resetCertificates(context: Context): Boolean {
             val intent = Intent(context, CustomCertService::class.java)
             intent.action = CustomCertService.CMD_RESET_CERTIFICATES

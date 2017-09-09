@@ -66,11 +66,11 @@ public class CustomCertManagerTest {
 
         certManager = new CustomCertManager(getContext(), true, service);
         assertNotNull(certManager);
-        certManager.resetCertificates();
+        certManager.resetCertificates(getContext());
 
         paranoidCertManager = new CustomCertManager(getContext(), false, service);
         assertNotNull(paranoidCertManager);
-        paranoidCertManager.resetCertificates();
+        paranoidCertManager.resetCertificates(getContext());
     }
 
     @After
