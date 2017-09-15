@@ -194,7 +194,13 @@ class CustomCertService: Service() {
             val id = msg.arg1
 
             val data = msg.data
-            val cert = data.getSerializable(MSG_DATA_CERTIFICATE) as X509Certificate
+            val cert = try {
+                data.getSerializable(MSG_DATA_CERTIFICATE) as X509Certificate
+            } catch(e: Exception) {
+                // for instance: NotSerializableException wrapped in RuntimeException
+                Constants.log.log(Level.SEVERE, "Couldn't handle certificate", e)
+                return
+            }
 
             val replyInfo = ReplyInfo(msg.replyTo, id)
 
