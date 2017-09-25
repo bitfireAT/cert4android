@@ -4,6 +4,8 @@
     <string name="certificate_notification_connection_security">连接安全性</string>
     <string name="certificate_notification_user_interaction">请检查证书</string>
 
+    <string name="service_rejected_temporarily">证书被临时拒绝</string>
+
     <string name="trust_certificate_unknown_certificate_found">cert4android 遇到了未知证书。你是否要信任该证书？</string>
     <string name="trust_certificate_x509_certificate_details">X509 证书信息</string>
     <string name="trust_certificate_issued_for">签发给</string>
