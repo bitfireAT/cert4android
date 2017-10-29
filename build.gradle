@@ -36,6 +36,7 @@ android {
 
     lintOptions {
         disable "ExtraTranslation","MissingTranslation"
+        disable "OnClick"     // doesn't recognize Kotlin onClick methods
     }
 
     defaultConfig {
