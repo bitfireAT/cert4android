@@ -16,8 +16,8 @@ import android.os.Handler
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
+import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
-import android.support.v7.app.NotificationCompat
 import android.widget.Toast
 import java.io.File
 import java.io.FileInputStream
@@ -58,10 +58,10 @@ class CustomCertService: Service() {
 
     }
 
-    var keyStoreFile: File? = null
+    private var keyStoreFile: File? = null
 
-    val trustedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
-    var customTrustManager: X509TrustManager? = null
+    private val trustedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
+    private var customTrustManager: X509TrustManager? = null
 
     var untrustedCerts = HashSet<X509Certificate>()
 
@@ -175,7 +175,7 @@ class CustomCertService: Service() {
 
     // bound service; Messenger for IPC
 
-    val messenger = Messenger(MessageHandler(this))
+    private val messenger = Messenger(MessageHandler(this))
     override fun onBind(intent: Intent?) = messenger.binder!!
 
     private class MessageHandler(
