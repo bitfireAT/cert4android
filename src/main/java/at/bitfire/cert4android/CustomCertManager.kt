@@ -12,12 +12,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.*
-import android.util.SparseBooleanArray
+import android.os.IBinder
+import android.os.Looper
 import java.io.Closeable
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Level
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLPeerUnverifiedException
@@ -26,52 +25,22 @@ import javax.net.ssl.X509TrustManager
 
 /**
  * TrustManager to handle custom certificates. Communicates with
- * {@link CustomCertService} to fetch information about custom certificate
+ * [CustomCertService] to fetch information about custom certificate
  * trustworthiness. The IPC with a service is required when multiple processes,
- * each of them with an own {@link CustomCertManager}, want to access a synchronized central
+ * each of them with an own [CustomCertManager], want to access a synchronized central
  * certificate trust store + UI (for accepting certificates etc.).
  */
-class CustomCertManager(
+class CustomCertManager @JvmOverloads constructor(
         val context: Context,
-        trustSystemCerts: Boolean = true,
-        initMessenger: Messenger? = null
+        val interactive: Boolean = true,
+        trustSystemCerts: Boolean = true
 ): X509TrustManager, Closeable {
 
     companion object {
-        /** how log to wait for a decision from {@link CustomCertService} */
+
+        /** how long to wait for a decision from [CustomCertService] before giving up temporarily */
         @JvmField
-        var SERVICE_TIMEOUT: Long = 5*60*1000
-
-        val nextDecisionID = AtomicInteger()
-
-        val decisions = SparseBooleanArray()
-        val decisionLock = Object()
-
-        /** thread to receive replies from {@link CustomCertService} */
-        private val messengerThread = HandlerThread("CustomCertificateManager.Messenger")
-        init {
-            messengerThread.start()
-        }
-
-        /** messenger to receive replies from {@link CustomCertService} */
-        val messenger = Messenger(Handler(messengerThread.looper, MessageHandler()))
-
-        // Messenger for receiving replies from CustomCertificateService
-        private class MessageHandler: Handler.Callback {
-            override fun handleMessage(msg: Message): Boolean {
-                Constants.log.fine("Received reply from CustomCertificateService: " + msg)
-                return when (msg.what) {
-                    CustomCertService.MSG_CERTIFICATE_DECISION ->
-                        synchronized(decisionLock) {
-                            decisions.put(msg.arg1, msg.arg2 != 0)
-                            decisionLock.notifyAll()
-                            true
-                        }
-                    else ->
-                        false
-                }
-            }
-        }
+        var SERVICE_TIMEOUT: Long = 3*60*1000
 
         @JvmStatic
         fun resetCertificates(context: Context): Boolean {
@@ -79,10 +48,10 @@ class CustomCertManager(
             intent.action = CustomCertService.CMD_RESET_CERTIFICATES
             return context.startService(intent) != null
         }
+
     }
 
-    /** for sending requests to {@link CustomCertService} */
-    @Volatile var service: Messenger? = null
+    var service: ICustomCertService? = null
     private var serviceConnection: ServiceConnection?
     private var serviceLock = Object()
 
@@ -103,51 +72,43 @@ class CustomCertManager(
      * service would block forever.
      *
      * @param context used to bind to [CustomCertService]
+     * @param interactive whether calls to [CustomCertService] are flagged as interactive (which allows the user to accept/deny certificates)
      * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
-     * @param service          messenger connected with [CustomCertService]
      * @throws IllegalStateException if run from main thread
      */
     init {
-        if (initMessenger != null) {
-            // use a specific service, primarily for testing
-            this.service = initMessenger
-            serviceConnection = null
-
-        } else {
-            serviceConnection = object: ServiceConnection {
-                override fun onServiceConnected(className: ComponentName, binder: IBinder) {
-                    Constants.log.fine("Connected to service")
-                    synchronized(serviceLock) {
-                        this@CustomCertManager.service = Messenger(binder)
-                        serviceLock.notify()
-                    }
-                }
-
-                override fun onServiceDisconnected(className: ComponentName) {
-                    synchronized(serviceLock) {
-                        this@CustomCertManager.service = null
-                    }
+        serviceConnection = object: ServiceConnection {
+            override fun onServiceConnected(className: ComponentName, binder: IBinder) {
+                Constants.log.fine("Connected to service")
+                synchronized(serviceLock) {
+                    this@CustomCertManager.service = ICustomCertService.Stub.asInterface(binder)
+                    serviceLock.notify()
                 }
             }
 
-            if (Looper.myLooper() == Looper.getMainLooper())
-                // service is actually created after bindService() by code running in looper, so this would block
-                throw IllegalStateException("must not be run on main thread")
-
-            // bind service asynchronously
-            Constants.log.fine("Binding to service")
-            if (context.bindService(Intent(context, CustomCertService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)) {
-                Constants.log.fine("Waiting for service to be bound")
+            override fun onServiceDisconnected(className: ComponentName) {
                 synchronized(serviceLock) {
-                    while (this.service == null)
-                        try {
-                            serviceLock.wait()
-                        } catch(e: InterruptedException) {
-                        }
+                    this@CustomCertManager.service = null
                 }
-            } else
-                Constants.log.severe("Couldn't bind CustomCertService to context")
+            }
         }
+
+        if (Looper.myLooper() == Looper.getMainLooper())
+            // service is actually created after bindService() by code running in looper, so this would block
+            throw IllegalStateException("must not be run on main thread")
+
+        Constants.log.fine("Binding to service")
+        if (context.bindService(Intent(context, CustomCertService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)) {
+            Constants.log.fine("Waiting for service to be bound")
+            synchronized(serviceLock) {
+                while (service == null)
+                    try {
+                        serviceLock.wait()
+                    } catch(e: InterruptedException) {
+                    }
+            }
+        } else
+            Constants.log.severe("Couldn't bind CustomCertService to context")
     }
 
     override fun close() {
@@ -177,7 +138,7 @@ class CustomCertManager(
      * @throws CertificateException in case of an untrusted or questionable certificate
      */
     @Throws(CertificateException::class)
-    override fun checkServerTrusted(chain: Array<X509Certificate>, authType : String) {
+    override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
         var trusted = false
 
         systemTrustManager?.let {
@@ -195,77 +156,54 @@ class CustomCertManager(
     }
 
     internal fun checkCustomTrusted(cert: X509Certificate) {
-        val decisionID = nextDecisionID.getAndIncrement()
-        Constants.log.fine("Querying custom certificate trustworthiness (expecting decision $decisionID)")
+        val svc = service ?: throw CertificateException("Not bound to CustomCertService")
 
-        val service : Messenger = this.service ?: throw CertificateException("Custom certificate service not available")
+        val lock = Object()
+        var valid: Boolean? = null
 
-        var msg = Message.obtain()
-        msg.what = CustomCertService.MSG_CHECK_TRUSTED
-        msg.arg1 = decisionID
-        val id = msg.arg1
-        msg.replyTo = messenger
-
-        val data = Bundle()
-        data.putSerializable(CustomCertService.MSG_DATA_CERTIFICATE, cert)
-        data.putBoolean(CustomCertService.MSG_DATA_APP_IN_FOREGROUND, appInForeground)
-        msg.data = data
-
-        try {
-            service.send(msg)
-        } catch(e: RemoteException) {
-            throw CertificateException("Couldn't query custom certificate trustworthiness", e)
-        }
-
-        synchronized(decisionLock) {
-            var idx = decisions.indexOfKey(id)
-
-            // wait for a reply for up to SERVICE_TIMEOUT milliseconds, if necessary
-            val startTime = System.currentTimeMillis()
-            while (idx < 0 && System.currentTimeMillis() < startTime + SERVICE_TIMEOUT) {
-                Constants.log.finer("Waiting for reply from service (decision $id)")
-                try {
-                    decisionLock.wait(SERVICE_TIMEOUT)
-                } catch(e: InterruptedException) {
+        val callback = object: IOnCertificateDecision.Stub() {
+            override fun accept() {
+                synchronized(lock) {
+                    valid = true
+                    lock.notify()
                 }
-                idx = decisions.indexOfKey(id)
             }
-
-            if (idx >= 0) {
-                Constants.log.finer("Decision $id received from service")
-                decisions.valueAt(idx).let { decision ->
-                    decisions.delete(id)
-                    if (decision)
-                        // certificate trusted
-                        return
-                    else
-                        throw CertificateException("Certificate not trusted")
+            override fun reject() {
+                synchronized(lock) {
+                    valid = false
+                    lock.notify()
                 }
             }
         }
 
-        Constants.log.finer("Timeout for decision $id, sending cancellation to service")
-        msg = Message.obtain()
-        msg.what = CustomCertService.MSG_CHECK_TRUSTED_ABORT
-        msg.arg1 = id
-        msg.replyTo = messenger
-
-        val data2 = Bundle()
-        data2.putSerializable(CustomCertService.MSG_DATA_CERTIFICATE, cert)
-        msg.data = data2
-
+        val id: Int
         try {
-            service.send(msg)
-        } catch(e: RemoteException) {
-            Constants.log.log(Level.WARNING, "Couldn't abort trustworthiness check", e)
+            svc.checkTrusted(cert.encoded, interactive, appInForeground, callback)
+            synchronized(lock) {
+                if (valid == null) {
+                    Constants.log.fine("Waiting for reply from service")
+                    try {
+                        lock.wait(SERVICE_TIMEOUT)
+                    } catch(e: InterruptedException) {
+                    }
+                }
+            }
+        } catch(e: Exception) {
+            throw CertificateException("Couldn't check certificate", e)
         }
 
-        throw CertificateException("Timeout when waiting for certificate trustworthiness decision")
+        when (valid) {
+            null -> {
+                svc.abortCheck(callback)
+                throw CertificateException("Timeout when waiting for certificate trustworthiness decision")
+            }
+
+            true -> { /* OK */ }
+            false -> throw CertificateException("Certificate not accepted by CustomCertService")
+        }
     }
 
-    override fun getAcceptedIssuers(): Array<X509Certificate> {
-        return arrayOf()
-    }
+    override fun getAcceptedIssuers() = arrayOf<X509Certificate>()
 
 
     // custom methods
@@ -276,7 +214,7 @@ class CustomCertManager(
     // hostname verifier
 
     inner class CustomHostnameVerifier(
-            val defaultVerifier: HostnameVerifier?
+            private val defaultVerifier: HostnameVerifier?
     ): HostnameVerifier {
 
         override fun verify(host: String, sslSession: SSLSession): Boolean {

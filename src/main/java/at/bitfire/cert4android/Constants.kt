@@ -14,7 +14,7 @@ import java.util.logging.Logger
 
 object Constants {
 
-    private val TAG = "cert4android"
+    val TAG = "cert4android"
 
     @JvmField
     var log: Logger = Logger.getLogger(TAG)

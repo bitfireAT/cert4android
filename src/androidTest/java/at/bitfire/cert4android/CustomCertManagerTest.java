@@ -46,11 +46,11 @@ public class CustomCertManagerTest {
 
     Messenger service;
 
-    static X509Certificate[] siteCerts;
+    private static X509Certificate[] siteCerts;
     static {
         try {
-            siteCerts = getSiteCertificates(new URL("https://davdroid.bitfire.at"));
-        } catch(IOException e) {
+            siteCerts = getSiteCertificates(new URL("https://www.davdroid.com"));
+        } catch(IOException ignored) {
         }
         assertNotNull(siteCerts);
     }
@@ -62,15 +62,14 @@ public class CustomCertManagerTest {
         // loop required because of https://code.google.com/p/android/issues/detail?id=180396
         IBinder binder = bindService(CustomCertService.class);
         assertNotNull(binder);
-        service = new Messenger(binder);
 
-        certManager = new CustomCertManager(getContext(), true, service);
+        CustomCertManager.resetCertificates(getContext());
+
+        certManager = new CustomCertManager(getContext(), false);
         assertNotNull(certManager);
-        certManager.resetCertificates(getContext());
 
-        paranoidCertManager = new CustomCertManager(getContext(), false, service);
+        paranoidCertManager = new CustomCertManager(getContext(), false, false);
         assertNotNull(paranoidCertManager);
-        paranoidCertManager.resetCertificates(getContext());
     }
 
     @After
@@ -101,7 +100,7 @@ public class CustomCertManagerTest {
         paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
     }
 
-    // fails randomly (in about 1 of 3 cases) for unknown reason:
+    // fails randomly for unknown reason:
     @Test(expected = CertificateException.class)
     public void testRemoveCustomCertificate() throws CertificateException, TimeoutException, InterruptedException {
         addCustomCertificate();
@@ -110,17 +109,17 @@ public class CustomCertManagerTest {
         // should now be rejected for the whole session, i.e. no timeout anymore
         Intent intent = new Intent(getContext(), CustomCertService.class);
         intent.setAction(CustomCertService.CMD_CERTIFICATION_DECISION);
-        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0]);
+        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0].getEncoded());
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, false);
         startService(intent, CustomCertService.class);
         paranoidCertManager.checkServerTrusted(siteCerts, "RSA");
     }
 
-    private void addCustomCertificate() throws TimeoutException, InterruptedException {
+    private void addCustomCertificate() throws CertificateException, TimeoutException, InterruptedException {
         // add certificate and check again
         Intent intent = new Intent(getContext(), CustomCertService.class);
         intent.setAction(CustomCertService.CMD_CERTIFICATION_DECISION);
-        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0]);
+        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts[0].getEncoded());
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, true);
         startService(intent, CustomCertService.class);
     }

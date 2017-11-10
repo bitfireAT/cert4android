@@ -15,7 +15,9 @@ import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
+import java.io.ByteArrayInputStream
 import java.security.MessageDigest
+import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
 import java.security.cert.X509Certificate
 import java.text.DateFormat
@@ -26,6 +28,8 @@ class TrustCertificateActivity: AppCompatActivity() {
 
     companion object {
         val EXTRA_CERTIFICATE = "certificate"
+
+        val certFactory = CertificateFactory.getInstance("X.509")!!
     }
 
 
@@ -43,39 +47,40 @@ class TrustCertificateActivity: AppCompatActivity() {
     }
 
     private fun showCertificate() {
-        val cert = intent.getSerializableExtra(EXTRA_CERTIFICATE) as X509Certificate
+        val raw = intent.getByteArrayExtra(EXTRA_CERTIFICATE)
+        (certFactory.generateCertificate(ByteArrayInputStream(raw)) as X509Certificate?)?.let { cert ->
+            val subject: String
+            try {
+                subject = if (cert.issuerAlternativeNames != null) {
+                    val sb = StringBuilder()
+                    for (altName in cert.subjectAlternativeNames) {
+                        val name = altName[1]
+                        if (name is String)
+                            sb.append("[").append(altName[0]).append("]").append(name).append(" ")
+                    }
+                    sb.toString()
+                } else
+                    cert.subjectDN.name
 
-        val subject: String
-        try {
-            if (cert.issuerAlternativeNames != null) {
-                val sb = StringBuilder()
-                for (altName in cert.subjectAlternativeNames) {
-                    val name = altName[1]
-                    if (name is String)
-                        sb.append("[").append(altName[0]).append("]").append(name).append(" ")
-                }
-                subject = sb.toString()
-            } else
-                subject = cert.subjectDN.name
+                var tv = findViewById<TextView>(R.id.issuedFor)
+                tv.text = subject
 
-            var tv = findViewById<TextView>(R.id.issuedFor)
-            tv.text = subject
+                tv = findViewById<TextView>(R.id.issuedBy)
+                tv.text = cert.issuerDN.toString()
 
-            tv = findViewById<TextView>(R.id.issuedBy)
-            tv.text = cert.issuerDN.toString()
+                val formatter = DateFormat.getDateInstance(DateFormat.LONG)
+                tv = findViewById<TextView>(R.id.validity_period)
+                tv.text = getString(R.string.trust_certificate_validity_period_value,
+                        formatter.format(cert.notBefore),
+                        formatter.format(cert.notAfter))
 
-            val formatter = DateFormat.getDateInstance(DateFormat.LONG)
-            tv = findViewById<TextView>(R.id.validity_period)
-            tv.text = getString(R.string.trust_certificate_validity_period_value,
-                    formatter.format(cert.notBefore),
-                    formatter.format(cert.notAfter))
-
-            tv = findViewById<TextView>(R.id.fingerprint_sha1)
-            tv.text = fingerprint(cert, "SHA-1")
-            tv = findViewById<TextView>(R.id.fingerprint_sha256)
-            tv.text = fingerprint(cert, "SHA-256")
-        } catch(e: CertificateParsingException) {
-            Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
+                tv = findViewById<TextView>(R.id.fingerprint_sha1)
+                tv.text = fingerprint(cert, "SHA-1")
+                tv = findViewById<TextView>(R.id.fingerprint_sha256)
+                tv.text = fingerprint(cert, "SHA-256")
+            } catch(e: CertificateParsingException) {
+                Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
+            }
         }
 
         val btnAccept = findViewById<Button>(R.id.accept)
