@@ -29,6 +29,10 @@ import javax.net.ssl.X509TrustManager
  * trustworthiness. The IPC with a service is required when multiple processes,
  * each of them with an own [CustomCertManager], want to access a synchronized central
  * certificate trust store + UI (for accepting certificates etc.).
+ *
+ * @param interactive true: users will be notified in case of unknown certificates;
+ *                    false: unknown certificates will be rejected (only uses custom certificate key store)
+*  @param trustSystemCerts whether system certificates will be trusted
  */
 class CustomCertManager @JvmOverloads constructor(
         val context: Context,
