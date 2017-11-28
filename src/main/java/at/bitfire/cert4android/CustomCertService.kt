@@ -13,7 +13,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.support.v4.app.NotificationCompat
-import android.support.v4.app.NotificationManagerCompat
 import android.widget.Toast
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -117,7 +116,7 @@ class CustomCertService: Service() {
 
     private fun onReceiveDecision(cert: X509Certificate, trusted: Boolean) {
         // remove notification
-        val nm = NotificationManagerCompat.from(this)
+        val nm = NotificationUtils.createChannels(this)
         nm.cancel(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION)
 
         // put into trust store, if trusted
@@ -137,6 +136,7 @@ class CustomCertService: Service() {
 
         // notify receivers which are waiting for a decision
         pendingDecisions[cert]?.let { callbacks ->
+            Constants.log.fine("Notifying ${callbacks.size} certificate decision listener(s)")
             callbacks.forEach {
                 if (trusted)
                     it.accept()
@@ -192,6 +192,9 @@ class CustomCertService: Service() {
                     if (interactive) {
                         Constants.log.fine("Certificate not known and running in interactive mode, asking user")
 
+                        // remember pending decision
+                        pendingDecisions[cert] = mutableListOf(callback)
+
                         val decisionIntent = Intent(this@CustomCertService, TrustCertificateActivity::class.java)
                         decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, raw)
 
@@ -203,7 +206,7 @@ class CustomCertService: Service() {
                         }
 
                         val id = Arrays.hashCode(raw)
-                        val notify = NotificationCompat.Builder(this@CustomCertService)
+                        val notify = NotificationCompat.Builder(this@CustomCertService, NotificationUtils.CHANNEL_CERTIFICATES)
                                 .setSmallIcon(R.drawable.ic_lock_open_white)
                                 .setContentTitle(this@CustomCertService.getString(R.string.certificate_notification_connection_security))
                                 .setContentText(this@CustomCertService.getString(R.string.certificate_notification_user_interaction))
@@ -213,7 +216,7 @@ class CustomCertService: Service() {
                                 .setContentIntent(PendingIntent.getActivity(this@CustomCertService, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                                 .setDeleteIntent(PendingIntent.getService(this@CustomCertService, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                                 .build()
-                        val nm = NotificationManagerCompat.from(this@CustomCertService)
+                        val nm = NotificationUtils.createChannels(this@CustomCertService)
                         nm.notify(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION, notify)
 
                         if (foreground) {
