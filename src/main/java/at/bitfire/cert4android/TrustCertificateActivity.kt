@@ -53,7 +53,7 @@ class TrustCertificateActivity: AppCompatActivity() {
             try {
                 subject = if (cert.issuerAlternativeNames != null) {
                     val sb = StringBuilder()
-                    for (altName in cert.subjectAlternativeNames) {
+                    for (altName in cert.subjectAlternativeNames.orEmpty()) {
                         val name = altName[1]
                         if (name is String)
                             sb.append("[").append(altName[0]).append("]").append(name).append(" ")
