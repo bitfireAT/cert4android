@@ -1,13 +1,11 @@
 
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.kotlin_version = '1.2.21'
     ext.dokka_version = '0.9.15'
 
     repositories {
         jcenter()
-        maven {
-            url "https://maven.google.com"
-        }
+        google()
     }
 
     dependencies {
@@ -19,9 +17,7 @@ buildscript {
 
 repositories {
     jcenter()
-    maven {
-        url "https://maven.google.com"
-    }
+    google()
 }
 
 apply plugin: 'com.android.library'
@@ -50,14 +46,11 @@ android {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    compile 'com.android.support:appcompat-v7:27.0.1'
-    compile 'com.android.support:cardview-v7:27.0.1'
+    compile 'com.android.support:appcompat-v7:27.0.2'
+    compile 'com.android.support:cardview-v7:27.0.2'
 
-    //noinspection GradleDynamicVersion
-    androidTestCompile 'com.android.support.test:runner:+'
-    //noinspection GradleDynamicVersion
-    androidTestCompile 'com.android.support.test:rules:+'
-    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile 'com.android.support.test:runner:1.0.1'
+    androidTestCompile 'com.android.support.test:rules:1.0.1'
 
     testCompile 'junit:junit:4.12'
 }
