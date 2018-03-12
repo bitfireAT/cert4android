@@ -27,7 +27,7 @@ import java.util.logging.Level
 class TrustCertificateActivity: AppCompatActivity() {
 
     companion object {
-        val EXTRA_CERTIFICATE = "certificate"
+        const val EXTRA_CERTIFICATE = "certificate"
 
         val certFactory = CertificateFactory.getInstance("X.509")!!
     }
@@ -65,18 +65,18 @@ class TrustCertificateActivity: AppCompatActivity() {
                 var tv = findViewById<TextView>(R.id.issuedFor)
                 tv.text = subject
 
-                tv = findViewById<TextView>(R.id.issuedBy)
+                tv = findViewById(R.id.issuedBy)
                 tv.text = cert.issuerDN.toString()
 
                 val formatter = DateFormat.getDateInstance(DateFormat.LONG)
-                tv = findViewById<TextView>(R.id.validity_period)
+                tv = findViewById(R.id.validity_period)
                 tv.text = getString(R.string.trust_certificate_validity_period_value,
                         formatter.format(cert.notBefore),
                         formatter.format(cert.notAfter))
 
-                tv = findViewById<TextView>(R.id.fingerprint_sha1)
+                tv = findViewById(R.id.fingerprint_sha1)
                 tv.text = fingerprint(cert, "SHA-1")
-                tv = findViewById<TextView>(R.id.fingerprint_sha256)
+                tv = findViewById(R.id.fingerprint_sha256)
                 tv.text = fingerprint(cert, "SHA-256")
             } catch(e: CertificateParsingException) {
                 Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
@@ -110,17 +110,16 @@ class TrustCertificateActivity: AppCompatActivity() {
     }
 
 
-    private fun fingerprint(cert: X509Certificate, algorithm: String): String {
-        try {
-            val md = MessageDigest.getInstance(algorithm)
-            return "$algorithm: ${hexString(md.digest(cert.encoded))}"
-        } catch(e: Exception) {
-            return e.message ?: "Couldn't create message digest"
-        }
-    }
+    private fun fingerprint(cert: X509Certificate, algorithm: String) =
+            try {
+                val md = MessageDigest.getInstance(algorithm)
+                "$algorithm: ${hexString(md.digest(cert.encoded))}"
+            } catch(e: Exception) {
+                e.message ?: "Couldn't create message digest"
+            }
 
     private fun hexString(data: ByteArray): String {
-        val str = data.mapTo(LinkedList<String>()) { String.format("%02x", it) }
+        val str = data.mapTo(LinkedList()) { String.format("%02x", it) }
         return str.joinToString(":")
     }
 

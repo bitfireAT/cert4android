@@ -30,9 +30,17 @@ import javax.net.ssl.X509TrustManager
  * each of them with an own [CustomCertManager], want to access a synchronized central
  * certificate trust store + UI (for accepting certificates etc.).
  *
+ * @param context used to bind to [CustomCertService]
  * @param interactive true: users will be notified in case of unknown certificates;
  *                    false: unknown certificates will be rejected (only uses custom certificate key store)
-*  @param trustSystemCerts whether system certificates will be trusted
+ * @param trustSystemCerts whether system certificates will be trusted
+ *
+ * @constructor Creates a new instance, using a certain [CustomCertService] messenger (for testing).
+ * Must not be run from the main thread because this constructor may request binding to [CustomCertService].
+ * The actual binding code is called by the looper in the main thread, so waiting for the
+ * service would block forever.
+ *
+ * @throws IllegalStateException if run from main thread
  */
 class CustomCertManager @JvmOverloads constructor(
         val context: Context,
@@ -43,10 +51,8 @@ class CustomCertManager @JvmOverloads constructor(
     companion object {
 
         /** how long to wait for a decision from [CustomCertService] before giving up temporarily */
-        @JvmField
         var SERVICE_TIMEOUT: Long = 3*60*1000
 
-        @JvmStatic
         fun resetCertificates(context: Context): Boolean {
             val intent = Intent(context, CustomCertService::class.java)
             intent.action = CustomCertService.CMD_RESET_CERTIFICATES
@@ -64,22 +70,10 @@ class CustomCertManager @JvmOverloads constructor(
             if (trustSystemCerts) CertUtils.getTrustManager(null) else null
 
 
-    /** Whether to launch {@link TrustCertificateActivity} directly. The notification will always be shown. */
-    @JvmField
+    /** Whether to launch [TrustCertificateActivity] directly. The notification will always be shown. */
     var appInForeground = false
 
 
-    /**
-     * Creates a new instance, using a certain [CustomCertService] messenger (for testing).
-     * Must not be run from the main thread because this constructor may request binding to [CustomCertService].
-     * The actual binding code is called by the looper in the main thread, so waiting for the
-     * service would block forever.
-     *
-     * @param context used to bind to [CustomCertService]
-     * @param interactive whether calls to [CustomCertService] are flagged as interactive (which allows the user to accept/deny certificates)
-     * @param trustSystemCerts whether to trust system/user-installed CAs (default trust store)
-     * @throws IllegalStateException if run from main thread
-     */
     init {
         serviceConnection = object: ServiceConnection {
             override fun onServiceConnected(className: ComponentName, binder: IBinder) {
@@ -180,7 +174,6 @@ class CustomCertManager @JvmOverloads constructor(
             }
         }
 
-        val id: Int
         try {
             svc.checkTrusted(cert.encoded, interactive, appInForeground, callback)
             synchronized(lock) {
@@ -222,7 +215,7 @@ class CustomCertManager @JvmOverloads constructor(
     ): HostnameVerifier {
 
         override fun verify(host: String, sslSession: SSLSession): Boolean {
-            Constants.log.fine("Verifying certificate for " + host)
+            Constants.log.fine("Verifying certificate for $host")
 
             if (defaultVerifier?.verify(host, sslSession) == true)
                 return true

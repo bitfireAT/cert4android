@@ -17,7 +17,6 @@ import javax.net.ssl.X509TrustManager
 
 object CertUtils {
 
-    @JvmStatic
     fun getTrustManager(keyStore: KeyStore?): X509TrustManager? {
         try {
             val tmf = TrustManagerFactory.getInstance("X509")
@@ -31,7 +30,6 @@ object CertUtils {
         return null
     }
 
-    @JvmStatic
     fun getTag(cert: X509Certificate): String {
         val str = StringBuilder()
         for (b in cert.signature)

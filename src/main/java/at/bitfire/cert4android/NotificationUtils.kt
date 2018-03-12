@@ -12,19 +12,20 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.support.v4.app.NotificationManagerCompat
 
 object NotificationUtils {
 
-    val CHANNEL_CERTIFICATES = "cert4android"
+    const val CHANNEL_CERTIFICATES = "cert4android"
 
-    fun createChannels(context: Context): NotificationManager {
+    fun createChannels(context: Context): NotificationManagerCompat {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= 26)
             nm.createNotificationChannel(NotificationChannel(CHANNEL_CERTIFICATES,
-                    context.getString(R.string.certificate_notification_connection_security), NotificationManager.IMPORTANCE_DEFAULT))
+                    context.getString(R.string.certificate_notification_connection_security), NotificationManager.IMPORTANCE_HIGH))
 
-        return nm
+        return NotificationManagerCompat.from(context)
     }
 
 }

@@ -14,9 +14,8 @@ import java.util.logging.Logger
 
 object Constants {
 
-    val TAG = "cert4android"
+    const val TAG = "cert4android"
 
-    @JvmField
     var log: Logger = Logger.getLogger(TAG)
     init {
         log.level = if (Log.isLoggable(TAG, Log.VERBOSE))
@@ -25,7 +24,6 @@ object Constants {
             Level.INFO
     }
 
-    @JvmField
-    val NOTIFICATION_CERT_DECISION = 88809
+    const val NOTIFICATION_CERT_DECISION = 88809
 
 }

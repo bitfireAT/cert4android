@@ -26,21 +26,34 @@ import java.util.*
 import java.util.logging.Level
 import javax.net.ssl.X509TrustManager
 
+/**
+ * The service which manages the certificates. Communications with
+ * the [CustomCertManager]s over IPC.
+ *
+ * This services is both a started and a bound service.
+ */
 class CustomCertService: Service() {
 
     companion object {
-        // started service
-        @JvmField val CMD_CERTIFICATION_DECISION = "certificateDecision"
-        @JvmField val CMD_RESET_CERTIFICATES = "resetCertificates"
+        /**
+         * Command when used as started service to accept/reject an open certificate decision.
+         * Usually sent by a notification action or [TrustCertificateActivity].
+         */
+        const val CMD_CERTIFICATION_DECISION = "certificateDecision"
+        /**
+         * Command when used as a started service to remove all known certificates.
+         * Resets the state of all previously accepted and rejected certificates.
+         */
+        const val CMD_RESET_CERTIFICATES = "resetCertificates"
 
-        @JvmField val EXTRA_CERTIFICATE = "certificate"
-        @JvmField val EXTRA_TRUSTED = "trusted"
+        const val EXTRA_CERTIFICATE = "certificate"
+        const val EXTRA_TRUSTED = "trusted"
 
-        val KEYSTORE_DIR = "KeyStore"
-        val KEYSTORE_NAME = "KeyStore.bks"
+        const val KEYSTORE_DIR = "KeyStore"
+        const val KEYSTORE_NAME = "KeyStore.bks"
     }
 
-    private var keyStoreFile: File? = null
+    private lateinit var keyStoreFile: File
 
     private val certFactory = CertificateFactory.getInstance("X.509")
     private val trustedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
@@ -87,7 +100,7 @@ class CustomCertService: Service() {
     // started service
 
     override fun onStartCommand(intent: Intent?, flags: Int, id: Int): Int {
-        Constants.log.fine("Received command:" + intent)
+        Constants.log.fine("Received command: $intent")
 
         when (intent?.action) {
             CMD_CERTIFICATION_DECISION -> {

@@ -6,33 +6,28 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.cert4android;
+package at.bitfire.cert4android
 
-import org.junit.Test;
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-public class CertUtilsTest {
+class CertUtilsTest {
 
     @Test
-    public void getTrustManagerSystem() {
-        assertNotNull(CertUtils.getTrustManager(null));
+    fun getTrustManagerSystem() {
+        assertNotNull(CertUtils.getTrustManager(null))
     }
 
     @Test
-    public void getTag() throws CertificateException, IOException {
-        CertificateFactory factory = CertificateFactory.getInstance("X.509");
+    fun getTag() {
+        val factory = CertificateFactory.getInstance("X.509")
 
-        try(InputStream is = getClass().getClassLoader().getResourceAsStream("davdroid-web.crt")) {
-            X509Certificate cert = (X509Certificate)factory.generateCertificate(is);
-            assertNotNull(cert);
+        javaClass.classLoader.getResourceAsStream("davdroid-web.crt").use { stream ->
+            val cert = factory.generateCertificate(stream) as X509Certificate
+            assertNotNull(cert)
 
             assertEquals("276126a80783ee16b84811e1e96e977a" +
                     "05ac0f980c586cc9784d95a804260c6d" +
@@ -49,7 +44,7 @@ public class CertUtilsTest {
                     "81ec4c6019ac2f01b9f6c22dfbf4fb69" +
                     "0564874dc8e7ee3ac2ac0f29722ca353" +
                     "17865e1cac3c4a1fb9780fafd1c8763e" +
-                    "1b4854d63067b91ece029833e9506b75", CertUtils.getTag(cert));
+                    "1b4854d63067b91ece029833e9506b75", CertUtils.getTag(cert))
         }
     }
 
