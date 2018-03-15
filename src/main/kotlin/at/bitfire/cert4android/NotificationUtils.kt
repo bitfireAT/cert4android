@@ -23,7 +23,7 @@ object NotificationUtils {
 
         if (Build.VERSION.SDK_INT >= 26)
             nm.createNotificationChannel(NotificationChannel(CHANNEL_CERTIFICATES,
-                    context.getString(R.string.certificate_notification_connection_security), NotificationManager.IMPORTANCE_HIGH))
+                    context.getString(R.string.certificate_notification_connection_security), NotificationManager.IMPORTANCE_DEFAULT))
 
         return NotificationManagerCompat.from(context)
     }

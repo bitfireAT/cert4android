@@ -72,7 +72,7 @@ class CustomCertService: Service() {
         try {
             FileInputStream(keyStoreFile).use { trustedKeyStore.load(it, null) }
         } catch(e: Exception) {
-            Constants.log.log(Level.INFO, "No persistent key store (yet), creating in-memory key store", e)
+            Constants.log.log(Level.INFO, "No persistent key store (yet), creating in-memory key store. This is not an error!", e)
             try {
                 trustedKeyStore.load(null, null)
             } catch(e: Exception) {
@@ -225,7 +225,6 @@ class CustomCertService: Service() {
                                 .setContentText(this@CustomCertService.getString(R.string.certificate_notification_user_interaction))
                                 .setSubText(cert.subjectDN.name)
                                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                                .setPriority(NotificationCompat.PRIORITY_HIGH)
                                 .setContentIntent(PendingIntent.getActivity(this@CustomCertService, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                                 .setDeleteIntent(PendingIntent.getService(this@CustomCertService, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                                 .build()
