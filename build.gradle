@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = '1.2.31'
+    ext.kotlin_version = '1.2.40'
     ext.dokka_version = '0.9.16'
 
     repositories {
@@ -9,7 +9,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.1'
+        classpath 'com.android.tools.build:gradle:3.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
     }
@@ -34,7 +34,7 @@ android {
     }
 
     lintOptions {
-        disable "ExtraTranslation","MissingTranslation"
+        disable 'MissingTranslation', 'ExtraTranslation'	// translations from Transifex are not always up to date
         disable "OnClick"     // doesn't recognize Kotlin onClick methods
     }
 
@@ -49,8 +49,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:27.1.1'
     compile 'com.android.support:cardview-v7:27.1.1'
 
-    androidTestCompile 'com.android.support.test:runner:1.0.1'
-    androidTestCompile 'com.android.support.test:rules:1.0.1'
+    androidTestCompile 'com.android.support.test:runner:1.0.2'
+    androidTestCompile 'com.android.support.test:rules:1.0.2'
 
     testCompile 'junit:junit:4.12'
 }
