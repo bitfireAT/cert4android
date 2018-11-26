@@ -11,9 +11,8 @@ package at.bitfire.cert4android
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import android.support.test.InstrumentationRegistry.getContext
-import android.support.test.InstrumentationRegistry.getTargetContext
-import android.support.test.rule.ServiceTestRule
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import androidx.test.rule.ServiceTestRule
 import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assume.assumeNotNull
@@ -70,12 +69,13 @@ class CustomCertManagerTest {
         val binder = bindService(CustomCertService::class.java)
         assertNotNull(binder)
 
-        CustomCertManager.resetCertificates(getContext())
+        val context = getInstrumentation().context
+        CustomCertManager.resetCertificates(context)
 
-        certManager = CustomCertManager(getContext(), false)
+        certManager = CustomCertManager(context, false)
         assertNotNull(certManager)
 
-        paranoidCertManager = CustomCertManager(getContext(), false, false)
+        paranoidCertManager = CustomCertManager(context, false, false)
         assertNotNull(paranoidCertManager)
     }
 
@@ -114,7 +114,7 @@ class CustomCertManagerTest {
 
         // remove certificate and check again
         // should now be rejected for the whole session, i.e. no timeout anymore
-        val intent = Intent(getContext(), CustomCertService::class.java)
+        val intent = Intent(getInstrumentation().context, CustomCertService::class.java)
         intent.action = CustomCertService.CMD_CERTIFICATION_DECISION
         intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts!!.first().encoded)
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, false)
@@ -124,7 +124,7 @@ class CustomCertManagerTest {
 
     private fun addCustomCertificate() {
         // add certificate and check again
-        val intent = Intent(getContext(), CustomCertService::class.java)
+        val intent = Intent(getInstrumentation().context, CustomCertService::class.java)
         intent.action = CustomCertService.CMD_CERTIFICATION_DECISION
         intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts!!.first().encoded)
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, true)
@@ -133,10 +133,10 @@ class CustomCertManagerTest {
 
 
     private fun bindService(clazz: Class<out Service>): IBinder {
-        var binder = serviceTestRule.bindService(Intent(getTargetContext(), clazz))
+        var binder = serviceTestRule.bindService(Intent(getInstrumentation().targetContext, clazz))
         var it = 0
         while (binder == null && it++ <100) {
-            binder = serviceTestRule.bindService(Intent(getTargetContext(), clazz))
+            binder = serviceTestRule.bindService(Intent(getInstrumentation().targetContext, clazz))
             System.err.println("Waiting for ServiceTestRule.bindService")
             Thread.sleep(50)
         }

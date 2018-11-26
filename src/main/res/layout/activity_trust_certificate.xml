@@ -18,7 +18,7 @@
             android:text="@string/trust_certificate_unknown_certificate_found"
             android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-        <android.support.v7.widget.CardView
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardElevation="8dp">
@@ -97,7 +97,7 @@
                     android:layout_marginBottom="8dp"
                     android:text="@string/trust_certificate_fingerprint_verified"/>
 
-                <android.support.v7.widget.ButtonBarLayout
+                <androidx.appcompat.widget.ButtonBarLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
@@ -118,11 +118,11 @@
                         android:text="@string/trust_certificate_reject"
                         android:onClick="rejectCertificate"/>
 
-                </android.support.v7.widget.ButtonBarLayout>
+                </androidx.appcompat.widget.ButtonBarLayout>
 
             </LinearLayout>
 
-        </android.support.v7.widget.CardView>
+        </androidx.cardview.widget.CardView>
 
         <TextView
             android:layout_width="match_parent"
