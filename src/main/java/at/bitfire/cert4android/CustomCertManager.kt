@@ -62,7 +62,7 @@ class CustomCertManager @JvmOverloads constructor(
     }
 
     var service: ICustomCertService? = null
-    private var serviceConnection: ServiceConnection?
+    private var serviceConn: ServiceConnection? = null
     private var serviceLock = Object()
 
     /** system-default trust store */
@@ -75,7 +75,7 @@ class CustomCertManager @JvmOverloads constructor(
 
 
     init {
-        serviceConnection = object: ServiceConnection {
+        val newServiceConn = object: ServiceConnection {
             override fun onServiceConnected(className: ComponentName, binder: IBinder) {
                 Constants.log.fine("Connected to service")
                 synchronized(serviceLock) {
@@ -96,7 +96,9 @@ class CustomCertManager @JvmOverloads constructor(
             throw IllegalStateException("must not be run on main thread")
 
         Constants.log.fine("Binding to service")
-        if (context.bindService(Intent(context, CustomCertService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)) {
+        if (context.bindService(Intent(context, CustomCertService::class.java), newServiceConn, Context.BIND_AUTO_CREATE)) {
+            serviceConn = newServiceConn
+
             Constants.log.fine("Waiting for service to be bound")
             synchronized(serviceLock) {
                 while (service == null)
@@ -110,10 +112,10 @@ class CustomCertManager @JvmOverloads constructor(
     }
 
     override fun close() {
-        serviceConnection?.let {
+        serviceConn?.let {
             try {
                 context.unbindService(it)
-                serviceConnection = null
+                serviceConn = null
             } catch (e: Exception) {
                 Constants.log.log(Level.WARNING, "Couldn't unbind CustomCertService", e)
             }
