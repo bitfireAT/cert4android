@@ -4,6 +4,8 @@
     <string name="certificate_notification_connection_security">Безбедност везе</string>
     <string name="certificate_notification_user_interaction">Прегледајте сертификат</string>
 
+    <string name="service_rejected_temporarily">Сертификат привремено одбијен</string>
+
     <string name="trust_certificate_unknown_certificate_found">серт-за-Андроид је наишао на непознат сертификат. Желите ли да се поуздате у њега?</string>
     <string name="trust_certificate_x509_certificate_details">Детаљи X509 сертификата</string>
     <string name="trust_certificate_issued_for">Издат за</string>
