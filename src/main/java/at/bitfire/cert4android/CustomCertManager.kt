@@ -34,6 +34,7 @@ import javax.net.ssl.X509TrustManager
  * @param interactive true: users will be notified in case of unknown certificates;
  *                    false: unknown certificates will be rejected (only uses custom certificate key store)
  * @param trustSystemCerts whether system certificates will be trusted
+ * @param appInForeground  Whether to launch [TrustCertificateActivity] directly. The notification will always be shown.
  *
  * @constructor Creates a new instance, using a certain [CustomCertService] messenger (for testing).
  * Must not be run from the main thread because this constructor may request binding to [CustomCertService].
@@ -45,7 +46,10 @@ import javax.net.ssl.X509TrustManager
 class CustomCertManager @JvmOverloads constructor(
         val context: Context,
         val interactive: Boolean = true,
-        trustSystemCerts: Boolean = true
+        trustSystemCerts: Boolean = true,
+
+        @Volatile
+        var appInForeground: Boolean = false
 ): X509TrustManager, Closeable {
 
     companion object {
@@ -68,10 +72,6 @@ class CustomCertManager @JvmOverloads constructor(
     /** system-default trust store */
     private val systemTrustManager: X509TrustManager? =
             if (trustSystemCerts) CertUtils.getTrustManager(null) else null
-
-
-    /** Whether to launch [TrustCertificateActivity] directly. The notification will always be shown. */
-    var appInForeground = false
 
 
     init {
