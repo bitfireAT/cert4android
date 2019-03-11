@@ -172,7 +172,7 @@ class CustomCertService: Service() {
 
     // bound service
 
-    val binder = object: ICustomCertService.Stub() {
+    private val binder = object: ICustomCertService.Stub() {
 
         override fun checkTrusted(raw: ByteArray, interactive: Boolean, foreground: Boolean, callback: IOnCertificateDecision) {
             val cert: X509Certificate? = try {
@@ -246,11 +246,7 @@ class CustomCertService: Service() {
 
         override fun abortCheck(callback: IOnCertificateDecision) {
             for ((cert, list) in pendingDecisions) {
-                val it = list.listIterator()
-                while (it.hasNext())
-                    if (it.next() == callback)
-                        it.remove()
-
+                list.removeAll { it == callback }
                 if (list.isEmpty())
                     pendingDecisions -= cert
             }
