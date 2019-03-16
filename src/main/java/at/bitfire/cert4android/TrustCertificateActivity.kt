@@ -11,83 +11,47 @@ package at.bitfire.cert4android
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProviders
+import at.bitfire.cert4android.databinding.ActivityTrustCertificateBinding
 import java.io.ByteArrayInputStream
 import java.security.MessageDigest
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
 import java.security.cert.X509Certificate
+import java.security.spec.MGF1ParameterSpec.SHA1
+import java.security.spec.MGF1ParameterSpec.SHA256
 import java.text.DateFormat
 import java.util.*
 import java.util.logging.Level
+import kotlin.concurrent.thread
 
 class TrustCertificateActivity: AppCompatActivity() {
 
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
-
-        val certFactory = CertificateFactory.getInstance("X.509")!!
     }
 
+    private lateinit var model: Model
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_trust_certificate)
-        showCertificate()
+        model = ViewModelProviders.of(this).get(Model::class.java)
+        model.processIntent(intent)
+
+        val binding = DataBindingUtil.setContentView<ActivityTrustCertificateBinding>(this, R.layout.activity_trust_certificate)
+        binding.lifecycleOwner = this
+        binding.model = model
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        this.intent = intent
-        showCertificate()
+        model.processIntent(intent)
     }
-
-    private fun showCertificate() {
-        val raw = intent.getByteArrayExtra(EXTRA_CERTIFICATE)
-        (certFactory.generateCertificate(ByteArrayInputStream(raw)) as X509Certificate?)?.let { cert ->
-            val subject: String
-            try {
-                subject = if (cert.issuerAlternativeNames != null) {
-                    val sb = StringBuilder()
-                    for (altName in cert.subjectAlternativeNames.orEmpty()) {
-                        val name = altName[1]
-                        if (name is String)
-                            sb.append("[").append(altName[0]).append("]").append(name).append(" ")
-                    }
-                    sb.toString()
-                } else
-                    cert.subjectDN.name
-
-                var tv = findViewById<TextView>(R.id.issuedFor)
-                tv.text = subject
-
-                tv = findViewById(R.id.issuedBy)
-                tv.text = cert.issuerDN.toString()
-
-                val formatter = DateFormat.getDateInstance(DateFormat.LONG)
-                tv = findViewById(R.id.validity_period)
-                tv.text = getString(R.string.trust_certificate_validity_period_value,
-                        formatter.format(cert.notBefore),
-                        formatter.format(cert.notAfter))
-
-                tv = findViewById(R.id.fingerprint_sha1)
-                tv.text = fingerprint(cert, "SHA-1")
-                tv = findViewById(R.id.fingerprint_sha256)
-                tv.text = fingerprint(cert, "SHA-256")
-            } catch(e: CertificateParsingException) {
-                Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
-            }
-        }
-
-        val btnAccept = findViewById<Button>(R.id.accept)
-        val cb = findViewById<CheckBox>(R.id.fingerprint_ok)
-        cb.setOnCheckedChangeListener { _, state -> btnAccept.isEnabled = state }
-    }
-
 
     fun acceptCertificate(view: View) {
         sendDecision(true)
@@ -110,17 +74,70 @@ class TrustCertificateActivity: AppCompatActivity() {
     }
 
 
-    private fun fingerprint(cert: X509Certificate, algorithm: String) =
-            try {
-                val md = MessageDigest.getInstance(algorithm)
-                "$algorithm: ${hexString(md.digest(cert.encoded))}"
-            } catch(e: Exception) {
-                e.message ?: "Couldn't create message digest"
-            }
+    class Model: ViewModel() {
 
-    private fun hexString(data: ByteArray): String {
-        val str = data.mapTo(LinkedList()) { String.format("%02x", it) }
-        return str.joinToString(":")
+        companion object {
+            val certFactory = CertificateFactory.getInstance("X.509")!!
+        }
+
+        val issuedFor = MutableLiveData<String>()
+        val issuedBy = MutableLiveData<String>()
+
+        val validFrom = MutableLiveData<String>()
+        val validTo = MutableLiveData<String>()
+
+        val sha1 = MutableLiveData<String>()
+        val sha256 = MutableLiveData<String>()
+
+        val verifiedByUser = MutableLiveData<Boolean>()
+
+        fun processIntent(intent: Intent?) {
+            intent?.getByteArrayExtra(EXTRA_CERTIFICATE)?.let { raw ->
+                thread {
+                    val cert = certFactory.generateCertificate(ByteArrayInputStream(raw)) as? X509Certificate ?: return@thread
+
+                    try {
+                        val subject = if (cert.issuerAlternativeNames != null) {
+                            val sb = StringBuilder()
+                            for (altName in cert.subjectAlternativeNames.orEmpty()) {
+                                val name = altName[1]
+                                if (name is String)
+                                    sb.append("[").append(altName[0]).append("]").append(name).append(" ")
+                            }
+                            sb.toString()
+                        } else
+                            cert.subjectDN.name
+                        issuedFor.postValue(subject)
+
+                        issuedBy.postValue(cert.issuerDN.toString())
+
+                        val formatter = DateFormat.getDateInstance(DateFormat.LONG)
+                        validFrom.postValue(formatter.format(cert.notBefore))
+                        validTo.postValue(formatter.format(cert.notAfter))
+
+                        sha1.postValue(fingerprint(cert, SHA1.digestAlgorithm))
+                        sha256.postValue(fingerprint(cert, SHA256.digestAlgorithm))
+
+                    } catch(e: CertificateParsingException) {
+                        Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
+                    }
+                }
+            }
+        }
+
+        fun fingerprint(cert: X509Certificate, algorithm: String) =
+                try {
+                    val md = MessageDigest.getInstance(algorithm)
+                    "$algorithm: ${hexString(md.digest(cert.encoded))}"
+                } catch(e: Exception) {
+                    e.message ?: "Couldn't create message digest"
+                }
+
+        fun hexString(data: ByteArray): String {
+            val str = data.mapTo(LinkedList()) { String.format("%02x", it) }
+            return str.joinToString(":")
+        }
+
     }
 
 }
