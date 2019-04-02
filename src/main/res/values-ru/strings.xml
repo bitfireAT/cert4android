@@ -7,7 +7,7 @@
     <string name="service_rejected_temporarily">Сертификат временно отклонен</string>
 
     <string name="trust_certificate_unknown_certificate_found">cert4android обнаружил неизвестный сертификат. Вы хотите доверять ему?</string>
-    <string name="trust_certificate_x509_certificate_details">Сведения о сертификате X509</string>
+    <string name="trust_certificate_x509_certificate_details">Данные сертификата X509</string>
     <string name="trust_certificate_issued_for">Выдан для</string>
     <string name="trust_certificate_issued_by">Кем выдан</string>
     <string name="trust_certificate_validity_period">Срок действия</string>
