@@ -12,23 +12,27 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import org.conscrypt.Conscrypt
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.security.KeyStore
 import java.security.KeyStoreException
+import java.security.Security
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
 import java.util.logging.Level
+import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
 /**
  * The service which manages the certificates. Communications with
- * the [CustomCertManager]s over IPC.
+ * the [CustomCertManager]s over IPC. Initializes Conscrypt when class is loaded.
  *
  * This services is both a started and a bound service.
  */
@@ -51,6 +55,18 @@ class CustomCertService: Service() {
 
         const val KEYSTORE_DIR = "KeyStore"
         const val KEYSTORE_NAME = "KeyStore.bks"
+
+        init {
+            // initialize Conscrypt
+            Security.insertProviderAt(Conscrypt.newProvider(), 1)
+
+            val version = Conscrypt.version()
+            Log.i(Constants.TAG, "Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
+            val engine = SSLContext.getDefault().createSSLEngine()
+            Log.i(Constants.TAG, "Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
+            Log.i(Constants.TAG, "Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
+        }
+
     }
 
     private lateinit var keyStoreFile: File
