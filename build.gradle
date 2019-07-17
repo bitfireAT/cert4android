@@ -29,11 +29,16 @@ apply plugin: 'org.jetbrains.dokka-android'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '29.0.1'
 
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 28
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     dataBinding.enabled = true
@@ -49,7 +54,7 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}"
 
     implementation 'androidx.appcompat:appcompat:1.1.0-rc01'
     implementation 'androidx.cardview:cardview:1.0.0'
@@ -62,7 +67,7 @@ dependencies {
     androidTestImplementation 'androidx.test:rules:1.2.0'
     androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.12.3'
     androidTestImplementation 'commons-io:commons-io:2.6'
-    androidTestImplementation 'org.apache.commons:commons-lang3:3.8.1'
+    androidTestImplementation 'org.apache.commons:commons-lang3:3.9'
 
     testImplementation 'junit:junit:4.12'
 }
