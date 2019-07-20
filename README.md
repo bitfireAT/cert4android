@@ -4,13 +4,16 @@
 
 # cert4android
 
-cert4android is an Android library for managing custom certificates which has
-been developed for [DAVdroid](https://davdroid.bitfire.at). Feel free to use
+cert4android is a library for Android to manage custom certificates which has
+been developed for [DAVx⁵](https://www.davx5.com). Feel free to use
 it in your own open-source app.
+
+_This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
+by Google LLC. Android is a trademark of Google LLC._
 
 Generated KDoc: https://bitfireat.gitlab.io/cert4android/dokka/cert4android/
 
-Discussion: https://forums.bitfire.at/category/7/transport-level-security
+Discussion: https://forums.bitfire.at/category/18/libraries
 
 
 # Features
@@ -52,6 +55,17 @@ Example of initialzing an okhttp client:
 You can overwrite resources when you want, just have a look at the `res/strings`
 directory. Especially `certificate_notification_connection_security` and
 `trust_certificate_unknown_certificate_found` should contain your app name.
+
+
+## Contact
+
+```
+bitfire web engineering – Stockmann, Hirner GesnbR
+Florastraße 27
+2540 Bad Vöslau, AUSTRIA
+```
+
+Email: [play@bitfire.at](mailto:play@bitfire.at) (do not use this)
 
 
 # License 
