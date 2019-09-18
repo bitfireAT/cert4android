@@ -25,7 +25,7 @@ class CertUtilsTest {
     fun getTag() {
         val factory = CertificateFactory.getInstance("X.509")
 
-        javaClass.classLoader.getResourceAsStream("davdroid-web.crt").use { stream ->
+        javaClass.classLoader!!.getResourceAsStream("davdroid-web.crt").use { stream ->
             val cert = factory.generateCertificate(stream) as X509Certificate
             assertNotNull(cert)
 
