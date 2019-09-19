@@ -11,7 +11,7 @@
     <string name="trust_certificate_issued_for">Vydaný pre</string>
     <string name="trust_certificate_issued_by">Vydaný</string>
     <string name="trust_certificate_validity_period">Obdobie platnosti</string>
-    <string name="trust_certificate_validity_period_value">%1$s – %2$s (nebude sa vynocovať)</string>
+    <string name="trust_certificate_validity_period_value">%1$s – %2$s (nebude sa vynucovať)</string>
     <string name="trust_certificate_fingerprints">Odtlačky</string>
     <string name="trust_certificate_fingerprint_verified">Manuálne som skontroloval celý odtlačok.</string>
     <string name="trust_certificate_accept">Prijať</string>
