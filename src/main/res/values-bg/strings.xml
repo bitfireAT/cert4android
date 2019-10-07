@@ -14,4 +14,6 @@
     <string name="trust_certificate_validity_period_value">%1$s – %2$s (няма да се прилага)</string>
     <string name="trust_certificate_fingerprints">Пръстови отпечатъци</string>
     <string name="trust_certificate_fingerprint_verified">Проверих целия пръстов отпечатък</string>
+    <string name="trust_certificate_accept">Приемам</string>
+    <string name="trust_certificate_reject">Отхвърлям</string>
     </resources>
