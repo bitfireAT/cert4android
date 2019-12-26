@@ -1,8 +1,8 @@
 
 buildscript {
     ext.versions = [
-        kotlin: '1.3.50',
-        dokka: '0.9.18',
+        kotlin: '1.3.61',
+        dokka: '0.10.0',
         conscrypt: '2.2.1'
     ]
 
@@ -12,9 +12,9 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:3.5.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${versions.dokka}"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
     }
 }
 
@@ -25,11 +25,11 @@ repositories {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'org.jetbrains.dokka-android'
+apply plugin: 'org.jetbrains.dokka'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion '29.0.1'
+    buildToolsVersion '29.0.2'
 
     defaultConfig {
         minSdkVersion 14
@@ -50,6 +50,14 @@ android {
 
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    dokka.configuration {
+        sourceLink {
+            url = "https://gitlab.com/bitfireAT/cert4android/tree/master/"
+            lineSuffix = "#L"
+        }
+        jdkVersion = 7
     }
 }
 

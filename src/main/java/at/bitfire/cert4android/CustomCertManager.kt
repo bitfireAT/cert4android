@@ -91,9 +91,10 @@ class CustomCertManager @JvmOverloads constructor(
             }
         }
 
-        if (Looper.myLooper() == Looper.getMainLooper())
+        check(Looper.myLooper() != Looper.getMainLooper()) {
             // service is actually created after bindService() by code running in looper, so this would block
-            throw IllegalStateException("must not be run on main thread")
+            "must not be run on main thread"
+        }
 
         Constants.log.fine("Binding to service")
         if (context.bindService(Intent(context, CustomCertService::class.java), newServiceConn, Context.BIND_AUTO_CREATE)) {

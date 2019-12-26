@@ -1,4 +1,4 @@
-image: registry.gitlab.com/bitfireat/davx5-ose:latest
+image: registry.gitlab.com/bitfireat/docker-android-emulator:latest
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle; chmod +x gradlew
@@ -8,10 +8,11 @@ cache:
      - .gradle/
 
 test:
+  tags:
+    - privileged
   script:
-    - (cd /sdk/emulator; ./emulator @test -no-audio -no-window & wait-for-emulator.sh)
+    - start-emulator.sh
     - ./gradlew check connectedCheck
-    - ./gradlew check
   artifacts:
     paths:
       - build/outputs/lint-results-debug.html
