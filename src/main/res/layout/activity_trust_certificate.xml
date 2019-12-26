@@ -25,21 +25,22 @@
                 android:text="@string/trust_certificate_unknown_certificate_found"
                 android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardElevation="8dp">
+                style="@style/Widget.MaterialComponents.CardView">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_margin="8dp">
+                    android:layout_margin="8dp"
+                    android:padding="8dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        style="@style/TextView.Heading"
+                        style="@style/TextAppearance.MaterialComponents.Headline5"
                         android:layout_marginBottom="16dp"
                         android:text="@string/trust_certificate_x509_certificate_details"/>
 
@@ -106,30 +107,32 @@
                         android:checked="@={model.verifiedByUser}"
                         android:text="@string/trust_certificate_fingerprint_verified"/>
 
-                    <androidx.appcompat.widget.ButtonBarLayout
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
                         <Button
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                            android:layout_marginRight="16dp"
+                            style="@style/Widget.MaterialComponents.Button"
                             android:text="@string/trust_certificate_accept"
                             android:onClick="acceptCertificate"
-                            android:enabled="@{model.verifiedByUser}"/>
+                            android:enabled="@{model.verifiedByUser}" />
 
                         <Button
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            style="@style/Widget.AppCompat.Button.Borderless"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
                             android:text="@string/trust_certificate_reject"
                             android:onClick="rejectCertificate"/>
 
-                    </androidx.appcompat.widget.ButtonBarLayout>
+                    </LinearLayout>
 
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="match_parent"
