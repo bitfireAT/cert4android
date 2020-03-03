@@ -234,7 +234,7 @@ class CustomCertService: Service() {
                             putExtra(EXTRA_TRUSTED, false)
                         }
 
-                        val id = Arrays.hashCode(raw)
+                        val id = raw.contentHashCode()
                         val notify = NotificationCompat.Builder(this@CustomCertService, NotificationUtils.CHANNEL_CERTIFICATES)
                                 .setSmallIcon(R.drawable.ic_lock_open_white)
                                 .setContentTitle(this@CustomCertService.getString(R.string.certificate_notification_connection_security))

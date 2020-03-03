@@ -125,7 +125,7 @@ class TrustCertificateActivity: AppCompatActivity() {
             }
         }
 
-        fun fingerprint(cert: X509Certificate, algorithm: String) =
+        private fun fingerprint(cert: X509Certificate, algorithm: String) =
                 try {
                     val md = MessageDigest.getInstance(algorithm)
                     "$algorithm: ${hexString(md.digest(cert.encoded))}"
@@ -133,7 +133,7 @@ class TrustCertificateActivity: AppCompatActivity() {
                     e.message ?: "Couldn't create message digest"
                 }
 
-        fun hexString(data: ByteArray): String {
+        private fun hexString(data: ByteArray): String {
             val str = data.mapTo(LinkedList()) { String.format("%02x", it) }
             return str.joinToString(":")
         }
