@@ -10,19 +10,20 @@
 
     <ScrollView
         android:layout_height="match_parent"
-        android:layout_width="match_parent"
-        android:layout_margin="@dimen/activity_margin">
+        android:layout_width="match_parent">
 
-        <LinearLayout android:orientation="vertical"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/activity_margin">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:text="@string/trust_certificate_unknown_certificate_found"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                style="@style/TextAppearance.MaterialComponents.Body1"
+                android:text="@string/trust_certificate_unknown_certificate_found" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -46,48 +47,52 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textStyle="bold"
+                        style="@style/TextAppearance.MaterialComponents.Overline"
                         android:text="@string/trust_certificate_issued_for"/>
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
+                        style="@style/TextAppearance.MaterialComponents.Body1"
                         android:text="@{model.issuedFor}"
                         tools:text="CN=example.com"/>
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textStyle="bold"
+                        style="@style/TextAppearance.MaterialComponents.Overline"
                         android:text="@string/trust_certificate_issued_by"/>
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
+                        style="@style/TextAppearance.MaterialComponents.Body1"
                         android:text="@{model.issuedBy}"
                         tools:text="CN=example.com"/>
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textStyle="bold"
+                        style="@style/TextAppearance.MaterialComponents.Overline"
                         android:text="@string/trust_certificate_validity_period"/>
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
+                        style="@style/TextAppearance.MaterialComponents.Body1"
                         android:text="@{@string/trust_certificate_validity_period_value(model.validFrom, model.validTo)}"
                         tools:text="1.1.1000 – 2.2.2000"/>
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textStyle="bold"
+                        style="@style/TextAppearance.MaterialComponents.Overline"
                         android:text="@string/trust_certificate_fingerprints"/>
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
+                        style="@style/TextAppearance.MaterialComponents.Body1"
                         android:text="@{model.sha1}"
                         tools:text="SHA-1: abcdef"/>
                     <TextView
@@ -95,6 +100,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:layout_marginBottom="16dp"
+                        style="@style/TextAppearance.MaterialComponents.Body1"
                         android:text="@{model.sha256}"
                         tools:text="SHA-256: abcdef"/>
 
@@ -115,7 +121,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginRight="16dp"
-                            style="@style/Widget.MaterialComponents.Button"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
                             android:text="@string/trust_certificate_accept"
                             android:onClick="acceptCertificate"
                             android:enabled="@{model.verifiedByUser}" />
@@ -137,6 +143,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                style="@style/TextAppearance.MaterialComponents.Body2"
                 android:text="@string/trust_certificate_reset_info"/>
 
         </LinearLayout>

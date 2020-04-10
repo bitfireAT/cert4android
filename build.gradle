@@ -78,5 +78,5 @@ dependencies {
     androidTestImplementation 'commons-io:commons-io:2.6'
     androidTestImplementation 'org.apache.commons:commons-lang3:3.9'
 
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
 }
