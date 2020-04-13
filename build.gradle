@@ -74,8 +74,9 @@ dependencies {
 
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test:rules:1.2.0'
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.12.10'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.5.0'
     androidTestImplementation 'commons-io:commons-io:2.6'
+    //noinspection GradleDependency - commons-lang 3.10+ needs Java 8/Android 7
     androidTestImplementation 'org.apache.commons:commons-lang3:3.9'
 
     testImplementation 'junit:junit:4.13'

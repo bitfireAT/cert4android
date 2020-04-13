@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import at.bitfire.cert4android.databinding.ActivityTrustCertificateBinding
 import java.io.ByteArrayInputStream
 import java.security.MessageDigest
@@ -40,7 +40,7 @@ class TrustCertificateActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        model = ViewModelProviders.of(this).get(Model::class.java)
+        model = ViewModelProvider(this).get(Model::class.java)
         model.processIntent(intent)
 
         val binding = DataBindingUtil.setContentView<ActivityTrustCertificateBinding>(this, R.layout.activity_trust_certificate)
