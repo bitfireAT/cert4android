@@ -86,9 +86,12 @@ class CustomCertService: Service() {
         // initialize trustedKeyStore
         keyStoreFile = File(getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
         try {
-            FileInputStream(keyStoreFile).use { trustedKeyStore.load(it, null) }
+            FileInputStream(keyStoreFile).use {
+                trustedKeyStore.load(it, null)
+                Constants.log.fine("Loaded ${trustedKeyStore.size()} trusted certificate(s)")
+            }
         } catch(e: Exception) {
-            Constants.log.log(Level.INFO, "No persistent key store (yet), creating in-memory key store. This is not an error!", e)
+            Constants.log.log(Level.INFO, "No key store for trusted certifcates (yet); creating in-memory key store.")
             try {
                 trustedKeyStore.load(null, null)
             } catch(e: Exception) {

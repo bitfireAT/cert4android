@@ -97,16 +97,15 @@ class TrustCertificateActivity: AppCompatActivity() {
                     val cert = certFactory.generateCertificate(ByteArrayInputStream(raw)) as? X509Certificate ?: return@thread
 
                     try {
-                        val subject = if (cert.issuerAlternativeNames != null) {
+                        val subject = cert.subjectAlternativeNames?.let { altNames ->
                             val sb = StringBuilder()
-                            for (altName in cert.subjectAlternativeNames.orEmpty()) {
+                            for (altName in altNames) {
                                 val name = altName[1]
                                 if (name is String)
                                     sb.append("[").append(altName[0]).append("]").append(name).append(" ")
                             }
                             sb.toString()
-                        } else
-                            cert.subjectDN.name
+                        } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
                         issuedFor.postValue(subject)
 
                         issuedBy.postValue(cert.issuerDN.toString())
