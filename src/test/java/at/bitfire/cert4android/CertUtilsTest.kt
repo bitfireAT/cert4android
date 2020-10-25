@@ -13,20 +13,31 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.security.spec.MGF1ParameterSpec
 
 class CertUtilsTest {
 
+    val certFactory = CertificateFactory.getInstance("X.509")
+
+
     @Test
-    fun getTrustManagerSystem() {
+    fun testFingerprint() {
+        javaClass.classLoader!!.getResourceAsStream("davdroid-web.crt").use { stream ->
+            val cert = certFactory.generateCertificate(stream) as X509Certificate
+            assertEquals("8D:E5:74:B2:AA:3E:5C:EE:62:84:4A:3B:78:71:B6:C3", CertUtils.fingerprint(cert, "MD5"))
+            assertEquals("6C:83:A0:12:1A:F5:55:BF:C2:BC:23:DA:78:E4:5F:88:6E:01:0A:BC", CertUtils.fingerprint(cert, MGF1ParameterSpec.SHA1.digestAlgorithm))
+        }
+    }
+
+    @Test
+    fun testGetTrustManagerSystem() {
         assertNotNull(CertUtils.getTrustManager(null))
     }
 
     @Test
-    fun getTag() {
-        val factory = CertificateFactory.getInstance("X.509")
-
+    fun testGetTag() {
         javaClass.classLoader!!.getResourceAsStream("davdroid-web.crt").use { stream ->
-            val cert = factory.generateCertificate(stream) as X509Certificate
+            val cert = certFactory.generateCertificate(stream) as X509Certificate
             assertNotNull(cert)
 
             assertEquals("276126a80783ee16b84811e1e96e977a" +
@@ -46,6 +57,12 @@ class CertUtilsTest {
                     "17865e1cac3c4a1fb9780fafd1c8763e" +
                     "1b4854d63067b91ece029833e9506b75", CertUtils.getTag(cert))
         }
+    }
+
+    @Test
+    fun testHexString() {
+        assertEquals("", CertUtils.hexString(ByteArray(0)))
+        assertEquals("00:01:02:03:04:05:06:07:08:09:0A:0B:0C:0D:0E:0F:10", CertUtils.hexString(ByteArray(17) { i -> i.toByte() }))
     }
 
 }

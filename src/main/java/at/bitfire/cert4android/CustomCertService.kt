@@ -14,6 +14,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.MainThread
 import androidx.core.app.NotificationCompat
 import org.conscrypt.Conscrypt
 import java.io.ByteArrayInputStream
@@ -118,6 +119,7 @@ class CustomCertService: Service() {
 
     // started service
 
+    @MainThread
     override fun onStartCommand(intent: Intent?, flags: Int, id: Int): Int {
         Constants.log.fine("Received command: $intent")
 
@@ -156,7 +158,11 @@ class CustomCertService: Service() {
             untrustedCerts.remove(cert)
 
             try {
-                trustedKeyStore.setCertificateEntry(cert.subjectDN.name, cert)
+                // This is the key which is used to store the certificate. If the CN is used,
+                // there can be only one certificate per CN (which is not always desired),
+                // so we use the MD5 fingerprint.
+                val certKey = CertUtils.fingerprint(cert, "MD5")
+                trustedKeyStore.setCertificateEntry(certKey, cert)
                 saveKeyStore()
             } catch(e: KeyStoreException) {
                 Constants.log.log(Level.SEVERE, "Couldn't add certificate into key store", e)
