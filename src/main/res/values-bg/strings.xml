@@ -16,4 +16,6 @@
     <string name="trust_certificate_fingerprint_verified">Проверих целия пръстов отпечатък</string>
     <string name="trust_certificate_accept">Приемам</string>
     <string name="trust_certificate_reject">Отхвърлям</string>
-    </resources>
+    <string name="trust_certificate_reset_info">Можеш да нулираш всички допълнително вкарани сертификати в настройките на приложението.</string>
+
+</resources>
