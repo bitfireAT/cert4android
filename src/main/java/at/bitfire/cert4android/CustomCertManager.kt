@@ -91,10 +91,9 @@ class CustomCertManager @JvmOverloads constructor(
             }
         }
 
-        check(Looper.myLooper() != Looper.getMainLooper()) {
-            // service is actually created after bindService() by code running in looper, so this would block
-            "must not be run on main thread"
-        }
+        if (Looper.myLooper() == Looper.getMainLooper())
+            // service is created after bindService() by code running in looper, so this would block
+            throw IllegalStateException("Must not be run in main thread")
 
         Constants.log.fine("Binding to service")
         if (context.bindService(Intent(context, CustomCertService::class.java), newServiceConn, Context.BIND_AUTO_CREATE)) {
@@ -116,10 +115,10 @@ class CustomCertManager @JvmOverloads constructor(
         serviceConn?.let {
             try {
                 context.unbindService(it)
-                serviceConn = null
             } catch (e: Exception) {
-                Constants.log.log(Level.WARNING, "Couldn't unbind CustomCertService", e)
+                Constants.log.log(Level.FINE, "Couldn't unbind CustomCertService", e)
             }
+            serviceConn = null
         }
     }
 
