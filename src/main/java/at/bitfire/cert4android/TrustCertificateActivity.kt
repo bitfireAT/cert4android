@@ -10,7 +10,6 @@ package at.bitfire.cert4android
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
@@ -44,21 +43,20 @@ class TrustCertificateActivity: AppCompatActivity() {
         val binding = DataBindingUtil.setContentView<ActivityTrustCertificateBinding>(this, R.layout.activity_trust_certificate)
         binding.lifecycleOwner = this
         binding.model = model
+
+        binding.acceptCertificate.setOnClickListener {
+            sendDecision(true)
+            finish()
+        }
+        binding.rejectCertificate.setOnClickListener {
+            sendDecision(false)
+            finish()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         model.processIntent(intent)
-    }
-
-    fun acceptCertificate(view: View) {
-        sendDecision(true)
-        finish()
-    }
-
-    fun rejectCertificate(view: View) {
-        sendDecision(false)
-        finish()
     }
 
     private fun sendDecision(trusted: Boolean) {

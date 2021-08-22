@@ -8,6 +8,7 @@
 
 package at.bitfire.cert4android
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -43,6 +44,7 @@ import javax.net.ssl.X509TrustManager
  *
  * @throws IllegalStateException if run from main thread
  */
+@SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
         val context: Context,
         val interactive: Boolean = true,
