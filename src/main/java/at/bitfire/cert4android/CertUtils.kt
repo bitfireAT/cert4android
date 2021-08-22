@@ -49,7 +49,7 @@ object CertUtils {
         for ((idx, b) in data.withIndex()) {
             if (idx != 0)
                 str.append(':')
-            str.append(String.format("%02x", b).toUpperCase())
+            str.append(String.format("%02x", b).uppercase(Locale.ROOT))
         }
         return str.toString()
     }

@@ -11,7 +11,7 @@ it in your own open-source app.
 _This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
 by Google LLC. Android is a trademark of Google LLC._
 
-Generated KDoc: https://bitfireat.gitlab.io/cert4android/dokka/cert4android/
+Generated KDoc: https://bitfireat.gitlab.io/cert4android/dokka/html/
 
 Discussion: https://forums.bitfire.at/category/18/libraries
 

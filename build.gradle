@@ -52,13 +52,13 @@ android {
     }
 
     // TODO currently doesn't work with dokka 1.5.0, but dokka 0.10.1 doesn't work with new gradle
-    dokka.configuration {
+    /*dokka.configuration {
         sourceLink {
             url = "https://gitlab.com/bitfireAT/cert4android/tree/master/"
             lineSuffix = "#L"
         }
         jdkVersion = 7
-    }
+    }*/
 }
 
 dependencies {
