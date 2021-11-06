@@ -1,5 +1,6 @@
 
-[![build status](https://gitlab.com/bitfireAT/cert4android/badges/master/build.svg)](https://gitlab.com/bitfireAT/cert4android/commits/master)
+[![Development tests](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml/badge.svg)](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml)
+[![Documentation](https://img.shields.io/badge/documentation-kdoc-brightgreen)](https://bitfireat.github.io/cert4android/)
 
 
 # cert4android
@@ -11,9 +12,11 @@ it in your own open-source app.
 _This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
 by Google LLC. Android is a trademark of Google LLC._
 
-Generated KDoc: https://bitfireat.gitlab.io/cert4android/dokka/html/
+Generated KDoc: https://bitfireat.github.io/cert4android/
 
-Discussion: https://forums.bitfire.at/category/18/libraries
+For questions, suggestions etc. use [Github discussions](https://github.com/bitfireAT/cert4android/discussions).
+We're happy about contributions! In case of bigger changes, please let us know in the discussions before.
+Then make the changes in your own repository and send a pull request.
 
 
 # Features
@@ -57,20 +60,9 @@ directory. Especially `certificate_notification_connection_security` and
 `trust_certificate_unknown_certificate_found` should contain your app name.
 
 
-## Contact
-
-```
-bitfire web engineering – Stockmann, Hirner GesnbR
-Florastraße 27
-2540 Bad Vöslau, AUSTRIA
-```
-
-Email: [play@bitfire.at](mailto:play@bitfire.at) (do not use this)
-
-
 # License 
 
-Copyright (C) bitfire web engineering (Ricki Hirner, Bernhard Stockmann).
+Copyright (C) Ricki Hirner and [contributors](https://github.com/bitfireAT/cert4android/graphs/contributors).
 
 This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome
 to redistribute it under the conditions of the [GNU GPL v3](LICENSE).
