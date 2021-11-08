@@ -17,7 +17,7 @@ import java.security.spec.MGF1ParameterSpec
 
 class CertUtilsTest {
 
-    val certFactory = CertificateFactory.getInstance("X.509")
+    private val certFactory = CertificateFactory.getInstance("X.509")!!
 
 
     @Test

@@ -37,7 +37,7 @@ class TrustCertificateActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        model = ViewModelProvider(this).get(Model::class.java)
+        model = ViewModelProvider(this)[Model::class.java]
         model.processIntent(intent)
 
         val binding = DataBindingUtil.setContentView<ActivityTrustCertificateBinding>(this, R.layout.activity_trust_certificate)
