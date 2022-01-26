@@ -1,6 +1,6 @@
 buildscript {
     ext.versions = [
-        kotlin: '1.6.0',
+        kotlin: '1.6.10',
         dokka: '1.5.0',
         conscrypt: '2.5.2'
     ]
@@ -11,7 +11,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
     }
@@ -42,10 +42,10 @@ android {
     }
 
     buildFeatures.dataBinding = true
-
-    lintOptions {
-        disable 'MissingTranslation', 'ExtraTranslation'	// translations from Transifex are not always up to date
+    lint {
+        disable 'MissingTranslation', 'ExtraTranslation'
     }
+
 
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
