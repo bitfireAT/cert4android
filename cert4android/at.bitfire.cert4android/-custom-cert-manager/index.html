@@ -1,0 +1,236 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>CustomCertManager</title>
+<link href="../../../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="cert4android::at.bitfire.cert4android/CustomCertManager///PointingToDeclaration//579055962">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">cert4android</a>/<a href="../index.html">at.bitfire.cert4android</a>/<a href="index.html">CustomCertManager</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Custom</span><wbr></wbr><span>Cert</span><wbr></wbr><span>Manager</span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">class <a href="index.html">CustomCertManager</a> <span>@<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-overloads/index.html">JvmOverloads</a>() </span>constructor(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, interactive: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, trustSystemCerts: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, appInForeground: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>) : <a href="https://developer.android.com/reference/kotlin/javax/net/ssl/X509TrustManager.html">X509TrustManager</a>, <a href="https://developer.android.com/reference/kotlin/java/io/Closeable.html">Closeable</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">TrustManager to handle custom certificates. Communicates with <a href="../-custom-cert-service/index.html">CustomCertService</a> to fetch information about custom certificate trustworthiness. The IPC with a service is required when multiple processes, each of them with an own <a href="index.html">CustomCertManager</a>, want to access a synchronized central certificate trust store + UI (for accepting certificates etc.).</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button><button class="section-tab" data-togglable="Parameters">Parameters</button><button class="section-tab" data-togglable="Throws">Throws</button></div>
+            <div class="tabs-section-body">
+              <h2 class="">Parameters</h2>
+              <div data-togglable="Parameters">
+                <div class="platform-hinted WithExtraAttributes" data-platform-hinted="data-platform-hinted" data-togglable="Parameters"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div data-togglable="Parameters"><div class="table" data-togglable="Parameters"><div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">context</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">used to bind to <a href="../-custom-cert-service/index.html">CustomCertService</a></p></div></div></div></div></div><div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">interactive</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">true: users will be notified in case of unknown certificates;     false: unknown certificates will be rejected (only uses custom certificate key store)</p></div></div></div></div></div><div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">trustSystemCerts</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">whether system certificates will be trusted</p></div></div></div></div></div><div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">appInForeground</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Whether to launch <a href="../-trust-certificate-activity/index.html">TrustCertificateActivity</a> directly. The notification will always be shown.</p></div></div></div></div></div></div></div></div></div>
+              </div>
+              <h4 class="">Throws</h4>
+              <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="table"><div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-state-exception/index.html">kotlin.IllegalStateException</a></span></div><div><div class="title"><p class="paragraph">if run from main thread</p></div></div></div></div></div></div></div>
+              <h2 class="tabbedcontent">Constructors</h2>
+              <div class="table" data-togglable="Constructors"><a data-name="-1135431453%2FConstructors%2F579055962" anchor-label="CustomCertManager" id="-1135431453%2FConstructors%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue TabbedContent">
+                    <div class=""><span class="inline-flex"><a href="-custom-cert-manager.html">CustomCertManager</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1135431453%2FConstructors%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-overloads/index.html">JvmOverloads</a>()</div></div>fun <a href="-custom-cert-manager.html">CustomCertManager</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, interactive: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, trustSystemCerts: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, appInForeground: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief ">Creates a new instance, using a certain <a href="../-custom-cert-service/index.html">CustomCertService</a> messenger (for testing).</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Types</h2>
+              <div class="table" data-togglable="Types"><a data-name="1078769061%2FClasslikes%2F579055962" anchor-label="Companion" id="1078769061%2FClasslikes%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-companion/index.html">Companion</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1078769061%2FClasslikes%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">object <a href="-companion/index.html">Companion</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-829475657%2FClasslikes%2F579055962" anchor-label="CustomHostnameVerifier" id="-829475657%2FClasslikes%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-custom-hostname-verifier/index.html">CustomHostnameVerifier</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-829475657%2FClasslikes%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">inner class <a href="-custom-hostname-verifier/index.html">CustomHostnameVerifier</a>(defaultVerifier: <a href="https://developer.android.com/reference/kotlin/javax/net/ssl/HostnameVerifier.html">HostnameVerifier</a>?) : <a href="https://developer.android.com/reference/kotlin/javax/net/ssl/HostnameVerifier.html">HostnameVerifier</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="-83758834%2FFunctions%2F579055962" anchor-label="checkClientTrusted" id="-83758834%2FFunctions%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="check-client-trusted.html">checkClientTrusted</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-83758834%2FFunctions%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">open override fun <a href="check-client-trusted.html">checkClientTrusted</a>(chain: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html">Array</a>&lt;<a href="https://developer.android.com/reference/kotlin/java/security/cert/X509Certificate.html">X509Certificate</a>&gt;?, authType: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>?)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-828112176%2FFunctions%2F579055962" anchor-label="checkServerTrusted" id="-828112176%2FFunctions%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="check-server-trusted.html">checkServerTrusted</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-828112176%2FFunctions%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">open override fun <a href="check-server-trusted.html">checkServerTrusted</a>(chain: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html">Array</a>&lt;<a href="https://developer.android.com/reference/kotlin/java/security/cert/X509Certificate.html">X509Certificate</a>&gt;, authType: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="-828112176%2FFunctions%2F579055962" anchor-label="checkServerTrusted" id="-828112176%2FFunctions%2F579055962" data-filterable-set=":dokkaHtml/release"></a><div class="brief "><a data-name="-828112176%2FFunctions%2F579055962" anchor-label="checkServerTrusted" id="-828112176%2FFunctions%2F579055962" data-filterable-set=":dokkaHtml/release"></a>Checks whether a certificate is trusted.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1774757350%2FFunctions%2F579055962" anchor-label="close" id="1774757350%2FFunctions%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="close.html">close</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1774757350%2FFunctions%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">open override fun <a href="close.html">close</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-493413921%2FFunctions%2F579055962" anchor-label="getAcceptedIssuers" id="-493413921%2FFunctions%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-accepted-issuers.html">getAcceptedIssuers</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-493413921%2FFunctions%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">open override fun <a href="get-accepted-issuers.html">getAcceptedIssuers</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html">Array</a>&lt;<a href="https://developer.android.com/reference/kotlin/java/security/cert/X509Certificate.html">X509Certificate</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-25556796%2FFunctions%2F579055962" anchor-label="hostnameVerifier" id="-25556796%2FFunctions%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="hostname-verifier.html">hostnameVerifier</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-25556796%2FFunctions%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><div class="symbol monospace">fun <a href="hostname-verifier.html">hostnameVerifier</a>(defaultVerifier: <a href="https://developer.android.com/reference/kotlin/javax/net/ssl/HostnameVerifier.html">HostnameVerifier</a>?): <a href="-custom-hostname-verifier/index.html">CustomCertManager.CustomHostnameVerifier</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="-1259198795%2FProperties%2F579055962" anchor-label="appInForeground" id="-1259198795%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="app-in-foreground.html">appInForeground</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1259198795%2FProperties%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><a data-name="-1259198795%2FProperties%2F579055962" anchor-label="appInForeground" id="-1259198795%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-volatile/index.html">Volatile</a>()</div></div>var <a href="app-in-foreground.html">appInForeground</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1259198795%2FProperties%2F579055962" anchor-label="appInForeground" id="-1259198795%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a>Whether to launch <a href="../-trust-certificate-activity/index.html">TrustCertificateActivity</a> directly.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1298650575%2FProperties%2F579055962" anchor-label="context" id="1298650575%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="context.html">context</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1298650575%2FProperties%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><a data-name="1298650575%2FProperties%2F579055962" anchor-label="context" id="1298650575%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a><div class="symbol monospace">val <a href="context.html">context</a>: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1298650575%2FProperties%2F579055962" anchor-label="context" id="1298650575%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a>used to bind to <a href="../-custom-cert-service/index.html">CustomCertService</a></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-891907204%2FProperties%2F579055962" anchor-label="interactive" id="-891907204%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="interactive.html">interactive</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-891907204%2FProperties%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><a data-name="-891907204%2FProperties%2F579055962" anchor-label="interactive" id="-891907204%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a><div class="symbol monospace">val <a href="interactive.html">interactive</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-891907204%2FProperties%2F579055962" anchor-label="interactive" id="-891907204%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a>true: users will be notified in case of unknown certificates;     false: unknown certificates will be rejected (only uses custom certificate key store)</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1216894857%2FProperties%2F579055962" anchor-label="service" id="1216894857%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":dokkaHtml/release" data-filterable-set=":dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="service.html">service</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1216894857%2FProperties%2F579055962"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":dokkaHtml/release"><a data-name="1216894857%2FProperties%2F579055962" anchor-label="service" id="1216894857%2FProperties%2F579055962" data-filterable-set=":dokkaHtml/release"></a><div class="symbol monospace">var <a href="service.html">service</a>: <span data-unresolved-link="/&amp;lt;ERROR CLASS&amp;gt;///PointingToDeclaration/">&lt;ERROR CLASS&gt;</span>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2022 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+
