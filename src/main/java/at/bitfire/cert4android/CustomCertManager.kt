@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.os.Looper
+import org.conscrypt.Conscrypt
 import java.io.Closeable
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -69,7 +70,7 @@ class CustomCertManager @JvmOverloads constructor(
 
     /** system-default trust store */
     private val systemTrustManager: X509TrustManager? =
-            if (trustSystemCerts) CertUtils.getTrustManager(null) else null
+        if (trustSystemCerts) Conscrypt.getDefaultX509TrustManager() else null
 
 
     init {
@@ -127,24 +128,26 @@ class CustomCertManager @JvmOverloads constructor(
     }
 
     /**
-     * Checks whether a certificate is trusted. If {@link #systemTrustManager} is null (because
+     * Checks whether a certificate is trusted. If [systemTrustManager] is null (because
      * system certificates are not being trusted or available), the first certificate in the chain
      * (which is the lowest one, i.e. the actual server certificate) is passed to
-     * {@link CustomCertService} for further decision.
+     * [CustomCertService] for further decision.
+     *
      * @param chain        certificate chain to check
      * @param authType     authentication type (ignored)
+     *
      * @throws CertificateException in case of an untrusted or questionable certificate
      */
     @Throws(CertificateException::class)
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
         var trusted = false
 
-        systemTrustManager?.let {
+        systemTrustManager?.let { trustManager ->
             try {
-                it.checkServerTrusted(chain, authType)
+                trustManager.checkServerTrusted(chain, authType)
                 trusted = true
-            } catch(ignored: CertificateException) {
-                Constants.log.fine("Certificate not trusted by system")
+            } catch(e: CertificateException) {
+                Constants.log.log(Level.INFO, "Certificate not trusted by system, checking ourselves", e)
             }
         }
 

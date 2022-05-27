@@ -22,11 +22,11 @@ object CertUtils {
 
     fun getTrustManager(keyStore: KeyStore?): X509TrustManager? {
         try {
-            val tmf = TrustManagerFactory.getInstance("X509")
+            val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
             tmf.init(keyStore)
             tmf.trustManagers
-                    .filterIsInstance<X509TrustManager>()
-                    .forEach { return it }
+                .filterIsInstance<X509TrustManager>()
+                .forEach { return it }
         } catch(e: GeneralSecurityException) {
             Constants.log.log(Level.SEVERE, "Couldn't initialize trust manager", e)
         }
