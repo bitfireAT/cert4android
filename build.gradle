@@ -28,12 +28,12 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'org.jetbrains.dokka'
 
 android {
+    namespace "at.bitfire.cert4android"
+
     compileSdkVersion 33
     buildToolsVersion '33.0.0'
 
     defaultConfig {
-        namespace "at.bitfire.cert4android"
-
         minSdkVersion 21            // Android 5
         targetSdkVersion 32         // Android 12v2
     }
