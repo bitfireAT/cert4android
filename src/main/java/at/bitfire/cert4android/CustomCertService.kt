@@ -250,7 +250,10 @@ class CustomCertService: Service() {
                                 .setDeleteIntent(PendingIntent.getService(this@CustomCertService, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
                                 .build()
                         val nm = NotificationUtils.createChannels(this@CustomCertService)
-                        nm.notify(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION, notify)
+                        if (nm.areNotificationsEnabled())
+                            nm.notify(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION, notify)
+                        else
+                            Constants.log.log(Level.WARNING,"Notifications disabled")
 
                         if (foreground) {
                             decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
