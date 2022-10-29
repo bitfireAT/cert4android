@@ -1,6 +1,7 @@
 
-[![Development tests](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml/badge.svg)](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml)
-[![Documentation](https://img.shields.io/badge/documentation-kdoc-brightgreen)](https://bitfireat.github.io/cert4android/)
+[![License](https://img.shields.io/github/license/bitfireAT/cert4android)](https://github.com/bitfireAT/cert4android/blob/main/LICENSE)
+[![Tests](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml/badge.svg)](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml)
+[![KDoc](https://img.shields.io/badge/documentation-KDoc-informational)](https://bitfireat.github.io/cert4android/)
 
 
 # cert4android
