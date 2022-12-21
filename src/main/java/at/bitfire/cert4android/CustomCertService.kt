@@ -22,6 +22,7 @@ import java.security.KeyStoreException
 import java.security.Security
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.security.spec.MGF1ParameterSpec
 import java.util.*
 import java.util.logging.Level
 import javax.net.ssl.SSLContext
@@ -156,8 +157,8 @@ class CustomCertService: Service() {
             try {
                 // This is the key which is used to store the certificate. If the CN is used,
                 // there can be only one certificate per CN (which is not always desired),
-                // so we use the MD5 fingerprint.
-                val certKey = CertUtils.fingerprint(cert, "MD5")
+                // so we use the SHA-256 fingerprint as a key.
+                val certKey = CertUtils.fingerprint(cert, MGF1ParameterSpec.SHA256.digestAlgorithm)
                 trustedKeyStore.setCertificateEntry(certKey, cert)
                 saveKeyStore()
             } catch(e: KeyStoreException) {
