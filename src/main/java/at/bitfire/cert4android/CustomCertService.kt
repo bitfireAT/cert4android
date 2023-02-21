@@ -4,13 +4,16 @@
 
 package at.bitfire.cert4android
 
+import android.Manifest
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.MainThread
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import org.conscrypt.Conscrypt
 import java.io.ByteArrayInputStream
@@ -23,7 +26,6 @@ import java.security.Security
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.security.spec.MGF1ParameterSpec
-import java.util.*
 import java.util.logging.Level
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
@@ -252,7 +254,10 @@ class CustomCertService: Service() {
                                 .setDeleteIntent(PendingIntent.getService(this@CustomCertService, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
                                 .build()
                         val nm = NotificationUtils.createChannels(this@CustomCertService)
-                        nm.notify(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION, notify)
+                        if (ActivityCompat.checkSelfPermission(this@CustomCertService, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
+                            nm.notify(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION, notify)
+                        else
+                            Constants.log.warning("Couldn't show certificate notification (missing notification permission)")
 
                         if (foreground) {
                             decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
