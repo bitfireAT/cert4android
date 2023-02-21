@@ -242,6 +242,7 @@ class CustomCertService: Service() {
 
                         val id = raw.contentHashCode()
                         val notify = NotificationCompat.Builder(this@CustomCertService, NotificationUtils.CHANNEL_CERTIFICATES)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH)
                                 .setSmallIcon(R.drawable.ic_lock_open_white)
                                 .setContentTitle(this@CustomCertService.getString(R.string.certificate_notification_connection_security))
                                 .setContentText(this@CustomCertService.getString(R.string.certificate_notification_user_interaction))
