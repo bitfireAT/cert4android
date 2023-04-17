@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
@@ -53,6 +55,15 @@ class TrustCertificateActivity : AppCompatActivity() {
          * Must be of type [ParcelableColorScheme]. Contains the theme to be used.
          */
         const val EXTRA_COLOR_SCHEME = "color_scheme"
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        const val TEST_TAG_REJECT = "reject"
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        const val TEST_TAG_ACCEPT = "accept"
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        const val TEST_TAG_CHECKBOX = "checkbox"
     }
 
     private val model by viewModels<Model>()
@@ -190,7 +201,8 @@ class TrustCertificateActivity : AppCompatActivity() {
                 ) {
                     Checkbox(
                         checked = fingerprintVerified,
-                        onCheckedChange = { fingerprintVerified = it }
+                        onCheckedChange = { fingerprintVerified = it },
+                        modifier = Modifier.testTag(TEST_TAG_CHECKBOX)
                     )
                     Text(
                         text = stringResource(R.string.trust_certificate_fingerprint_verified),
@@ -212,7 +224,8 @@ class TrustCertificateActivity : AppCompatActivity() {
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 16.dp),
+                            .padding(end = 16.dp)
+                            .testTag(TEST_TAG_ACCEPT),
                     ) { Text(stringResource(R.string.trust_certificate_accept)) }
                     TextButton(
                         onClick = {
@@ -220,7 +233,8 @@ class TrustCertificateActivity : AppCompatActivity() {
                             finish()
                         },
                         modifier = Modifier
-                            .weight(1f),
+                            .weight(1f)
+                            .testTag(TEST_TAG_REJECT),
                     ) { Text(stringResource(R.string.trust_certificate_reject)) }
                 }
             }
