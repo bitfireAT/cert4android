@@ -24,6 +24,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -84,10 +86,20 @@ class TrustCertificateActivity : AppCompatActivity() {
             MaterialTheme(
                 // Take the extra color scheme, otherwise fallback to themed one
                 colorScheme = colorSchemeExtra?.toColorScheme()
-                    ?: if (isSystemInDarkTheme())
-                        DarkColors
-                    else
-                        LightColors
+                    ?: when {
+                        // Dynamic colors require Android S
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+                            if (isSystemInDarkTheme())
+                                dynamicDarkColorScheme(this)
+                            else
+                                dynamicLightColorScheme(this)
+                        // If SDK lower than S, fallback to predefined colors
+                        else ->
+                            if (isSystemInDarkTheme())
+                                DarkColors
+                            else
+                                LightColors
+                    }
             ) {
                 Column(
                     modifier = Modifier
