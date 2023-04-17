@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- FIXME: This should no longer be necessary, remove -->
     <style name="TextView.Heading" parent="Base.Theme.AppCompat.Light">
         <item name="android:textSize">22sp</item>
     </style>
