@@ -5,11 +5,13 @@
 package at.bitfire.cert4android
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,7 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.accompanist.themeadapter.material.MdcTheme
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
@@ -47,6 +48,11 @@ class TrustCertificateActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
+
+        /**
+         * Must be of type [ParcelableColorScheme]. Contains the theme to be used.
+         */
+        const val EXTRA_COLOR_SCHEME = "color_scheme"
     }
 
     private val model by viewModels<Model>()
@@ -56,8 +62,22 @@ class TrustCertificateActivity : AppCompatActivity() {
 
         model.processIntent(intent)
 
+        // Get the color scheme extra, may be null. Fallback to default one
+        val colorSchemeExtra = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            intent.getParcelableExtra(EXTRA_COLOR_SCHEME, ParcelableColorScheme::class.java)
+        else
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(EXTRA_COLOR_SCHEME) as? ParcelableColorScheme
+
         setContent {
-            MdcTheme {
+            MaterialTheme(
+                // Take the extra color scheme, otherwise fallback to themed one
+                colorScheme = colorSchemeExtra?.toColorScheme()
+                    ?: if (isSystemInDarkTheme())
+                        DarkColors
+                    else
+                        LightColors
+            ) {
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
