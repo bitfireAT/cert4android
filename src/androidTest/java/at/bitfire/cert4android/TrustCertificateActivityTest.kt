@@ -1,6 +1,7 @@
 package at.bitfire.cert4android
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onNodeWithTag
@@ -89,7 +90,10 @@ class TrustCertificateActivityTest: CertManagerTest() {
             .performClick()
 
         // Wait until the activity is finished
-        composeTestRule.waitUntil(10_000) { scenario.state == Lifecycle.State.DESTROYED }
+        composeTestRule.waitUntil(10_000) {
+            Log.d("TrustCertTest", "State: ${scenario.state}")
+            scenario.state == Lifecycle.State.DESTROYED
+        }
 
         // Check that the certificate is now trusted
         certManager.checkCustomTrusted(siteCert)
