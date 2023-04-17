@@ -12,8 +12,6 @@ import at.bitfire.cert4android.TrustCertificateActivity.Companion.TEST_TAG_ACCEP
 import at.bitfire.cert4android.TrustCertificateActivity.Companion.TEST_TAG_CHECKBOX
 import at.bitfire.cert4android.TrustCertificateActivity.Companion.TEST_TAG_REJECT
 import java.security.cert.CertificateException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -90,8 +88,8 @@ class TrustCertificateActivityTest: CertManagerTest() {
             .onNodeWithTag(TEST_TAG_ACCEPT)
             .performClick()
 
-        // Wait for a second to make sure the change has been applied
-        runBlocking { delay(1000) }
+        // Wait until the activity is finished
+        composeTestRule.waitUntil(10_000) { scenario.state == Lifecycle.State.DESTROYED }
 
         // Check that the certificate is now trusted
         certManager.checkCustomTrusted(siteCert)
@@ -117,8 +115,8 @@ class TrustCertificateActivityTest: CertManagerTest() {
             .onNodeWithTag(TEST_TAG_REJECT)
             .performClick()
 
-        // Wait for a second to make sure the change has been applied
-        runBlocking { delay(1000) }
+        // Wait until the activity is finished
+        composeTestRule.waitUntil(10_000) { scenario.state == Lifecycle.State.DESTROYED }
 
         // Check that the certificate is still not trusted
         assertThrows(CertificateException::class.java) {
