@@ -35,7 +35,7 @@ abstract class CertManagerTest {
         // add certificate and check again
         val intent = Intent(InstrumentationRegistry.getInstrumentation().context, CustomCertService::class.java)
         intent.action = CustomCertService.CMD_CERTIFICATION_DECISION
-        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts!!.first().encoded)
+        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts.first().encoded)
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, true)
         startService(intent, CustomCertService::class.java)
     }
