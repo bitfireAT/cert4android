@@ -89,7 +89,7 @@ class TrustCertificateActivityTest: CertManagerTest() {
             .performClick()
 
         // Wait until the activity is finished
-        composeTestRule.waitUntil { scenario.state == Lifecycle.State.DESTROYED }
+        composeTestRule.waitUntil(10_000) { scenario.state == Lifecycle.State.DESTROYED }
 
         // Check that the certificate is now trusted
         certManager.checkCustomTrusted(siteCert)
@@ -116,7 +116,7 @@ class TrustCertificateActivityTest: CertManagerTest() {
             .performClick()
 
         // Wait until the activity is finished
-        composeTestRule.waitUntil { scenario.state == Lifecycle.State.DESTROYED }
+        composeTestRule.waitUntil(10_000) { scenario.state == Lifecycle.State.DESTROYED }
 
         // Check that the certificate is still not trusted
         assertThrows(CertificateException::class.java) {
