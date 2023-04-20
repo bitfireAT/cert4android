@@ -53,11 +53,6 @@ class TrustCertificateActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
 
-        /**
-         * Must be of type [ParcelableColorScheme]. Contains the theme to be used.
-         */
-        const val EXTRA_COLOR_SCHEME = "color_scheme"
-
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         const val TEST_TAG_REJECT = "reject"
 
@@ -75,31 +70,10 @@ class TrustCertificateActivity : AppCompatActivity() {
 
         model.processIntent(intent)
 
-        // Get the color scheme extra, may be null. Fallback to default one
-        val colorSchemeExtra = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            intent.getParcelableExtra(EXTRA_COLOR_SCHEME, ParcelableColorScheme::class.java)
-        else
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra(EXTRA_COLOR_SCHEME) as? ParcelableColorScheme
-
         setContent {
             MaterialTheme(
                 // Take the extra color scheme, otherwise fallback to themed one
-                colorScheme = colorSchemeExtra?.toColorScheme()
-                    ?: when {
-                        // Dynamic colors require Android S
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-                            if (isSystemInDarkTheme())
-                                dynamicDarkColorScheme(this)
-                            else
-                                dynamicLightColorScheme(this)
-                        // If SDK lower than S, fallback to predefined colors
-                        else ->
-                            if (isSystemInDarkTheme())
-                                DarkColors
-                            else
-                                LightColors
-                    }
+                colorScheme = Cert4AndroidTheme.getColorScheme(this)
             ) {
                 Column(
                     modifier = Modifier

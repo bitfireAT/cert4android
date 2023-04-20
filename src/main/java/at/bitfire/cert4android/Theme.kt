@@ -1,7 +1,14 @@
 package at.bitfire.cert4android
 
+import android.content.Context
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 /*
@@ -137,3 +144,40 @@ val DarkColors = darkColorScheme(
     outlineVariant = md_theme_dark_outlineVariant,
     scrim = md_theme_dark_scrim,
 )
+
+@Composable
+fun getDefaultColorScheme(context: Context) = when {
+    // Dynamic colors require Android S
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+        if (isSystemInDarkTheme())
+            dynamicDarkColorScheme(context)
+        else
+            dynamicLightColorScheme(context)
+    // If SDK lower than S, fallback to predefined colors
+    else ->
+        if (isSystemInDarkTheme())
+            DarkColors
+        else
+            LightColors
+}
+
+/**
+ * Stores the current theme for Cert4Android. Note that all the theme updates must be called before
+ * launching any activity, otherwise they won't be updated until a restart is made.
+ */
+object Cert4AndroidTheme {
+    private var currentColorScheme: ColorScheme? = null
+
+    /**
+     * Gets the current theme for Cert4Android.
+     */
+    @Composable
+    fun getColorScheme(context: Context) = currentColorScheme ?: getDefaultColorScheme(context)
+
+    /**
+     * Updates the currently stored color scheme for Cert4Android.
+     */
+    fun setColorScheme(scheme: ColorScheme) {
+        currentColorScheme = scheme
+    }
+}
