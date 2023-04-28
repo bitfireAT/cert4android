@@ -1,4 +1,5 @@
 build/
+.gradle/
+.idea/
 cert4android.iml
-
-.gradle
+local.properties
