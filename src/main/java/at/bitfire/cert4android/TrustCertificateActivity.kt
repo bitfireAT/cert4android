@@ -6,6 +6,7 @@ package at.bitfire.cert4android
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
@@ -45,7 +46,7 @@ import java.text.DateFormat
 import java.util.logging.Level
 import kotlin.concurrent.thread
 
-class TrustCertificateActivity : AppCompatActivity() {
+class TrustCertificateActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
