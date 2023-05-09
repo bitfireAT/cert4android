@@ -5,7 +5,9 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.launchActivity
 import at.bitfire.cert4android.TrustCertificateActivity.Companion.TEST_TAG_ACCEPT
@@ -16,9 +18,12 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class TrustCertificateActivityTest: CertManagerTest() {
 
@@ -89,7 +94,7 @@ class TrustCertificateActivityTest: CertManagerTest() {
             .performClick()
 
         // Wait until the activity is finished
-        composeTestRule.waitUntil(10_000) { scenario.state == Lifecycle.State.DESTROYED }
+        scenario.awaitUntil(Lifecycle.State.DESTROYED)
 
         // Check that the certificate is now trusted
         certManager.checkCustomTrusted(siteCert)
