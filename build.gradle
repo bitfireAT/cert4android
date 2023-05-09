@@ -1,6 +1,6 @@
 buildscript {
     ext.versions = [
-        kotlin: '1.8.10',
+        kotlin: '1.8.20',
         dokka: '1.8.10',
         conscrypt: '2.5.2',
         compose: '1.4.4',
@@ -13,7 +13,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.0.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
     }
@@ -41,8 +41,13 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        aidl = true
+        dataBinding = true
     }
 
     buildFeatures.compose = true
@@ -54,7 +59,6 @@ android {
     lint {
         disable 'MissingTranslation', 'ExtraTranslation'
     }
-
 
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
