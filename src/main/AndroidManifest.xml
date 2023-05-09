@@ -12,7 +12,7 @@
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
 
     </application>
 
