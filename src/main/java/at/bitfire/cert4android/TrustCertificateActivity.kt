@@ -10,8 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
-import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,8 +28,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -50,15 +48,6 @@ class TrustCertificateActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
-
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        const val TEST_TAG_REJECT = "reject"
-
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        const val TEST_TAG_ACCEPT = "accept"
-
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        const val TEST_TAG_CHECKBOX = "checkbox"
     }
 
     private val model by viewModels<Model>()
@@ -69,31 +58,7 @@ class TrustCertificateActivity : ComponentActivity() {
         model.processIntent(intent)
 
         setContent {
-            MdcTheme {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    Text(
-                        text = stringResource(R.string.trust_certificate_unknown_certificate_found),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                    )
-
-                    CertificateCard()
-
-                    Text(
-                        text = stringResource(R.string.trust_certificate_reset_info),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                    )
-                }
-            }
+            MainLayout()
         }
     }
 
@@ -110,6 +75,37 @@ class TrustCertificateActivity : ComponentActivity() {
             putExtra(CustomCertService.EXTRA_TRUSTED, trusted)
         }
         startService(intent)
+    }
+
+
+    @Composable
+    @Preview
+    fun MainLayout() {
+        MdcTheme {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    text = stringResource(R.string.trust_certificate_unknown_certificate_found),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                CertificateCard()
+
+                Text(
+                    text = stringResource(R.string.trust_certificate_reset_info),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                )
+            }
+        }
     }
 
     @Composable
@@ -182,8 +178,7 @@ class TrustCertificateActivity : ComponentActivity() {
                 ) {
                     Checkbox(
                         checked = fingerprintVerified,
-                        onCheckedChange = { fingerprintVerified = it },
-                        modifier = Modifier.testTag(TEST_TAG_CHECKBOX)
+                        onCheckedChange = { fingerprintVerified = it }
                     )
                     Text(
                         text = stringResource(R.string.trust_certificate_fingerprint_verified),
@@ -206,7 +201,6 @@ class TrustCertificateActivity : ComponentActivity() {
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 16.dp)
-                            .testTag(TEST_TAG_ACCEPT),
                     ) { Text(stringResource(R.string.trust_certificate_accept)) }
                     TextButton(
                         onClick = {
@@ -215,7 +209,6 @@ class TrustCertificateActivity : ComponentActivity() {
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(TEST_TAG_REJECT),
                     ) { Text(stringResource(R.string.trust_certificate_reject)) }
                 }
             }
