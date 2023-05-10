@@ -33,7 +33,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.accompanist.themeadapter.material.MdcTheme
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
