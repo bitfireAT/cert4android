@@ -69,7 +69,10 @@ class TrustCertificateActivity : ComponentActivity() {
         model.processIntent(intent)
 
         setContent {
-            MdcTheme {
+            MaterialTheme(
+                // Take the extra color scheme, otherwise fallback to themed one
+                colorScheme = Cert4AndroidTheme.getColorScheme(this)
+            ) {
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
