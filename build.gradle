@@ -1,10 +1,9 @@
 buildscript {
     ext.versions = [
-        compose: '1.4.6',
-        composeBom: '2023.04.01',
+        composeBom: '2023.05.01',
         conscrypt: '2.5.2',
         dokka: '1.8.10',
-        kotlin: '1.8.20'
+        kotlin: '1.8.21'
     ]
 
     repositories {
@@ -51,7 +50,7 @@ android {
         dataBinding = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "${versions.compose}"
+        kotlinCompilerExtensionVersion = "1.4.7"
     }
 
     lint {
@@ -77,7 +76,7 @@ dependencies {
     implementation composeBom
     androidTestImplementation composeBom
     implementation 'androidx.activity:activity-compose:1.7.1'
-    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material:material'
     implementation 'androidx.compose.runtime:runtime-livedata'
     debugImplementation 'androidx.compose.ui:ui-tooling'
     implementation 'androidx.compose.ui:ui-tooling-preview'

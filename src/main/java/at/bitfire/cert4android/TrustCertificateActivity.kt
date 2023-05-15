@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.Card
+import androidx.compose.material.Checkbox
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -80,10 +80,7 @@ class TrustCertificateActivity : ComponentActivity() {
     @Composable
     @Preview
     fun MainLayout() {
-        MaterialTheme(
-            // Take the extra color scheme, otherwise fallback to themed one
-            colorScheme = Cert4AndroidTheme.getColorScheme(this)
-        ) {
+        Cert4Android.theme {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
@@ -91,7 +88,7 @@ class TrustCertificateActivity : ComponentActivity() {
             ) {
                 Text(
                     text = stringResource(R.string.trust_certificate_unknown_certificate_found),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.body1,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
@@ -101,7 +98,7 @@ class TrustCertificateActivity : ComponentActivity() {
 
                 Text(
                     text = stringResource(R.string.trust_certificate_reset_info),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.body2,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp),
@@ -129,7 +126,7 @@ class TrustCertificateActivity : ComponentActivity() {
 
                 Text(
                     text = stringResource(R.string.trust_certificate_x509_certificate_details),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.h3,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
@@ -153,20 +150,20 @@ class TrustCertificateActivity : ComponentActivity() {
 
                 Text(
                     text = stringResource(R.string.trust_certificate_fingerprints),
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.body1,
                     modifier = Modifier
                         .fillMaxWidth(),
                 )
                 Text(
                     text = sha1,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.body1,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp, top = 4.dp),
                 )
                 Text(
                     text = sha256,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.body1,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp, top = 4.dp),
@@ -221,13 +218,13 @@ class TrustCertificateActivity : ComponentActivity() {
     fun InfoPack(@StringRes labelStringRes: Int, text: String) {
         Text(
             text = stringResource(labelStringRes),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.body1,
             modifier = Modifier
                 .fillMaxWidth(),
         )
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.body2,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
@@ -277,7 +274,7 @@ class TrustCertificateActivity : ComponentActivity() {
                         sha256.postValue("SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm))
 
                     } catch(e: CertificateParsingException) {
-                        Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
+                        Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
                     }
                 }
             }
