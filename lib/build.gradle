@@ -25,6 +25,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    kotlin {
+        jvmToolchain(17)
+    }
 
     buildFeatures {
         aidl = true
@@ -54,6 +57,18 @@ android {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+kotlin {
+    jvmToolchain(17)
+}
+
+afterEvaluate {
+    tasks.withType(JavaCompile.class).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_17.toString()
+        targetCompatibility = JavaVersion.VERSION_17.toString()
+    }
 }
 
 publishing {
