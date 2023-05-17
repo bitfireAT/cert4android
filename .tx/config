@@ -1,0 +1,12 @@
+[main]
+host = https://www.transifex.com
+
+[davx5.cert4android]
+file_filter = src/main/res/values-<lang>/strings.xml
+minimum_perc = 0
+source_file = src/main/res/values/strings.xml
+source_lang = en
+trans.tr_TR = src/main/res/values-tr/strings.xml
+trans.zh_CN = src/main/res/values-zh/strings.xml
+type = ANDROID
+
