@@ -55,7 +55,7 @@ publishing {
     // Configure publishing data
     publications {
         release(MavenPublication) {
-            groupId = 'at.bitfire'
+            groupId = 'com.github.bitfireAT'
             artifactId = 'cert4android'
             version = '1.0.0'
 
