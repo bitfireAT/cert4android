@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-kapt'
     id 'org.jetbrains.dokka'
+    id 'maven-publish'
 }
 
 android {
@@ -14,6 +15,10 @@ android {
     defaultConfig {
         minSdkVersion 21            // Android 5
         targetSdkVersion 33         // Android 13
+
+        aarMetadata {
+            minCompileSdk = 29
+        }
     }
 
     compileOptions {
@@ -32,6 +37,32 @@ android {
 
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    testFixtures {
+        enable = true
+    }
+
+    publishing {
+        // Configure publish variant
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+}
+
+publishing {
+    // Configure publishing data
+    publications {
+        release(MavenPublication) {
+            groupId = 'at.bitfire'
+            artifactId = 'cert4android'
+            version = '1.0.0'
+
+            afterEvaluate {
+                from components.release
+            }
+        }
     }
 }
 
