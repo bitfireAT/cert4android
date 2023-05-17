@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="certificate_notification_connection_security">Kapcsolat biztonsága</string>
+    <string name="certificate_notification_user_interaction">Kérjük ellenőrizze a tanúsítványt.</string>
+
+    <string name="service_rejected_temporarily">Tanúsítvány ideglenesen elutasítva</string>
+
+    <string name="trust_certificate_unknown_certificate_found">Egy eddig ismeretlen tanúsítvány érkezett. Megbízik benne?</string>
+    <string name="trust_certificate_x509_certificate_details">X509 tanúsítvány részletei </string>
+    <string name="trust_certificate_issued_for">Tulajdonos</string>
+    <string name="trust_certificate_issued_by">Kibocsátó</string>
+    <string name="trust_certificate_validity_period">Érvényesség</string>
+    <string name="trust_certificate_validity_period_value">%1$s – %2$s (nem lesz kikényszerítve)</string>
+    <string name="trust_certificate_fingerprints">Ujjlenyomatok</string>
+    <string name="trust_certificate_fingerprint_verified">Az ujjlenyomatokat ellenőriztem.</string>
+    <string name="trust_certificate_accept">Elfogadás</string>
+    <string name="trust_certificate_reject">Elutasítás</string>
+    <string name="trust_certificate_reset_info">Az alkalmazásbeállításoknál lehetőség van a korábban elfogadott tanúsítványok törlésére</string>
+
+</resources>
