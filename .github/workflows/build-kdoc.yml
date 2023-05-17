@@ -15,12 +15,12 @@ jobs:
       - uses: gradle/gradle-build-action@v2
 
       - name: Build KDoc
-        run: ./gradlew --no-daemon --no-configuration-cache dokkaHtml
+        run: ./gradlew --no-daemon --no-configuration-cache cert4android:dokkaHtml
       - name: Publish KDoc
         if: success()
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
-          build_dir: build/dokka/html
+          build_dir: lib/build/dokka/html
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

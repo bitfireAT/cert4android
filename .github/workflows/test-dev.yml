@@ -15,14 +15,14 @@ jobs:
       - uses: gradle/gradle-build-action@v2
 
       - name: Check
-        run: ./gradlew check
+        run: ./gradlew cert4android:check
       - name: Archive results
         uses: actions/upload-artifact@v2
         with:
           name: test-results
           path: |
-            build/outputs/lint*
-            build/reports
+            lib/build/outputs/lint*
+            lib/build/reports
 
   test_on_emulator:
     name: Tests with emulator
@@ -74,11 +74,11 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew --no-daemon connectedCheck
+          script: ./gradlew --no-daemon cert4android:connectedCheck
 
       - name: Archive results
         uses: actions/upload-artifact@v2
         with:
           name: test-results
           path: |
-            build/reports
+            lib/build/reports
