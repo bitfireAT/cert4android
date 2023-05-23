@@ -61,10 +61,10 @@ class CustomCertService: Service() {
             Security.insertProviderAt(Conscrypt.newProvider(), 1)
 
             val version = Conscrypt.version()
-            Log.i(Constants.TAG, "Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
+            Log.i(Cert4Android.TAG, "Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
             val engine = SSLContext.getDefault().createSSLEngine()
-            Log.i(Constants.TAG, "Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
-            Log.i(Constants.TAG, "Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
+            Log.i(Cert4Android.TAG, "Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
+            Log.i(Cert4Android.TAG, "Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
         }
 
     }
@@ -81,21 +81,21 @@ class CustomCertService: Service() {
 
 
     override fun onCreate() {
-        Constants.log.info("CustomCertService created")
+        Cert4Android.log.info("CustomCertService created")
 
         // initialize trustedKeyStore
         keyStoreFile = File(getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
         try {
             FileInputStream(keyStoreFile).use {
                 trustedKeyStore.load(it, null)
-                Constants.log.fine("Loaded ${trustedKeyStore.size()} trusted certificate(s)")
+                Cert4Android.log.fine("Loaded ${trustedKeyStore.size()} trusted certificate(s)")
             }
         } catch(e: Exception) {
-            Constants.log.log(Level.INFO, "No key store for trusted certifcates (yet); creating in-memory key store.")
+            Cert4Android.log.log(Level.INFO, "No key store for trusted certifcates (yet); creating in-memory key store.")
             try {
                 trustedKeyStore.load(null, null)
             } catch(e: Exception) {
-                Constants.log.log(Level.SEVERE, "Couldn't initialize in-memory key store", e)
+                Cert4Android.log.log(Level.SEVERE, "Couldn't initialize in-memory key store", e)
             }
         }
 
@@ -104,14 +104,14 @@ class CustomCertService: Service() {
     }
 
     override fun onDestroy() {
-        Constants.log.info("CustomCertService destroyed")
+        Cert4Android.log.info("CustomCertService destroyed")
     }
 
     private fun inTrustStore(cert: X509Certificate) =
         try {
             trustedKeyStore.getCertificateAlias(cert) != null
         } catch(e: KeyStoreException) {
-            Constants.log.log(Level.WARNING, "Couldn't query custom key store", e)
+            Cert4Android.log.log(Level.WARNING, "Couldn't query custom key store", e)
             false
         }
 
@@ -120,7 +120,7 @@ class CustomCertService: Service() {
 
     @MainThread
     override fun onStartCommand(intent: Intent?, flags: Int, id: Int): Int {
-        Constants.log.fine("Received command: $intent")
+        Cert4Android.log.fine("Received command: $intent")
 
         when (intent?.action) {
             CMD_CERTIFICATION_DECISION -> {
@@ -129,7 +129,7 @@ class CustomCertService: Service() {
                     val cert = certFactory.generateCertificate(ByteArrayInputStream(raw)) as X509Certificate
                     onReceiveDecision(cert, intent.getBooleanExtra(EXTRA_TRUSTED, false))
                 } catch (e: Exception) {
-                    Constants.log.log(Level.SEVERE, "Couldn't process certificate", e)
+                    Cert4Android.log.log(Level.SEVERE, "Couldn't process certificate", e)
                 }
             }
             CMD_RESET_CERTIFICATES -> {
@@ -139,7 +139,7 @@ class CustomCertService: Service() {
                         trustedKeyStore.deleteEntry(alias)
                     saveKeyStore()
                 } catch(e: KeyStoreException) {
-                    Constants.log.log(Level.SEVERE, "Couldn't reset custom certificates", e)
+                    Cert4Android.log.log(Level.SEVERE, "Couldn't reset custom certificates", e)
                 }
             }
         }
@@ -150,7 +150,7 @@ class CustomCertService: Service() {
     private fun onReceiveDecision(cert: X509Certificate, trusted: Boolean) {
         // remove notification
         val nm = NotificationUtils.createChannels(this)
-        nm.cancel(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION)
+        nm.cancel(CertUtils.getTag(cert), Cert4Android.NOTIFICATION_CERT_DECISION)
 
         // put into trust store, if trusted
         if (trusted) {
@@ -164,7 +164,7 @@ class CustomCertService: Service() {
                 trustedKeyStore.setCertificateEntry(certKey, cert)
                 saveKeyStore()
             } catch(e: KeyStoreException) {
-                Constants.log.log(Level.SEVERE, "Couldn't add certificate into key store", e)
+                Cert4Android.log.log(Level.SEVERE, "Couldn't add certificate into key store", e)
             }
         } else {
             untrustedCerts.add(cert)
@@ -173,7 +173,7 @@ class CustomCertService: Service() {
 
         // notify receivers which are waiting for a decision
         pendingDecisions[cert]?.let { callbacks ->
-            Constants.log.fine("Notifying ${callbacks.size} certificate decision listener(s)")
+            Cert4Android.log.fine("Notifying ${callbacks.size} certificate decision listener(s)")
             callbacks.forEach {
                 if (trusted)
                     it.accept()
@@ -185,11 +185,11 @@ class CustomCertService: Service() {
     }
 
     private fun saveKeyStore() {
-        Constants.log.fine("Saving custom certificate key store to $keyStoreFile")
+        Cert4Android.log.fine("Saving custom certificate key store to $keyStoreFile")
         try {
             FileOutputStream(keyStoreFile).use { trustedKeyStore.store(it, null) }
         } catch(e: Exception) {
-            Constants.log.log(Level.SEVERE, "Couldn't save custom certificate key store", e)
+            Cert4Android.log.log(Level.SEVERE, "Couldn't save custom certificate key store", e)
         }
     }
 
@@ -202,7 +202,7 @@ class CustomCertService: Service() {
             val cert: X509Certificate? = try {
                 certFactory.generateCertificate(ByteArrayInputStream(raw)) as? X509Certificate
             } catch(e: Exception) {
-                Constants.log.log(Level.SEVERE, "Couldn't handle certificate", e)
+                Cert4Android.log.log(Level.SEVERE, "Couldn't handle certificate", e)
                 null
             }
             if (cert == null) {
@@ -218,16 +218,16 @@ class CustomCertService: Service() {
 
             when {
                 untrustedCerts.contains(cert) -> {
-                    Constants.log.fine("Certificate is cached as untrusted, rejecting")
+                    Cert4Android.log.fine("Certificate is cached as untrusted, rejecting")
                     callback.reject()
                 }
                 inTrustStore(cert) -> {
-                    Constants.log.fine("Certificate is cached as trusted, accepting")
+                    Cert4Android.log.fine("Certificate is cached as trusted, accepting")
                     callback.accept()
                 }
                 else -> {
                     if (interactive) {
-                        Constants.log.fine("Certificate not known and running in interactive mode, asking user")
+                        Cert4Android.log.fine("Certificate not known and running in interactive mode, asking user")
 
                         // remember pending decision
                         pendingDecisions[cert] = mutableListOf(callback)
@@ -255,9 +255,9 @@ class CustomCertService: Service() {
                                 .build()
                         val nm = NotificationUtils.createChannels(this@CustomCertService)
                         if (ActivityCompat.checkSelfPermission(this@CustomCertService, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
-                            nm.notify(CertUtils.getTag(cert), Constants.NOTIFICATION_CERT_DECISION, notify)
+                            nm.notify(CertUtils.getTag(cert), Cert4Android.NOTIFICATION_CERT_DECISION, notify)
                         else
-                            Constants.log.warning("Couldn't show certificate notification (missing notification permission)")
+                            Cert4Android.log.warning("Couldn't show certificate notification (missing notification permission)")
 
                         if (foreground) {
                             decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -265,7 +265,7 @@ class CustomCertService: Service() {
                         }
 
                     } else {
-                        Constants.log.fine("Certificate not known and running in non-interactive mode, rejecting")
+                        Cert4Android.log.fine("Certificate not known and running in non-interactive mode, rejecting")
                         callback.reject()
                     }
                 }

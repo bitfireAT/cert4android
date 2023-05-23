@@ -12,13 +12,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import at.bitfire.cert4android.Constants
+import at.bitfire.cert4android.Cert4Android
 import at.bitfire.cert4android.CustomCertManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier
 import java.net.URL
-import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 
 class MainActivity : ComponentActivity() {
@@ -56,7 +55,7 @@ class MainActivity : ComponentActivity() {
             }
 
             // access sample URL
-            Log.i(Constants.TAG, "accessDistrustedSystemCert(): HTTP ${urlConn.responseCode}")
+            Log.i(Cert4Android.TAG, "accessDistrustedSystemCert(): HTTP ${urlConn.responseCode}")
             urlConn.inputStream.close()
         }
 

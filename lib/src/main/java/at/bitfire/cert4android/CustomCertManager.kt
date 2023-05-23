@@ -76,7 +76,7 @@ class CustomCertManager @JvmOverloads constructor(
     init {
         val newServiceConn = object: ServiceConnection {
             override fun onServiceConnected(className: ComponentName, binder: IBinder) {
-                Constants.log.fine("Connected to service")
+                Cert4Android.log.fine("Connected to service")
                 synchronized(serviceLock) {
                     this@CustomCertManager.service = ICustomCertService.Stub.asInterface(binder)
                     serviceLock.notify()
@@ -94,11 +94,11 @@ class CustomCertManager @JvmOverloads constructor(
             // service is created after bindService() by code running in looper, so this would block
             throw IllegalStateException("Must not be run in main thread")
 
-        Constants.log.fine("Binding to service")
+        Cert4Android.log.fine("Binding to service")
         if (context.bindService(Intent(context, CustomCertService::class.java), newServiceConn, Context.BIND_AUTO_CREATE)) {
             serviceConn = newServiceConn
 
-            Constants.log.fine("Waiting for service to be bound")
+            Cert4Android.log.fine("Waiting for service to be bound")
             synchronized(serviceLock) {
                 while (service == null)
                     try {
@@ -107,7 +107,7 @@ class CustomCertManager @JvmOverloads constructor(
                     }
             }
         } else
-            Constants.log.severe("Couldn't bind CustomCertService to context")
+            Cert4Android.log.severe("Couldn't bind CustomCertService to context")
     }
 
     override fun close() {
@@ -115,7 +115,7 @@ class CustomCertManager @JvmOverloads constructor(
             try {
                 context.unbindService(it)
             } catch (e: Exception) {
-                Constants.log.log(Level.FINE, "Couldn't unbind CustomCertService", e)
+                Cert4Android.log.log(Level.FINE, "Couldn't unbind CustomCertService", e)
             }
             serviceConn = null
         }
@@ -147,7 +147,7 @@ class CustomCertManager @JvmOverloads constructor(
                 trustManager.checkServerTrusted(chain, authType)
                 trusted = true
             } catch(e: CertificateException) {
-                Constants.log.log(Level.INFO, "Certificate not trusted by system, checking ourselves", e)
+                Cert4Android.log.log(Level.INFO, "Certificate not trusted by system, checking ourselves", e)
             }
         }
 
@@ -181,7 +181,7 @@ class CustomCertManager @JvmOverloads constructor(
             svc.checkTrusted(cert.encoded, interactive, appInForeground, callback)
             synchronized(lock) {
                 if (valid == null) {
-                    Constants.log.fine("Waiting for reply from service")
+                    Cert4Android.log.fine("Waiting for reply from service")
                     try {
                         lock.wait(SERVICE_TIMEOUT)
                     } catch(e: InterruptedException) {
@@ -218,7 +218,7 @@ class CustomCertManager @JvmOverloads constructor(
     ): HostnameVerifier {
 
         override fun verify(host: String, sslSession: SSLSession): Boolean {
-            Constants.log.fine("Verifying certificate for $host")
+            Cert4Android.log.fine("Verifying certificate for $host")
 
             if (defaultVerifier?.verify(host, sslSession) == true)
                 return true
@@ -230,11 +230,11 @@ class CustomCertManager @JvmOverloads constructor(
                 val cert = sslSession.peerCertificates
                 if (cert.isNotEmpty() && cert[0] is X509Certificate) {
                     checkCustomTrusted(cert[0] as X509Certificate)
-                    Constants.log.fine("Certificate is in custom trust store, accepting")
+                    Cert4Android.log.fine("Certificate is in custom trust store, accepting")
                     return true
                 }
             } catch(e: SSLPeerUnverifiedException) {
-                Constants.log.log(Level.WARNING, "Couldn't get certificate for host name verification", e)
+                Cert4Android.log.log(Level.WARNING, "Couldn't get certificate for host name verification", e)
             } catch (ignored: CertificateException) {
             }
 
