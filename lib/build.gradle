@@ -77,7 +77,7 @@ publishing {
         release(MavenPublication) {
             groupId = 'com.github.bitfireAT'
             artifactId = 'cert4android'
-            version = '1.0.0'
+            version = project.properties['cert4android.version']
 
             afterEvaluate {
                 from components.release
