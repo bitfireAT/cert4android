@@ -31,7 +31,6 @@ android {
 
     buildFeatures {
         aidl = true
-        dataBinding = true
     }
 
     lint {

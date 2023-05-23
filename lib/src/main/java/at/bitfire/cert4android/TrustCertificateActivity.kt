@@ -6,12 +6,13 @@ package at.bitfire.cert4android
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import at.bitfire.cert4android.databinding.ActivityTrustCertificateBinding
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
@@ -32,19 +33,39 @@ class TrustCertificateActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_trust_certificate)
 
         model = ViewModelProvider(this)[Model::class.java]
         model.processIntent(intent)
 
-        val binding = DataBindingUtil.setContentView<ActivityTrustCertificateBinding>(this, R.layout.activity_trust_certificate)
-        binding.lifecycleOwner = this
-        binding.model = model
+        model.issuedFor.observe(this) { findViewById<TextView>(R.id.issued_for).text = it }
+        model.issuedBy.observe(this) { findViewById<TextView>(R.id.issued_by).text = it }
+        model.sha1.observe(this) { findViewById<TextView>(R.id.sha1).text = it }
+        model.sha256.observe(this) { findViewById<TextView>(R.id.sha256).text = it }
 
-        binding.acceptCertificate.setOnClickListener {
+        val validityPeriodObserver: () -> Unit = {
+            val validFrom = model.validFrom.value
+            val validTo = model.validTo.value
+            findViewById<TextView>(R.id.validity_period).text = getString(
+                R.string.trust_certificate_validity_period_value,
+                validFrom,
+                validTo
+            )
+        }
+        model.validFrom.observe(this) { validityPeriodObserver() }
+        model.validTo.observe(this) { validityPeriodObserver() }
+
+        model.verifiedByUser.observe(this) { findViewById<Button>(R.id.acceptCertificate).isEnabled = it }
+
+        findViewById<CheckBox>(R.id.user_verified).setOnCheckedChangeListener { _, isChecked ->
+            model.verifiedByUser.value = isChecked
+        }
+
+        findViewById<Button>(R.id.acceptCertificate).setOnClickListener {
             sendDecision(true)
             finish()
         }
-        binding.rejectCertificate.setOnClickListener {
+        findViewById<Button>(R.id.rejectCertificate).setOnClickListener {
             sendDecision(false)
             finish()
         }
@@ -81,7 +102,7 @@ class TrustCertificateActivity: AppCompatActivity() {
         val sha1 = MutableLiveData<String>()
         val sha256 = MutableLiveData<String>()
 
-        val verifiedByUser = MutableLiveData<Boolean>()
+        val verifiedByUser = MutableLiveData(false)
 
         fun processIntent(intent: Intent?) {
             intent?.getByteArrayExtra(EXTRA_CERTIFICATE)?.let { raw ->
