@@ -1,5 +1,6 @@
-build/
-.gradle/
-.idea/
-cert4android.iml
-local.properties
+.gradle
+/.idea/
+.DS_Store
+/build
+/captures
+/local.properties

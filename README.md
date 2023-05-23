@@ -2,6 +2,7 @@
 [![License](https://img.shields.io/github/license/bitfireAT/cert4android)](https://github.com/bitfireAT/cert4android/blob/main/LICENSE)
 [![Tests](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml/badge.svg)](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml)
 [![KDoc](https://img.shields.io/badge/documentation-KDoc-informational)](https://bitfireat.github.io/cert4android/)
+[![Latest Version](https://img.shields.io/jitpack/version/com.github.bitfireAT/cert4android)](https://jitpack.io/#bitfireAT/cert4android)
 
 
 # cert4android
@@ -29,13 +30,36 @@ Then make the changes in your own repository and send a pull request.
 
 # How to use
 
-1. Clone cert4android as a submodule.
-1. Add the submodule to `settings.gradle` / `app/build.gradle`.
-1. Create an instance of `CustomCertManager` (`Context` is required to connect to the
+1. Add the [jitpack.io](https://jitpack.io) repository to your project's level `build.gradle`:
+    ```groovy
+    allprojects {
+        repositories {
+            // ... more repos
+            maven { url "https://jitpack.io" }
+        }
+    }
+    ```
+   or if you are using `settings.gradle`:
+    ```groovy
+    dependencyResolutionManagement {
+        repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+        repositories {
+            // ... more repos
+            maven { url "https://jitpack.io" }
+        }
+    }
+    ```
+2. Add the dependency to your module's `build.gradle` file:
+    ```groovy
+    dependencies {
+       implementation 'com.github.bitfireAT:cert4android:<version>'
+    }
+    ```
+3. Create an instance of `CustomCertManager` (`Context` is required to connect to the
    `CustomCertService`, which manages the custom certificates).
-1. Use this instance as `X509TrustManager` in your calls (for instance, when setting up your HTTP client).
+4. Use this instance as `X509TrustManager` in your calls (for instance, when setting up your HTTP client).
    Don't forget to get and use the `hostnameVerifier()`, too.
-1. Close the instance when it's not required anymore (will disconnect from the
+5. Close the instance when it's not required anymore (will disconnect from the
    `CustomCertService`, thus allowing it to be destroyed).
 
 Example of initialzing an okhttp client:
