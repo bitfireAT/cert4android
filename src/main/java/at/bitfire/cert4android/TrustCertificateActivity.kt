@@ -98,7 +98,7 @@ class TrustCertificateActivity : ComponentActivity() {
 
                 Text(
                     text = stringResource(R.string.trust_certificate_reset_info),
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.body1,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp),
@@ -126,7 +126,7 @@ class TrustCertificateActivity : ComponentActivity() {
 
                 Text(
                     text = stringResource(R.string.trust_certificate_x509_certificate_details),
-                    style = MaterialTheme.typography.h3,
+                    style = MaterialTheme.typography.h5,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
@@ -149,8 +149,8 @@ class TrustCertificateActivity : ComponentActivity() {
                 )
 
                 Text(
-                    text = stringResource(R.string.trust_certificate_fingerprints),
-                    style = MaterialTheme.typography.body1,
+                    text = stringResource(R.string.trust_certificate_fingerprints).uppercase(),
+                    style = MaterialTheme.typography.overline,
                     modifier = Modifier
                         .fillMaxWidth(),
                 )
@@ -184,6 +184,7 @@ class TrustCertificateActivity : ComponentActivity() {
                         modifier = Modifier
                             .weight(1f)
                             .padding(bottom = 8.dp),
+                        style = MaterialTheme.typography.body2
                     )
                 }
 
@@ -200,7 +201,7 @@ class TrustCertificateActivity : ComponentActivity() {
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 16.dp)
-                    ) { Text(stringResource(R.string.trust_certificate_accept)) }
+                    ) { Text(stringResource(R.string.trust_certificate_accept).uppercase()) }
                     TextButton(
                         onClick = {
                             sendDecision(false)
@@ -208,7 +209,7 @@ class TrustCertificateActivity : ComponentActivity() {
                         },
                         modifier = Modifier
                             .weight(1f)
-                    ) { Text(stringResource(R.string.trust_certificate_reject)) }
+                    ) { Text(stringResource(R.string.trust_certificate_reject).uppercase()) }
                 }
             }
         }
@@ -217,14 +218,14 @@ class TrustCertificateActivity : ComponentActivity() {
     @Composable
     fun InfoPack(@StringRes labelStringRes: Int, text: String) {
         Text(
-            text = stringResource(labelStringRes),
-            style = MaterialTheme.typography.body1,
+            text = stringResource(labelStringRes).uppercase(),
+            style = MaterialTheme.typography.overline,
             modifier = Modifier
                 .fillMaxWidth(),
         )
         Text(
             text = text,
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.body1,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
