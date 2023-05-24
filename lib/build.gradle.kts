@@ -1,7 +1,6 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
-    id("kotlin-kapt")
     id("org.jetbrains.dokka")
     id("maven-publish")
 }
@@ -9,12 +8,11 @@ plugins {
 android {
     namespace = "at.bitfire.cert4android"
 
-    compileSdkVersion(33)
-    buildToolsVersion("33.0.2")
+    compileSdk = 33
 
     defaultConfig {
-        minSdkVersion(21)            // Android 5
-        targetSdkVersion(33)         // Android 13
+        minSdk = 21            // Android 5
+        targetSdk = 33         // Android 13
 
         aarMetadata {
             minCompileSdk = 29
