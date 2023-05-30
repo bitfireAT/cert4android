@@ -6,13 +6,33 @@ package at.bitfire.cert4android
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Card
+import androidx.compose.material.Checkbox
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
@@ -23,51 +43,21 @@ import java.text.DateFormat
 import java.util.logging.Level
 import kotlin.concurrent.thread
 
-class TrustCertificateActivity: AppCompatActivity() {
+class TrustCertificateActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
     }
 
-    private lateinit var model: Model
+    private val model by viewModels<Model>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_trust_certificate)
 
-        model = ViewModelProvider(this)[Model::class.java]
         model.processIntent(intent)
 
-        model.issuedFor.observe(this) { findViewById<TextView>(R.id.issued_for).text = it }
-        model.issuedBy.observe(this) { findViewById<TextView>(R.id.issued_by).text = it }
-        model.sha1.observe(this) { findViewById<TextView>(R.id.sha1).text = it }
-        model.sha256.observe(this) { findViewById<TextView>(R.id.sha256).text = it }
-
-        val validityPeriodObserver: () -> Unit = {
-            val validFrom = model.validFrom.value
-            val validTo = model.validTo.value
-            findViewById<TextView>(R.id.validity_period).text = getString(
-                R.string.trust_certificate_validity_period_value,
-                validFrom,
-                validTo
-            )
-        }
-        model.validFrom.observe(this) { validityPeriodObserver() }
-        model.validTo.observe(this) { validityPeriodObserver() }
-
-        model.verifiedByUser.observe(this) { findViewById<Button>(R.id.acceptCertificate).isEnabled = it }
-
-        findViewById<CheckBox>(R.id.user_verified).setOnCheckedChangeListener { _, isChecked ->
-            model.verifiedByUser.value = isChecked
-        }
-
-        findViewById<Button>(R.id.acceptCertificate).setOnClickListener {
-            sendDecision(true)
-            finish()
-        }
-        findViewById<Button>(R.id.rejectCertificate).setOnClickListener {
-            sendDecision(false)
-            finish()
+        setContent {
+            MainLayout()
         }
     }
 
@@ -87,7 +77,163 @@ class TrustCertificateActivity: AppCompatActivity() {
     }
 
 
-    class Model: ViewModel() {
+    @Composable
+    @Preview
+    fun MainLayout() {
+        Cert4Android.theme {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    text = stringResource(R.string.trust_certificate_unknown_certificate_found),
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                CertificateCard()
+
+                Text(
+                    text = stringResource(R.string.trust_certificate_reset_info),
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun CertificateCard() {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp),
+            ) {
+                val issuedFor by model.issuedFor.observeAsState("")
+                val issuedBy by model.issuedBy.observeAsState("")
+                val validFrom by model.validFrom.observeAsState("")
+                val validTo by model.validTo.observeAsState("")
+                val sha1 by model.sha1.observeAsState("")
+                val sha256 by model.sha256.observeAsState("")
+
+                Text(
+                    text = stringResource(R.string.trust_certificate_x509_certificate_details),
+                    style = MaterialTheme.typography.h5,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                )
+                InfoPack(
+                    R.string.trust_certificate_issued_for,
+                    issuedFor
+                )
+                InfoPack(
+                    R.string.trust_certificate_issued_by,
+                    issuedBy
+                )
+                InfoPack(
+                    R.string.trust_certificate_validity_period,
+                    stringResource(
+                        R.string.trust_certificate_validity_period_value,
+                        validFrom,
+                        validTo
+                    )
+                )
+
+                Text(
+                    text = stringResource(R.string.trust_certificate_fingerprints).uppercase(),
+                    style = MaterialTheme.typography.overline,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                )
+                Text(
+                    text = sha1,
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp, top = 4.dp),
+                )
+                Text(
+                    text = sha256,
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp, top = 4.dp),
+                )
+
+                var fingerprintVerified by remember { mutableStateOf(false) }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                ) {
+                    Checkbox(
+                        checked = fingerprintVerified,
+                        onCheckedChange = { fingerprintVerified = it }
+                    )
+                    Text(
+                        text = stringResource(R.string.trust_certificate_fingerprint_verified),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(bottom = 8.dp),
+                        style = MaterialTheme.typography.body2
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                ) {
+                    TextButton(
+                        enabled = fingerprintVerified,
+                        onClick = {
+                            sendDecision(true)
+                            finish()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 16.dp)
+                    ) { Text(stringResource(R.string.trust_certificate_accept).uppercase()) }
+                    TextButton(
+                        onClick = {
+                            sendDecision(false)
+                            finish()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                    ) { Text(stringResource(R.string.trust_certificate_reject).uppercase()) }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun InfoPack(@StringRes labelStringRes: Int, text: String) {
+        Text(
+            text = stringResource(labelStringRes).uppercase(),
+            style = MaterialTheme.typography.overline,
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.body1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+        )
+    }
+
+
+    class Model : ViewModel() {
 
         companion object {
             val certFactory = CertificateFactory.getInstance("X.509")!!
@@ -101,8 +247,6 @@ class TrustCertificateActivity: AppCompatActivity() {
 
         val sha1 = MutableLiveData<String>()
         val sha256 = MutableLiveData<String>()
-
-        val verifiedByUser = MutableLiveData(false)
 
         fun processIntent(intent: Intent?) {
             intent?.getByteArrayExtra(EXTRA_CERTIFICATE)?.let { raw ->
@@ -131,7 +275,7 @@ class TrustCertificateActivity: AppCompatActivity() {
                         sha256.postValue("SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm))
 
                     } catch(e: CertificateParsingException) {
-                        Constants.log.log(Level.WARNING, "Couldn't parse certificate", e)
+                        Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
                     }
                 }
             }

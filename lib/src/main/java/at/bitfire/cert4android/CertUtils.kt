@@ -28,7 +28,7 @@ object CertUtils {
                 .filterIsInstance<X509TrustManager>()
                 .forEach { return it }
         } catch(e: GeneralSecurityException) {
-            Constants.log.log(Level.SEVERE, "Couldn't initialize trust manager", e)
+            Cert4Android.log.log(Level.SEVERE, "Couldn't initialize trust manager", e)
         }
         return null
     }
