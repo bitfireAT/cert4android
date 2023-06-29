@@ -6,4 +6,4 @@ plugins {
 }
 
 group = "at.bitfire"
-version = project.properties["cert4android.version"]
+version = System.getenv("GIT_COMMIT")
