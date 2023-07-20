@@ -15,6 +15,7 @@ import org.conscrypt.Conscrypt
 import java.io.Closeable
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import java.util.concurrent.CompletableFuture
 import java.util.logging.Level
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLPeerUnverifiedException
@@ -23,8 +24,8 @@ import javax.net.ssl.X509TrustManager
 
 /**
  * TrustManager to handle custom certificates. Communicates with
- * [CustomCertService] to fetch information about custom certificate
- * trustworthiness. The IPC with a service is required when multiple processes,
+ * [CustomCertService] (singleton) to fetch information about custom certificate
+ * trustworthiness. The service is required when multiple threads,
  * each of them with an own [CustomCertManager], want to access a synchronized central
  * certificate trust store + UI (for accepting certificates etc.).
  *
@@ -43,12 +44,12 @@ import javax.net.ssl.X509TrustManager
  */
 @SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
-        val context: Context,
-        val interactive: Boolean = true,
-        trustSystemCerts: Boolean = true,
+    private val context: Context,
+    val interactive: Boolean = true,
+    trustSystemCerts: Boolean = true,
 
-        @Volatile
-        var appInForeground: Boolean = false
+    @Volatile
+    var appInForeground: Boolean = false
 ): X509TrustManager, Closeable {
 
     companion object {
