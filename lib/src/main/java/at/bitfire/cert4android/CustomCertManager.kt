@@ -15,6 +15,7 @@ import org.conscrypt.Conscrypt
 import java.io.Closeable
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import java.util.concurrent.CompletableFuture
 import java.util.logging.Level
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLPeerUnverifiedException
@@ -23,8 +24,8 @@ import javax.net.ssl.X509TrustManager
 
 /**
  * TrustManager to handle custom certificates. Communicates with
- * [CustomCertService] to fetch information about custom certificate
- * trustworthiness. The IPC with a service is required when multiple processes,
+ * [CustomCertService] (singleton) to fetch information about custom certificate
+ * trustworthiness. The service is required when multiple threads,
  * each of them with an own [CustomCertManager], want to access a synchronized central
  * certificate trust store + UI (for accepting certificates etc.).
  *
@@ -43,12 +44,12 @@ import javax.net.ssl.X509TrustManager
  */
 @SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
-        val context: Context,
-        val interactive: Boolean = true,
-        trustSystemCerts: Boolean = true,
+    private val context: Context,
+    val interactive: Boolean = true,
+    trustSystemCerts: Boolean = true,
 
-        @Volatile
-        var appInForeground: Boolean = false
+    @Volatile
+    var appInForeground: Boolean = false
 ): X509TrustManager, Closeable {
 
     companion object {
@@ -78,7 +79,7 @@ class CustomCertManager @JvmOverloads constructor(
             override fun onServiceConnected(className: ComponentName, binder: IBinder) {
                 Cert4Android.log.fine("Connected to service")
                 synchronized(serviceLock) {
-                    this@CustomCertManager.service = ICustomCertService.Stub.asInterface(binder)
+                    this@CustomCertManager.service = binder as ICustomCertService
                     serviceLock.notify()
                 }
             }
@@ -103,7 +104,7 @@ class CustomCertManager @JvmOverloads constructor(
                 while (service == null)
                     try {
                         serviceLock.wait()
-                    } catch(e: InterruptedException) {
+                    } catch(_: InterruptedException) {
                     }
             }
         } else
@@ -162,7 +163,7 @@ class CustomCertManager @JvmOverloads constructor(
         val lock = Object()
         var valid: Boolean? = null
 
-        val callback = object: IOnCertificateDecision.Stub() {
+        val callback = object: IOnCertificateDecision {
             override fun accept() {
                 synchronized(lock) {
                     valid = true
@@ -184,7 +185,7 @@ class CustomCertManager @JvmOverloads constructor(
                     Cert4Android.log.fine("Waiting for reply from service")
                     try {
                         lock.wait(SERVICE_TIMEOUT)
-                    } catch(e: InterruptedException) {
+                    } catch(_: InterruptedException) {
                     }
                 }
             }
