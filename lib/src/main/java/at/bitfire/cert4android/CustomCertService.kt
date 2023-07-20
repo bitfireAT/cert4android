@@ -10,6 +10,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Binder
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.MainThread
@@ -196,11 +198,11 @@ class CustomCertService: Service() {
 
     // bound service
 
-    private val binder = object: ICustomCertService.Stub() {
+    private val binder = object: ICustomCertService, Binder() {
 
-        override fun checkTrusted(raw: ByteArray, interactive: Boolean, foreground: Boolean, callback: IOnCertificateDecision) {
+        override fun checkTrusted(rawCert: ByteArray, interactive: Boolean, foreground: Boolean, callback: IOnCertificateDecision) {
             val cert: X509Certificate? = try {
-                certFactory.generateCertificate(ByteArrayInputStream(raw)) as? X509Certificate
+                certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate
             } catch(e: Exception) {
                 Cert4Android.log.log(Level.SEVERE, "Couldn't handle certificate", e)
                 null
@@ -233,16 +235,16 @@ class CustomCertService: Service() {
                         pendingDecisions[cert] = mutableListOf(callback)
 
                         val decisionIntent = Intent(this@CustomCertService, TrustCertificateActivity::class.java)
-                        decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, raw)
+                        decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
 
                         val rejectIntent = Intent(this@CustomCertService, CustomCertService::class.java)
                         with(rejectIntent) {
                             action = CMD_CERTIFICATION_DECISION
-                            putExtra(EXTRA_CERTIFICATE, raw)
+                            putExtra(EXTRA_CERTIFICATE, rawCert)
                             putExtra(EXTRA_TRUSTED, false)
                         }
 
-                        val id = raw.contentHashCode()
+                        val id = rawCert.contentHashCode()
                         val notify = NotificationCompat.Builder(this@CustomCertService, NotificationUtils.CHANNEL_CERTIFICATES)
                                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                                 .setSmallIcon(R.drawable.ic_lock_open_white)
@@ -282,6 +284,6 @@ class CustomCertService: Service() {
 
     }
 
-    override fun onBind(intent: Intent?) = binder
+    override fun onBind(intent: Intent?): IBinder = binder
 
 }

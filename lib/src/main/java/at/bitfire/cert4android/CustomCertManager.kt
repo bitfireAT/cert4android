@@ -78,7 +78,7 @@ class CustomCertManager @JvmOverloads constructor(
             override fun onServiceConnected(className: ComponentName, binder: IBinder) {
                 Cert4Android.log.fine("Connected to service")
                 synchronized(serviceLock) {
-                    this@CustomCertManager.service = ICustomCertService.Stub.asInterface(binder)
+                    this@CustomCertManager.service = binder as ICustomCertService
                     serviceLock.notify()
                 }
             }
@@ -162,7 +162,7 @@ class CustomCertManager @JvmOverloads constructor(
         val lock = Object()
         var valid: Boolean? = null
 
-        val callback = object: IOnCertificateDecision.Stub() {
+        val callback = object: IOnCertificateDecision {
             override fun accept() {
                 synchronized(lock) {
                     valid = true
