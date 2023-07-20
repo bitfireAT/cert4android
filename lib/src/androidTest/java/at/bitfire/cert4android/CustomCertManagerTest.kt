@@ -51,8 +51,8 @@ class CustomCertManagerTest {
     var siteCerts: List<X509Certificate>? = null
     init {
         try {
-            siteCerts = getSiteCertificates(URL("https://www.davdroid.com"))
-        } catch(e: IOException) {
+            siteCerts = getSiteCertificates(URL("https://www.davx5.com"))
+        } catch(_: IOException) {
         }
         assumeNotNull(siteCerts)
     }

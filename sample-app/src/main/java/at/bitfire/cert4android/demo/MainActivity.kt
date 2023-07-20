@@ -7,10 +7,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.Cert4Android
 import at.bitfire.cert4android.CustomCertManager
@@ -30,10 +33,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                Button(onClick = {
-                    model.accessDistrustedSystemCert()
-                }) {
-                    Text("Access URL with distrusted system certs")
+                Column {
+                    Button(onClick = {
+                        model.accessDistrustedSystemCert()
+                    }) {
+                        Text("Access URL with distrusted system certs")
+                    }
+
+                    val snackBarHostState = remember { SnackbarHostState() }
+                    val result = model.resultMessage.observeAsState()
+                    result.value?.let { msg ->
+                        if (msg.isNotEmpty())
+                            LaunchedEffect(snackBarHostState) {
+                                snackBarHostState.showSnackbar(msg)
+                                model.resultMessage.value = null
+                            }
+                    }
+                    SnackbarHost(snackBarHostState)
                 }
             }
         }
@@ -41,6 +57,8 @@ class MainActivity : ComponentActivity() {
 
 
     class Model(application: Application): AndroidViewModel(application) {
+
+        val resultMessage = MutableLiveData<String>()
 
         fun accessDistrustedSystemCert() = viewModelScope.launch(Dispatchers.IO) {
             val urlConn = URL("https://google.com").openConnection() as HttpsURLConnection
@@ -56,6 +74,7 @@ class MainActivity : ComponentActivity() {
 
             // access sample URL
             Log.i(Cert4Android.TAG, "accessDistrustedSystemCert(): HTTP ${urlConn.responseCode}")
+            resultMessage.postValue("${urlConn.responseCode} ${urlConn.responseMessage}")
             urlConn.inputStream.close()
         }
 
