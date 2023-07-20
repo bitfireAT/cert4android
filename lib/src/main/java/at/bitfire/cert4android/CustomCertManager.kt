@@ -103,7 +103,7 @@ class CustomCertManager @JvmOverloads constructor(
                 while (service == null)
                     try {
                         serviceLock.wait()
-                    } catch(e: InterruptedException) {
+                    } catch(_: InterruptedException) {
                     }
             }
         } else
@@ -184,7 +184,7 @@ class CustomCertManager @JvmOverloads constructor(
                     Cert4Android.log.fine("Waiting for reply from service")
                     try {
                         lock.wait(SERVICE_TIMEOUT)
-                    } catch(e: InterruptedException) {
+                    } catch(_: InterruptedException) {
                     }
                 }
             }
