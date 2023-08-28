@@ -18,19 +18,15 @@ interface ICustomCertService {
      *
      * Example:
      * ```kotlin
-     * try {
-     *     withTimeout(30000) {
-     *         val isTrusted = svc.checkTrusted(cert, interactive, appInForeground)
+     * withTimeout(30000) {
+     *     val isTrusted = svc.checkTrusted(cert, interactive, appInForeground)
      *
-     *         if (!isTrusted) {
-     *             throw CertificateNotTrustedException(cert)
-     *         }
+     *     if (!isTrusted) {
+     *         throw CertificateNotTrustedException(cert)
      *     }
-     * } catch (_: TimeoutCancellationException) {
-     *     cert.let(svc::abortCheck)
-     *     throw CertificateTimeoutException()
      * }
      * ```
+     * If the coroutine running the function is canceled, [abortCheck] is called automatically with the certificate given.
      *
      * @since 2023-08-28
      *

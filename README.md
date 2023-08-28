@@ -96,6 +96,8 @@ directory. Especially `certificate_notification_connection_security` and
     The new function is suspending, see KTDoc for more information.
   - `CustomCertService`:\
     Just as in `ICustomCertService`, remove callback, and use the returned `Boolean`.
+- `CustomCertManager` now has an extra constructor parameter called `timeout` it's used for making sure custom
+  certificate checks do not take longer than a desired amount.
 
 
 # License 

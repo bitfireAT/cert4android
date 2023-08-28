@@ -303,12 +303,15 @@ class CustomCertService: Service() {
             cert: X509Certificate,
             interactive: Boolean,
             foreground: Boolean
-        ): Boolean = suspendCoroutine { cont ->
+        ): Boolean = suspendCancellableCoroutine { cont ->
+            // If canceled, abort check
+            cont.invokeOnCancellation { abortCheck(cert) }
+
             // if there's already a pending decision for this certificate, just add this callback
             val pending = pendingCertificates[cert]
             if (pending != null) {
                 pending += cont
-                return@suspendCoroutine
+                return@suspendCancellableCoroutine
             }
 
             when {

@@ -187,16 +187,17 @@ class CustomCertManager @JvmOverloads constructor(
         val svc = service ?: throw ServiceNotBoundException()
 
         try {
-            withTimeout(timeout) {
-                val isTrusted = svc.checkTrusted(cert, interactive, appInForeground)
-
-                if (!isTrusted) {
-                    throw CertificateNotTrustedException(cert)
-                }
+            val isTrusted = withTimeoutOrNull(timeout) {
+                svc.checkTrusted(cert, interactive, appInForeground)
             }
-        } catch (_: TimeoutCancellationException) {
-            cert.let(svc::abortCheck)
-            throw CertificateTimeoutException()
+            when (isTrusted) {
+                null -> {
+                    cert.let(svc::abortCheck)
+                    throw CertificateTimeoutException()
+                }
+                false -> throw CertificateNotTrustedException(cert)
+                true -> { /* do nothing */ }
+            }
         } catch(e: Exception) {
             throw CertificateException("Couldn't check certificate", e)
         }
