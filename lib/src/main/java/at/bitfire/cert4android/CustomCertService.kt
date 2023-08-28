@@ -315,59 +315,57 @@ class CustomCertService: Service() {
                 return completable
             }
 
-            CoroutineScope(Dispatchers.IO).launch {
-                when {
-                    untrustedCerts.contains(cert) -> {
-                        Cert4Android.log.fine("Certificate is cached as untrusted, rejecting")
-                        completable.complete(false)
-                    }
-                    inTrustStore(cert) -> {
-                        Cert4Android.log.fine("Certificate is cached as trusted, accepting")
-                        completable.complete(true)
-                    }
-                    else -> {
-                        if (interactive) {
-                            Cert4Android.log.fine("Certificate not known and running in interactive mode, asking user")
+            when {
+                untrustedCerts.contains(cert) -> {
+                    Cert4Android.log.fine("Certificate is cached as untrusted, rejecting")
+                    completable.complete(false)
+                }
+                inTrustStore(cert) -> {
+                    Cert4Android.log.fine("Certificate is cached as trusted, accepting")
+                    completable.complete(true)
+                }
+                else -> {
+                    if (interactive) {
+                        Cert4Android.log.fine("Certificate not known and running in interactive mode, asking user")
 
-                            // remember pending decision
-                            pendingCompletables[cert] = mutableListOf(completable)
+                        // remember pending decision
+                        pendingCompletables[cert] = mutableListOf(completable)
 
-                            val decisionIntent = Intent(this@CustomCertService, TrustCertificateActivity::class.java)
-                            decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
+                        val decisionIntent = Intent(this@CustomCertService, TrustCertificateActivity::class.java)
+                        decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
 
-                            val rejectIntent = Intent(this@CustomCertService, CustomCertService::class.java)
-                            with(rejectIntent) {
-                                action = CMD_CERTIFICATION_DECISION
-                                putExtra(EXTRA_CERTIFICATE, rawCert)
-                                putExtra(EXTRA_TRUSTED, false)
-                            }
-
-                            val id = rawCert.contentHashCode()
-                            val notify = NotificationCompat.Builder(this@CustomCertService, NotificationUtils.CHANNEL_CERTIFICATES)
-                                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                                .setSmallIcon(R.drawable.ic_lock_open_white)
-                                .setContentTitle(this@CustomCertService.getString(R.string.certificate_notification_connection_security))
-                                .setContentText(this@CustomCertService.getString(R.string.certificate_notification_user_interaction))
-                                .setSubText(cert.subjectDN.name)
-                                .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                                .setContentIntent(PendingIntent.getActivity(this@CustomCertService, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
-                                .setDeleteIntent(PendingIntent.getService(this@CustomCertService, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
-                                .build()
-                            val nm = NotificationUtils.createChannels(this@CustomCertService)
-                            if (ActivityCompat.checkSelfPermission(this@CustomCertService, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
-                                nm.notify(CertUtils.getTag(cert), Cert4Android.NOTIFICATION_CERT_DECISION, notify)
-                            else
-                                Cert4Android.log.warning("Couldn't show certificate notification (missing notification permission)")
-
-                            if (foreground) {
-                                decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                startActivity(decisionIntent)
-                            }
-
-                        } else {
-                            Cert4Android.log.fine("Certificate not known and running in non-interactive mode, rejecting")
-                            completable.complete(false)
+                        val rejectIntent = Intent(this@CustomCertService, CustomCertService::class.java)
+                        with(rejectIntent) {
+                            action = CMD_CERTIFICATION_DECISION
+                            putExtra(EXTRA_CERTIFICATE, rawCert)
+                            putExtra(EXTRA_TRUSTED, false)
                         }
+
+                        val id = rawCert.contentHashCode()
+                        val notify = NotificationCompat.Builder(this@CustomCertService, NotificationUtils.CHANNEL_CERTIFICATES)
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setSmallIcon(R.drawable.ic_lock_open_white)
+                            .setContentTitle(this@CustomCertService.getString(R.string.certificate_notification_connection_security))
+                            .setContentText(this@CustomCertService.getString(R.string.certificate_notification_user_interaction))
+                            .setSubText(cert.subjectDN.name)
+                            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                            .setContentIntent(PendingIntent.getActivity(this@CustomCertService, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+                            .setDeleteIntent(PendingIntent.getService(this@CustomCertService, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+                            .build()
+                        val nm = NotificationUtils.createChannels(this@CustomCertService)
+                        if (ActivityCompat.checkSelfPermission(this@CustomCertService, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
+                            nm.notify(CertUtils.getTag(cert), Cert4Android.NOTIFICATION_CERT_DECISION, notify)
+                        else
+                            Cert4Android.log.warning("Couldn't show certificate notification (missing notification permission)")
+
+                        if (foreground) {
+                            decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(decisionIntent)
+                        }
+
+                    } else {
+                        Cert4Android.log.fine("Certificate not known and running in non-interactive mode, rejecting")
+                        completable.complete(false)
                     }
                 }
             }

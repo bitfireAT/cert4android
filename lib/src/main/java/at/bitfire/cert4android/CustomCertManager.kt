@@ -11,6 +11,9 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.os.Looper
+import at.bitfire.cert4android.exception.CertificateNotTrustedException
+import at.bitfire.cert4android.exception.CertificateTimeoutException
+import at.bitfire.cert4android.exception.ServiceNotBoundException
 import org.conscrypt.Conscrypt
 import java.io.Closeable
 import java.security.cert.CertificateException
@@ -22,7 +25,10 @@ import javax.net.ssl.SSLPeerUnverifiedException
 import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * TrustManager to handle custom certificates. Communicates with
@@ -162,27 +168,39 @@ class CustomCertManager @JvmOverloads constructor(
         }
     }
 
-    internal suspend fun checkCustomTrusted(cert: X509Certificate) {
-        val svc = service ?: throw CertificateException("Not bound to CustomCertService")
+    /**
+     * Uses the bound [service] to check whether the given [cert] is trusted.
+     * If no exception is thrown, the certificate
+     * is trusted, otherwise see the "throws" section.
+     *
+     * @param cert The certificate to check.
+     * @param timeout The number of milliseconds to wait until giving up on the response for the certificate "trusty-ness"
+     *
+     * @throws ServiceNotBoundException If [service] is null.
+     * @throws CertificateTimeoutException If after [timeout] no response was given from the service.
+     * @throws CertificateNotTrustedException If the certificate is not trusted.
+     * @throws CertificateException If there was an error while checking for the certificate.
+     */
+    internal suspend fun checkCustomTrusted(cert: X509Certificate, timeout: Long = 30_000) {
+        val svc = service ?: throw ServiceNotBoundException()
 
-        val completable: CompletableDeferred<Boolean>
+        var completable: CompletableDeferred<Boolean>? = null
 
         try {
-            completable = svc.checkTrusted(cert.encoded, interactive, appInForeground)
+            withTimeout(timeout) {
+                val trusted = svc.checkTrusted(cert.encoded, interactive, appInForeground)
+                    .also { completable = it }
+                    .await()
+
+                if (!trusted) {
+                    throw CertificateNotTrustedException(cert)
+                }
+            }
+        } catch (_: TimeoutCancellationException) {
+            completable?.let(svc::abortCheck)
+            throw CertificateTimeoutException()
         } catch(e: Exception) {
             throw CertificateException("Couldn't check certificate", e)
-        }
-
-        // todo - should we add a timeout? maybe we can let it be handled by the calling function
-        when (completable.await()) {
-            null -> {
-                // todo - if no timeout is added, this is never called
-                svc.abortCheck(completable)
-                throw CertificateException("Timeout when waiting for certificate trustworthiness decision")
-            }
-
-            true -> { /* OK */ }
-            false -> throw CertificateException("Certificate not accepted by CustomCertService")
         }
     }
 
