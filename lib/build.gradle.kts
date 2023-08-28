@@ -12,7 +12,6 @@ android {
 
     defaultConfig {
         minSdk = 21            // Android 5
-        targetSdk = 33         // Android 13
 
         aarMetadata {
             minCompileSdk = 29
