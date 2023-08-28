@@ -4,16 +4,9 @@
 
 package at.bitfire.cert4android
 
-import android.app.Service
-import android.content.Intent
-import android.os.IBinder
-import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
-import androidx.test.rule.ServiceTestRule
-import org.junit.After
-import org.junit.Assert.assertNotNull
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assume.assumeNotNull
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
 import java.net.URL
@@ -37,16 +30,10 @@ class CustomCertManagerTest {
         }
     }
 
+    val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
+
     lateinit var certManager: CustomCertManager
     lateinit var paranoidCertManager: CustomCertManager
-
-    init {
-        CustomCertManager.SERVICE_TIMEOUT = 1000
-    }
-
-    @JvmField
-    @Rule
-    val serviceTestRule = ServiceTestRule()
 
     var siteCerts: List<X509Certificate>? = null
     init {
@@ -59,26 +46,9 @@ class CustomCertManagerTest {
 
 
     @Before
-    fun initCertManager() {
-        // prepare a bound and ready service for testing
-        // loop required because of https://code.google.com/p/android/issues/detail?id=180396
-        val binder = bindService(CustomCertService::class.java)
-        assertNotNull(binder)
-
-        val context = getInstrumentation().context
-        CustomCertManager.resetCertificates(context)
-
-        certManager = CustomCertManager(context, false)
-        assertNotNull(certManager)
-
-        paranoidCertManager = CustomCertManager(context, false, false)
-        assertNotNull(paranoidCertManager)
-    }
-
-    @After
-    fun closeCertManager() {
-        paranoidCertManager.close()
-        certManager.close()
+    fun createCertManager() {
+        certManager = CustomCertManager(context, true, null)
+        paranoidCertManager = CustomCertManager(context, false, null)
     }
 
 
@@ -99,51 +69,27 @@ class CustomCertManagerTest {
 
     @Test
     fun testAddCustomCertificate() {
-        addCustomCertificate()
+        addTrustedCertificate()
         paranoidCertManager.checkServerTrusted(siteCerts!!.toTypedArray(), "RSA")
     }
 
-    // fails randomly for unknown reason:
     @Test(expected = CertificateException::class)
     fun testRemoveCustomCertificate() {
-        addCustomCertificate()
+        addTrustedCertificate()
 
-        // remove certificate and check again
-        // should now be rejected for the whole session, i.e. no timeout anymore
-        val intent = Intent(getInstrumentation().context, CustomCertService::class.java)
-        intent.action = CustomCertService.CMD_CERTIFICATION_DECISION
-        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts!!.first().encoded)
-        intent.putExtra(CustomCertService.EXTRA_TRUSTED, false)
-        startService(intent, CustomCertService::class.java)
+        // remove certificate again
+        // should now be rejected for the whole session
+        addUntrustedCertificate()
+
         paranoidCertManager.checkServerTrusted(siteCerts!!.toTypedArray(), "RSA")
     }
 
-    private fun addCustomCertificate() {
-        // add certificate and check again
-        val intent = Intent(getInstrumentation().context, CustomCertService::class.java)
-        intent.action = CustomCertService.CMD_CERTIFICATION_DECISION
-        intent.putExtra(CustomCertService.EXTRA_CERTIFICATE, siteCerts!!.first().encoded)
-        intent.putExtra(CustomCertService.EXTRA_TRUSTED, true)
-        startService(intent, CustomCertService::class.java)
+    private fun addTrustedCertificate() {
+        CustomCertStore.getInstance(context).setTrustedByUser(siteCerts!!.first())
     }
 
-
-    private fun bindService(clazz: Class<out Service>): IBinder {
-        var binder = serviceTestRule.bindService(Intent(getInstrumentation().targetContext, clazz))
-        var it = 0
-        while (binder == null && it++ <100) {
-            binder = serviceTestRule.bindService(Intent(getInstrumentation().targetContext, clazz))
-            System.err.println("Waiting for ServiceTestRule.bindService")
-            Thread.sleep(50)
-        }
-        if (binder == null)
-            throw IllegalStateException("Couldn't bind to service")
-        return binder
-    }
-
-    private fun startService(intent: Intent, clazz: Class<out Service>) {
-        serviceTestRule.startService(intent)
-        bindService(clazz)
+    private fun addUntrustedCertificate() {
+        CustomCertStore.getInstance(context).setUntrustedByUser(siteCerts!!.first())
     }
 
 }

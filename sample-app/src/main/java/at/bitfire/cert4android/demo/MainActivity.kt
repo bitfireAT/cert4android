@@ -1,7 +1,10 @@
 package at.bitfire.cert4android.demo
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
 import android.net.SSLCertificateSocketFactory
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -19,6 +22,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -40,6 +44,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= 33 && ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
 
         setContent {
             MaterialTheme {
@@ -110,7 +117,8 @@ class MainActivity : ComponentActivity() {
                 resultMessage.postValue("${urlConn.responseCode} ${urlConn.responseMessage}")
                 urlConn.inputStream.close()
             } catch (e: Exception) {
-                resultMessage.postValue("ERROR: ${e.message}")
+                resultMessage.postValue("testAccess() ERROR: ${e.message}")
+                Log.w(Cert4Android.TAG, "testAccess(): ERROR: ${e.message}")
             }
         }
 

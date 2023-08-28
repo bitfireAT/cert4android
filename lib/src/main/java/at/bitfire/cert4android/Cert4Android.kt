@@ -31,9 +31,4 @@ object Cert4Android {
         MaterialTheme(content = content)
     }
 
-
-    // notifications
-
-    const val NOTIFICATION_CERT_DECISION = 88809
-
 }

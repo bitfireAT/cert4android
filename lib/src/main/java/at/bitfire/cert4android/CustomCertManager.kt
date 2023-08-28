@@ -36,8 +36,7 @@ import javax.net.ssl.X509TrustManager
 class CustomCertManager @JvmOverloads constructor(
     private val context: Context,
     val trustSystemCerts: Boolean = true,
-    val interactive: Boolean,
-    var appInForeground: StateFlow<Boolean>
+    var appInForeground: StateFlow<Boolean>?
 ): X509TrustManager {
 
     private val certStore = CustomCertStore.getInstance(context)

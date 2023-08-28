@@ -7,8 +7,10 @@ package at.bitfire.cert4android
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.conscrypt.Conscrypt
 import java.io.File
 import java.io.FileInputStream
@@ -21,7 +23,8 @@ import java.util.logging.Level
 import javax.net.ssl.SSLContext
 
 class CustomCertStore private constructor(
-    private val context: Context
+    private val context: Context,
+    private val userTimeout: Long = 60000L
 ) {
 
     companion object {
@@ -70,7 +73,8 @@ class CustomCertStore private constructor(
 
     @Synchronized
     fun clearUserDecisions() {
-        // clear trusted certs
+        Cert4Android.log.info("Clearing user-(dis)trusted certificates")
+
         for (alias in userKeyStore.aliases())
             userKeyStore.deleteEntry(alias)
         saveUserKeyStore()
@@ -92,6 +96,10 @@ class CustomCertStore private constructor(
                 // explicitly accepted by user
                 return true
 
+            // explicitly rejected by user
+            if (untrustedCerts.contains(cert))
+                return false
+
             // check system certs, if applicable
             if (trustSystemCerts)
                 try {
@@ -102,10 +110,6 @@ class CustomCertStore private constructor(
                 } catch (ignored: CertificateException) {
                     // not trusted by system, ask user
                 }
-
-            // already rejected by user, don't ask again
-            if (untrustedCerts.contains(cert))
-                return false
         }
 
         if (appInForeground == null) {
@@ -115,16 +119,15 @@ class CustomCertStore private constructor(
 
         return runBlocking {
             val ui = UserDecisionUi.getInstance(context)
-            val trusted = ui.check(cert, appInForeground)
 
-            // save decision
-            if (trusted) {
-                userKeyStore.setCertificateEntry(CertUtils.getTag(cert), cert)
-            } else {
-                untrustedCerts += cert
+            try {
+                withTimeout(userTimeout) {
+                    ui.check(cert, appInForeground.value)
+                }
+            } catch (e: TimeoutCancellationException) {
+                Cert4Android.log.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")
+                false
             }
-
-            trusted
         }
     }
 
@@ -133,10 +136,23 @@ class CustomCertStore private constructor(
      * we can ignore an invalid host name for that certificate.
      *
      */
+    @Synchronized
     fun isTrustedByUser(cert: X509Certificate): Boolean =
-        synchronized(this) {
-            userKeyStore.getCertificateAlias(cert) != null
-        }
+        userKeyStore.getCertificateAlias(cert) != null
+
+    @Synchronized
+    fun setTrustedByUser(cert: X509Certificate) {
+        Cert4Android.log.info("Trusted by user: $cert")
+        userKeyStore.setCertificateEntry(CertUtils.getTag(cert), cert)
+        untrustedCerts -= cert
+    }
+
+    @Synchronized
+    fun setUntrustedByUser(cert: X509Certificate) {
+        Cert4Android.log.info("Distrusted by user: $cert")
+        userKeyStore.deleteEntry(CertUtils.getTag(cert))
+        untrustedCerts += cert
+    }
 
     private fun loadUserKeyStore() {
         try {

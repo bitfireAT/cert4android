@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.cert.X509Certificate
 import kotlin.coroutines.Continuation
@@ -38,7 +37,7 @@ class UserDecisionUi private constructor(
 
     private val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
 
-    suspend fun check(cert: X509Certificate, appInForeground: StateFlow<Boolean>): Boolean = suspendCancellableCoroutine { cont ->
+    suspend fun check(cert: X509Certificate, appInForeground: Boolean): Boolean = suspendCancellableCoroutine { cont ->
         synchronized(pendingDecisions) {
             if (pendingDecisions.containsKey(cert))
                 pendingDecisions[cert]!! += cont
@@ -50,7 +49,8 @@ class UserDecisionUi private constructor(
             synchronized(pendingDecisions) {
                 pendingDecisions[cert]?.remove(cont)
 
-                // TODO cancel notification
+                val nm = NotificationUtils.createChannels(context)
+                nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
             }
         }
 
@@ -78,12 +78,12 @@ class UserDecisionUi private constructor(
         val nm = NotificationUtils.createChannels(context)
         val notificationShown =
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                nm.notify(CertUtils.getTag(cert), Cert4Android.NOTIFICATION_CERT_DECISION, notify)
+                nm.notify(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION, notify)
                 true
             } else
                 false
 
-        if (appInForeground.value) {
+        if (appInForeground) {
             decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(decisionIntent)
         } else if (!notificationShown) {
@@ -95,6 +95,18 @@ class UserDecisionUi private constructor(
     }
 
     fun onUserDecision(cert: X509Certificate, trusted: Boolean) {
+        // cancel notification
+        val nm = NotificationUtils.createChannels(context)
+        nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
+
+        // save decision
+        val customCertStore = CustomCertStore.getInstance(context)
+        if (trusted)
+            customCertStore.setTrustedByUser(cert)
+        else
+            customCertStore.setUntrustedByUser(cert)
+
+        // continue work that's waiting for decisions
         pendingDecisions[cert]?.iterator()?.let { iter ->
             while (iter.hasNext()) {
                 iter.next().resume(trusted)

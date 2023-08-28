@@ -14,6 +14,10 @@ object NotificationUtils {
 
     const val CHANNEL_CERTIFICATES = "cert4android"
 
+    const val ID_CERT_DECISION = 88809
+
+
+
     fun createChannels(context: Context): NotificationManagerCompat {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
