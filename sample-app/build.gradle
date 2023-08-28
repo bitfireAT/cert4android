@@ -38,7 +38,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.4.7'      // keep in sync with Kotlin version in top-level build.gradle
+        kotlinCompilerExtensionVersion '1.5.2'      // keep in sync with Kotlin version in top-level build.gradle
     }
     packagingOptions {
         resources {
