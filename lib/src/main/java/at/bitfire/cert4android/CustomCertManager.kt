@@ -184,20 +184,18 @@ class CustomCertManager @JvmOverloads constructor(
     internal suspend fun checkCustomTrusted(cert: X509Certificate, timeout: Long = 30_000) {
         val svc = service ?: throw ServiceNotBoundException()
 
-        var completable: CompletableDeferred<Boolean>? = null
-
         try {
             withTimeout(timeout) {
-                val trusted = svc.checkTrusted(cert.encoded, interactive, appInForeground)
-                    .also { completable = it }
-                    .await()
+                Cert4Android.log.info("Checking if certificate is trusted...")
+                val isTrusted = svc.checkTrusted(cert, interactive, appInForeground)
+                Cert4Android.log.info("Certificate trusted: $isTrusted")
 
-                if (!trusted) {
+                if (!isTrusted) {
                     throw CertificateNotTrustedException(cert)
                 }
             }
         } catch (_: TimeoutCancellationException) {
-            completable?.let(svc::abortCheck)
+            cert.let(svc::abortCheck)
             throw CertificateTimeoutException()
         } catch(e: Exception) {
             throw CertificateException("Couldn't check certificate", e)

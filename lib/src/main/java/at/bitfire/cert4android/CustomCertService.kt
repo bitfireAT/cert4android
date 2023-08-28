@@ -31,10 +31,14 @@ import java.security.spec.MGF1ParameterSpec
 import java.util.logging.Level
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * The service which manages the certificates. Communications with
@@ -87,7 +91,7 @@ class CustomCertService: Service() {
     @Deprecated("No longer using IOnCertificateDecision")
     private val pendingDecisions = mutableMapOf<X509Certificate, MutableList<IOnCertificateDecision>>()
 
-    private val pendingCompletables = mutableMapOf<X509Certificate, MutableList<CompletableDeferred<Boolean>>>()
+    private val pendingCertificates = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
 
 
     override fun onCreate() {
@@ -193,12 +197,12 @@ class CustomCertService: Service() {
             }
             pendingDecisions -= cert
         }
-        pendingCompletables[cert]?.let { list ->
+        pendingCertificates[cert]?.let { list ->
             Cert4Android.log.fine("Notifying ${list.size} pending certificate completable decision listener(s)")
             list.forEach {
-                it.complete(trusted)
+                it.resume(trusted)
             }
-            pendingCompletables -= cert
+            pendingCertificates -= cert
         }
     }
 
@@ -295,41 +299,35 @@ class CustomCertService: Service() {
             }
         }
 
-        override fun checkTrusted(rawCert: ByteArray, interactive: Boolean, foreground: Boolean): CompletableDeferred<Boolean> {
-            val completable = CompletableDeferred(false)
-
-            val cert: X509Certificate? = try {
-                certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate
-            } catch(e: Exception) {
-                Cert4Android.log.log(Level.SEVERE, "Couldn't handle certificate", e)
-                null
-            }
-            if (cert == null) {
-                completable.complete(false)
-                return completable
-            }
-
+        override suspend fun checkTrusted(
+            cert: X509Certificate,
+            interactive: Boolean,
+            foreground: Boolean
+        ): Boolean = suspendCoroutine { cont ->
             // if there's already a pending decision for this certificate, just add this callback
-            pendingCompletables[cert]?.let { list ->
-                list += completable
-                return completable
+            val pending = pendingCertificates[cert]
+            if (pending != null) {
+                pending += cont
+                return@suspendCoroutine
             }
 
             when {
                 untrustedCerts.contains(cert) -> {
                     Cert4Android.log.fine("Certificate is cached as untrusted, rejecting")
-                    completable.complete(false)
+                    cont.resume(false)
                 }
                 inTrustStore(cert) -> {
                     Cert4Android.log.fine("Certificate is cached as trusted, accepting")
-                    completable.complete(true)
+                    cont.resume(true)
                 }
                 else -> {
                     if (interactive) {
                         Cert4Android.log.fine("Certificate not known and running in interactive mode, asking user")
 
+                        val rawCert = cert.encoded
+
                         // remember pending decision
-                        pendingCompletables[cert] = mutableListOf(completable)
+                        pendingCertificates[cert] = mutableListOf(cont)
 
                         val decisionIntent = Intent(this@CustomCertService, TrustCertificateActivity::class.java)
                         decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
@@ -365,12 +363,10 @@ class CustomCertService: Service() {
 
                     } else {
                         Cert4Android.log.fine("Certificate not known and running in non-interactive mode, rejecting")
-                        completable.complete(false)
+                        cont.resume(false)
                     }
                 }
             }
-
-            return completable
         }
 
         @Deprecated(
@@ -386,12 +382,8 @@ class CustomCertService: Service() {
             }
         }
 
-        override fun abortCheck(completable: CompletableDeferred<Boolean>) {
-            for ((cert, list) in pendingCompletables) {
-                list.removeAll { it == completable }
-                if (list.isEmpty())
-                    pendingCompletables -= cert
-            }
+        override fun abortCheck(certificate: X509Certificate) {
+            pendingCertificates[certificate]?.clear()
         }
 
     }
