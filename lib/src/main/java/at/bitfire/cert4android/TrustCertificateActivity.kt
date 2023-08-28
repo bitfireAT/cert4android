@@ -47,13 +47,13 @@ class TrustCertificateActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
+        const val EXTRA_TRUSTED = "trusted"
     }
 
     private val model by viewModels<Model>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         model.processIntent(intent)
 
         setContent {
@@ -67,13 +67,10 @@ class TrustCertificateActivity : ComponentActivity() {
     }
 
     private fun sendDecision(trusted: Boolean) {
-        val intent = Intent(this, CustomCertService::class.java)
-        with(intent) {
-            action = CustomCertService.CMD_CERTIFICATION_DECISION
-            putExtra(CustomCertService.EXTRA_CERTIFICATE, getIntent().getSerializableExtra(EXTRA_CERTIFICATE))
-            putExtra(CustomCertService.EXTRA_TRUSTED, trusted)
-        }
-        startService(intent)
+        val rawCert: ByteArray = intent?.getByteArrayExtra(EXTRA_CERTIFICATE)!!
+        val cert = Model.certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as X509Certificate
+
+        UserDecisionUi.getInstance(this).onUserDecision(cert, trusted)
     }
 
 
