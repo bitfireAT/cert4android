@@ -84,6 +84,17 @@ You can overwrite resources when you want, just have a look at the `res/strings`
 directory. Especially `certificate_notification_connection_security` and
 `trust_certificate_unknown_certificate_found` should contain your app name.
 
+# Changelog
+## 2023-08-28
+- `IOnCertificateDecision` has been deprecated, instead `CompletableDeferred` is used.
+  - `ICustomCertService`:\
+    Replace `checkTrusted(ByteArray, Boolean, Boolean, IOnCertificateDecision)` with `checkTrusted(ByteArray, Boolean, Boolean): CompletableDeferred<Boolean>`,
+    this means, removing the callback.
+    Then, the result can be awaited, for example.
+    See [Deferred](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/) for more information.
+  - `CustomCertService`:\
+    Just as in `ICustomCertService`, remove callback, and use the returned `Deferred`.
+
 
 # License 
 
