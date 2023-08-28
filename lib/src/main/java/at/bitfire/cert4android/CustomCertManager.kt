@@ -42,6 +42,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  *                    false: unknown certificates will be rejected (only uses custom certificate key store)
  * @param trustSystemCerts whether system certificates will be trusted
  * @param appInForeground  Whether to launch [TrustCertificateActivity] directly. The notification will always be shown.
+ * @param timeout The number of milliseconds to wait until giving up on certificate verification.
  *
  * @constructor Creates a new instance, using a certain [CustomCertService] messenger (for testing).
  * Must not be run from the main thread because this constructor may request binding to [CustomCertService].
@@ -57,7 +58,9 @@ class CustomCertManager @JvmOverloads constructor(
     trustSystemCerts: Boolean = true,
 
     @Volatile
-    var appInForeground: Boolean = false
+    var appInForeground: Boolean = false,
+
+    private val timeout: Long = 30_000
 ): X509TrustManager, Closeable {
 
     companion object {
@@ -174,14 +177,13 @@ class CustomCertManager @JvmOverloads constructor(
      * is trusted, otherwise see the "throws" section.
      *
      * @param cert The certificate to check.
-     * @param timeout The number of milliseconds to wait until giving up on the response for the certificate "trusty-ness"
      *
      * @throws ServiceNotBoundException If [service] is null.
      * @throws CertificateTimeoutException If after [timeout] no response was given from the service.
      * @throws CertificateNotTrustedException If the certificate is not trusted.
      * @throws CertificateException If there was an error while checking for the certificate.
      */
-    internal suspend fun checkCustomTrusted(cert: X509Certificate, timeout: Long = 30_000) {
+    internal suspend fun checkCustomTrusted(cert: X509Certificate) {
         val svc = service ?: throw ServiceNotBoundException()
 
         try {
