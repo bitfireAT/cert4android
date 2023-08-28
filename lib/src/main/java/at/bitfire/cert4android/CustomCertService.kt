@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.conscrypt.Conscrypt
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -31,6 +32,8 @@ import java.security.spec.MGF1ParameterSpec
 import java.util.logging.Level
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
 
 /**
  * The service which manages the certificates. Communications with
@@ -79,7 +82,7 @@ class CustomCertService: Service() {
 
     private var untrustedCerts = HashSet<X509Certificate>()
 
-    private val pendingDecisions = mutableMapOf<X509Certificate, MutableList<IOnCertificateDecision>>()
+    private val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
 
 
     override fun onCreate() {
@@ -177,10 +180,7 @@ class CustomCertService: Service() {
         pendingDecisions[cert]?.let { callbacks ->
             Cert4Android.log.fine("Notifying ${callbacks.size} certificate decision listener(s)")
             callbacks.forEach {
-                if (trusted)
-                    it.accept()
-                else
-                    it.reject()
+                it.resume(trusted)
             }
             pendingDecisions -= cert
         }
@@ -200,39 +200,33 @@ class CustomCertService: Service() {
 
     private val binder = object: ICustomCertService, Binder() {
 
-        override fun checkTrusted(rawCert: ByteArray, interactive: Boolean, foreground: Boolean, callback: IOnCertificateDecision) {
-            val cert: X509Certificate? = try {
-                certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate
-            } catch(e: Exception) {
-                Cert4Android.log.log(Level.SEVERE, "Couldn't handle certificate", e)
-                null
-            }
-            if (cert == null) {
-                callback.reject()
-                return
-            }
+        override suspend fun checkTrusted(cert: X509Certificate, interactive: Boolean, foreground: Boolean): Boolean = suspendCancellableCoroutine { cont ->
+            // If canceled, abort check
+            cont.invokeOnCancellation { abortCheck(cert) }
 
-            // if there's already a pending decision for this certificate, just add this callback
-            pendingDecisions[cert]?.let { callbacks ->
-                callbacks += callback
-                return
+            // if there's already a pending decision for this certificate, just add this continuation
+            pendingDecisions[cert]?.let { decisions ->
+                decisions += cont
+                return@suspendCancellableCoroutine
             }
 
             when {
                 untrustedCerts.contains(cert) -> {
                     Cert4Android.log.fine("Certificate is cached as untrusted, rejecting")
-                    callback.reject()
+                    cont.resume(false)
                 }
                 inTrustStore(cert) -> {
                     Cert4Android.log.fine("Certificate is cached as trusted, accepting")
-                    callback.accept()
+                    cont.resume(true)
                 }
                 else -> {
                     if (interactive) {
                         Cert4Android.log.fine("Certificate not known and running in interactive mode, asking user")
 
                         // remember pending decision
-                        pendingDecisions[cert] = mutableListOf(callback)
+                        pendingDecisions[cert] = mutableListOf(cont)
+
+                        val rawCert = cert.encoded
 
                         val decisionIntent = Intent(this@CustomCertService, TrustCertificateActivity::class.java)
                         decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
@@ -268,18 +262,14 @@ class CustomCertService: Service() {
 
                     } else {
                         Cert4Android.log.fine("Certificate not known and running in non-interactive mode, rejecting")
-                        callback.reject()
+                        cont.resume(false)
                     }
                 }
             }
         }
 
-        override fun abortCheck(callback: IOnCertificateDecision) {
-            for ((cert, list) in pendingDecisions) {
-                list.removeAll { it == callback }
-                if (list.isEmpty())
-                    pendingDecisions -= cert
-            }
+        override fun abortCheck(certificate: X509Certificate) {
+            pendingDecisions[certificate]?.clear()
         }
 
     }

@@ -11,6 +11,8 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.os.Looper
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.conscrypt.Conscrypt
 import java.io.Closeable
 import java.security.cert.CertificateException
@@ -152,50 +154,24 @@ class CustomCertManager @JvmOverloads constructor(
             }
         }
 
-        if (!trusted)
+        if (!trusted) runBlocking {
             // not trusted by system, let's check ourselves
             checkCustomTrusted(chain[0])
+        }
     }
 
-    internal fun checkCustomTrusted(cert: X509Certificate) {
+    internal suspend fun checkCustomTrusted(cert: X509Certificate) {
         val svc = service ?: throw CertificateException("Not bound to CustomCertService")
 
-        val lock = Object()
-        var valid: Boolean? = null
-
-        val callback = object: IOnCertificateDecision {
-            override fun accept() {
-                synchronized(lock) {
-                    valid = true
-                    lock.notify()
-                }
-            }
-            override fun reject() {
-                synchronized(lock) {
-                    valid = false
-                    lock.notify()
-                }
-            }
-        }
-
-        try {
-            svc.checkTrusted(cert.encoded, interactive, appInForeground, callback)
-            synchronized(lock) {
-                if (valid == null) {
-                    Cert4Android.log.fine("Waiting for reply from service")
-                    try {
-                        lock.wait(SERVICE_TIMEOUT)
-                    } catch(_: InterruptedException) {
-                    }
-                }
-            }
+        val isValid = try {
+            withTimeoutOrNull(SERVICE_TIMEOUT) { svc.checkTrusted(cert, interactive, appInForeground) }
         } catch(e: Exception) {
             throw CertificateException("Couldn't check certificate", e)
         }
 
-        when (valid) {
+        when (isValid) {
             null -> {
-                svc.abortCheck(callback)
+                svc.abortCheck(cert)
                 throw CertificateException("Timeout when waiting for certificate trustworthiness decision")
             }
 
@@ -230,7 +206,7 @@ class CustomCertManager @JvmOverloads constructor(
             try {
                 val cert = sslSession.peerCertificates
                 if (cert.isNotEmpty() && cert[0] is X509Certificate) {
-                    checkCustomTrusted(cert[0] as X509Certificate)
+                    runBlocking { checkCustomTrusted(cert[0] as X509Certificate) }
                     Cert4Android.log.fine("Certificate is in custom trust store, accepting")
                     return true
                 }
