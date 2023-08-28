@@ -88,12 +88,11 @@ directory. Especially `certificate_notification_connection_security` and
 ## 2023-08-28
 - `IOnCertificateDecision` has been deprecated, instead `CompletableDeferred` is used.
   - `ICustomCertService`:\
-    Replace `checkTrusted(ByteArray, Boolean, Boolean, IOnCertificateDecision)` with `checkTrusted(ByteArray, Boolean, Boolean): CompletableDeferred<Boolean>`,
+    Replace `checkTrusted(ByteArray, Boolean, Boolean, IOnCertificateDecision)` with `checkTrusted(ByteArray, Boolean, Boolean): Boolean`,
     this means, removing the callback.
-    Then, the result can be awaited, for example.
-    See [Deferred](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/) for more information.
+    The new function is suspending, see KTDoc for more information.
   - `CustomCertService`:\
-    Just as in `ICustomCertService`, remove callback, and use the returned `Deferred`.
+    Just as in `ICustomCertService`, remove callback, and use the returned `BOolean`.
 
 
 # License 
