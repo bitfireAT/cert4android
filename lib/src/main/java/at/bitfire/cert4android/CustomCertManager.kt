@@ -14,21 +14,17 @@ import android.os.Looper
 import at.bitfire.cert4android.exception.CertificateNotTrustedException
 import at.bitfire.cert4android.exception.CertificateTimeoutException
 import at.bitfire.cert4android.exception.ServiceNotBoundException
-import org.conscrypt.Conscrypt
 import java.io.Closeable
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import java.util.concurrent.CompletableFuture
 import java.util.logging.Level
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLPeerUnverifiedException
 import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import org.conscrypt.Conscrypt
 
 /**
  * TrustManager to handle custom certificates. Communicates with
