@@ -88,14 +88,14 @@ directory. Especially `certificate_notification_connection_security` and
 ## 2023-08-28
 - `IOnCertificateDecision` has been deprecated, instead `CompletableDeferred` is used.
   - `ICustomCertService`:\
-    Replace `checkTrusted(X509Certificate, Boolean, Boolean, IOnCertificateDecision)` with `checkTrusted(ByteArray, Boolean, Boolean): Boolean`,
+    Replace `checkTrusted(ByteArray, Boolean, Boolean, IOnCertificateDecision)` with `checkTrusted(X509Certificate, Boolean, Boolean): Boolean`,
     this means, removing the callback.
   
     The certificate can now be passed directly instead of using raw bytes.
   
     The new function is suspending, see KTDoc for more information.
   - `CustomCertService`:\
-    Just as in `ICustomCertService`, remove callback, and use the returned `BOolean`.
+    Just as in `ICustomCertService`, remove callback, and use the returned `Boolean`.
 
 
 # License 

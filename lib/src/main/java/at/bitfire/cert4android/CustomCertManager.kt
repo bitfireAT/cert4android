@@ -186,9 +186,7 @@ class CustomCertManager @JvmOverloads constructor(
 
         try {
             withTimeout(timeout) {
-                Cert4Android.log.info("Checking if certificate is trusted...")
                 val isTrusted = svc.checkTrusted(cert, interactive, appInForeground)
-                Cert4Android.log.info("Certificate trusted: $isTrusted")
 
                 if (!isTrusted) {
                     throw CertificateNotTrustedException(cert)
