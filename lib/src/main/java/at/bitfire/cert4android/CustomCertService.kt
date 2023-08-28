@@ -31,6 +31,10 @@ import java.security.spec.MGF1ParameterSpec
 import java.util.logging.Level
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * The service which manages the certificates. Communications with
@@ -79,7 +83,11 @@ class CustomCertService: Service() {
 
     private var untrustedCerts = HashSet<X509Certificate>()
 
+    @Suppress("DEPRECATION")
+    @Deprecated("No longer using IOnCertificateDecision")
     private val pendingDecisions = mutableMapOf<X509Certificate, MutableList<IOnCertificateDecision>>()
+
+    private val pendingCompletables = mutableMapOf<X509Certificate, MutableList<CompletableDeferred<Boolean>>>()
 
 
     override fun onCreate() {
@@ -174,6 +182,7 @@ class CustomCertService: Service() {
         }
 
         // notify receivers which are waiting for a decision
+        @Suppress("DEPRECATION")
         pendingDecisions[cert]?.let { callbacks ->
             Cert4Android.log.fine("Notifying ${callbacks.size} certificate decision listener(s)")
             callbacks.forEach {
@@ -183,6 +192,13 @@ class CustomCertService: Service() {
                     it.reject()
             }
             pendingDecisions -= cert
+        }
+        pendingCompletables[cert]?.let { list ->
+            Cert4Android.log.fine("Notifying ${list.size} pending certificate completable decision listener(s)")
+            list.forEach {
+                it.complete(trusted)
+            }
+            pendingCompletables -= cert
         }
     }
 
@@ -200,6 +216,11 @@ class CustomCertService: Service() {
 
     private val binder = object: ICustomCertService, Binder() {
 
+        @Deprecated(
+            message = "Callbacks no longer used",
+            replaceWith = ReplaceWith("checkTrusted(rawCert, interactive, foreground)")
+        )
+        @Suppress("DEPRECATION")
         override fun checkTrusted(rawCert: ByteArray, interactive: Boolean, foreground: Boolean, callback: IOnCertificateDecision) {
             val cert: X509Certificate? = try {
                 certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate
@@ -274,11 +295,104 @@ class CustomCertService: Service() {
             }
         }
 
+        override fun checkTrusted(rawCert: ByteArray, interactive: Boolean, foreground: Boolean): CompletableDeferred<Boolean> {
+            val completable = CompletableDeferred(false)
+
+            val cert: X509Certificate? = try {
+                certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate
+            } catch(e: Exception) {
+                Cert4Android.log.log(Level.SEVERE, "Couldn't handle certificate", e)
+                null
+            }
+            if (cert == null) {
+                completable.complete(false)
+                return completable
+            }
+
+            // if there's already a pending decision for this certificate, just add this callback
+            pendingCompletables[cert]?.let { list ->
+                list += completable
+                return completable
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                when {
+                    untrustedCerts.contains(cert) -> {
+                        Cert4Android.log.fine("Certificate is cached as untrusted, rejecting")
+                        completable.complete(false)
+                    }
+                    inTrustStore(cert) -> {
+                        Cert4Android.log.fine("Certificate is cached as trusted, accepting")
+                        completable.complete(true)
+                    }
+                    else -> {
+                        if (interactive) {
+                            Cert4Android.log.fine("Certificate not known and running in interactive mode, asking user")
+
+                            // remember pending decision
+                            pendingCompletables[cert] = mutableListOf(completable)
+
+                            val decisionIntent = Intent(this@CustomCertService, TrustCertificateActivity::class.java)
+                            decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
+
+                            val rejectIntent = Intent(this@CustomCertService, CustomCertService::class.java)
+                            with(rejectIntent) {
+                                action = CMD_CERTIFICATION_DECISION
+                                putExtra(EXTRA_CERTIFICATE, rawCert)
+                                putExtra(EXTRA_TRUSTED, false)
+                            }
+
+                            val id = rawCert.contentHashCode()
+                            val notify = NotificationCompat.Builder(this@CustomCertService, NotificationUtils.CHANNEL_CERTIFICATES)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                .setSmallIcon(R.drawable.ic_lock_open_white)
+                                .setContentTitle(this@CustomCertService.getString(R.string.certificate_notification_connection_security))
+                                .setContentText(this@CustomCertService.getString(R.string.certificate_notification_user_interaction))
+                                .setSubText(cert.subjectDN.name)
+                                .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                                .setContentIntent(PendingIntent.getActivity(this@CustomCertService, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+                                .setDeleteIntent(PendingIntent.getService(this@CustomCertService, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+                                .build()
+                            val nm = NotificationUtils.createChannels(this@CustomCertService)
+                            if (ActivityCompat.checkSelfPermission(this@CustomCertService, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
+                                nm.notify(CertUtils.getTag(cert), Cert4Android.NOTIFICATION_CERT_DECISION, notify)
+                            else
+                                Cert4Android.log.warning("Couldn't show certificate notification (missing notification permission)")
+
+                            if (foreground) {
+                                decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(decisionIntent)
+                            }
+
+                        } else {
+                            Cert4Android.log.fine("Certificate not known and running in non-interactive mode, rejecting")
+                            completable.complete(false)
+                        }
+                    }
+                }
+            }
+
+            return completable
+        }
+
+        @Deprecated(
+            message = "Callbacks no longer used",
+            replaceWith = ReplaceWith("abortCheck()")
+        )
+        @Suppress("DEPRECATION")
         override fun abortCheck(callback: IOnCertificateDecision) {
             for ((cert, list) in pendingDecisions) {
                 list.removeAll { it == callback }
                 if (list.isEmpty())
                     pendingDecisions -= cert
+            }
+        }
+
+        override fun abortCheck(completable: CompletableDeferred<Boolean>) {
+            for ((cert, list) in pendingCompletables) {
+                list.removeAll { it == completable }
+                if (list.isEmpty())
+                    pendingCompletables -= cert
             }
         }
 
