@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.IBinder
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.rule.ServiceTestRule
+import at.bitfire.cert4android.exception.CertificateTimeoutException
 import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assume.assumeNotNull
@@ -37,8 +38,9 @@ class CustomCertManagerTest {
         }
     }
 
-    lateinit var certManager: CustomCertManager
-    lateinit var paranoidCertManager: CustomCertManager
+    private lateinit var certManager: CustomCertManager
+    private lateinit var paranoidCertManager: CustomCertManager
+    private lateinit var interactiveCertManager: CustomCertManager
 
     init {
         CustomCertManager.SERVICE_TIMEOUT = 1000
@@ -71,13 +73,18 @@ class CustomCertManagerTest {
         certManager = CustomCertManager(context, false)
         assertNotNull(certManager)
 
-        paranoidCertManager = CustomCertManager(context, false, false)
+        // set a low timeout so it fails quickly
+        interactiveCertManager = CustomCertManager(context, interactive = true, trustSystemCerts = false, timeout = 1)
+        assertNotNull(interactiveCertManager)
+
+        paranoidCertManager = CustomCertManager(context, interactive = false, trustSystemCerts = false)
         assertNotNull(paranoidCertManager)
     }
 
     @After
     fun closeCertManager() {
         paranoidCertManager.close()
+        interactiveCertManager.close()
         certManager.close()
     }
 
@@ -116,6 +123,11 @@ class CustomCertManagerTest {
         intent.putExtra(CustomCertService.EXTRA_TRUSTED, false)
         startService(intent, CustomCertService::class.java)
         paranoidCertManager.checkServerTrusted(siteCerts!!.toTypedArray(), "RSA")
+    }
+
+    @Test(expected = CertificateException::class)
+    fun testTimeoutAbortion() {
+        interactiveCertManager.checkServerTrusted(siteCerts!!.toTypedArray(), "RSA")
     }
 
     private fun addCustomCertificate() {
