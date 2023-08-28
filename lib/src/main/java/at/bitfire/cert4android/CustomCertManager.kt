@@ -191,10 +191,7 @@ class CustomCertManager @JvmOverloads constructor(
                 svc.checkTrusted(cert, interactive, appInForeground)
             }
             when (isTrusted) {
-                null -> {
-                    cert.let(svc::abortCheck)
-                    throw CertificateTimeoutException()
-                }
+                null -> throw CertificateTimeoutException()
                 false -> throw CertificateNotTrustedException(cert)
                 true -> { /* do nothing */ }
             }
