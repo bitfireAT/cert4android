@@ -34,6 +34,17 @@ class CustomCertStore private constructor(
         @SuppressLint("StaticFieldLeak")
         private var instance: CustomCertStore? = null
 
+        init {
+            // initialize Conscrypt
+            Security.insertProviderAt(Conscrypt.newProvider(), 1)
+
+            val version = Conscrypt.version()
+            Cert4Android.log.info("Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
+            val engine = SSLContext.getDefault().createSSLEngine()
+            Cert4Android.log.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
+            Cert4Android.log.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
+        }
+
         @Synchronized
         fun getInstance(context: Context): CustomCertStore {
             instance?.let {
@@ -58,15 +69,6 @@ class CustomCertStore private constructor(
     private var untrustedCerts = HashSet<X509Certificate>()
 
     init {
-        // initialize Conscrypt
-        Security.insertProviderAt(Conscrypt.newProvider(), 1)
-
-        val version = Conscrypt.version()
-        Cert4Android.log.info("Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
-        val engine = SSLContext.getDefault().createSSLEngine()
-        Cert4Android.log.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
-        Cert4Android.log.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
-
         loadUserKeyStore()
     }
 
@@ -133,7 +135,6 @@ class CustomCertStore private constructor(
     /**
      * Determines whether a certificate has been explicitly accepted by the user. In this case,
      * we can ignore an invalid host name for that certificate.
-     *
      */
     @Synchronized
     fun isTrustedByUser(cert: X509Certificate): Boolean =
@@ -161,7 +162,7 @@ class CustomCertStore private constructor(
                 Cert4Android.log.fine("Loaded ${userKeyStore.size()} trusted certificate(s)")
             }
         } catch(e: Exception) {
-            Cert4Android.log.log(Level.INFO, "No key store for trusted certificates (yet); creating in-memory key store.")
+            Cert4Android.log.fine("No key store for trusted certificates (yet); creating in-memory key store.")
             try {
                 userKeyStore.load(null, null)
             } catch(e: Exception) {
