@@ -13,6 +13,8 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.MaterialTheme
@@ -37,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier
+import org.apache.http.conn.ssl.StrictHostnameVerifier
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
@@ -53,7 +56,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                Column {
+                Column(Modifier
+                    .padding(8.dp)
+                    .verticalScroll(rememberScrollState())) {
                     Row {
                         Checkbox(model.appInForeground.collectAsState().value, onCheckedChange = { foreground ->
                             model.setInForeground(foreground)
@@ -62,15 +67,39 @@ class MainActivity : ComponentActivity() {
                     }
 
                     Button(onClick = {
-                        model.testAccess(trustSystemCerts = true)
+                        model.testAccess()
                     }, modifier = Modifier.padding(top = 16.dp)) {
-                        Text("Access URL with trusted system certs")
+                        Text("Access normal URL with trusted system certs")
                     }
 
                     Button(onClick = {
                         model.testAccess(trustSystemCerts = false)
                     }, modifier = Modifier.padding(top = 16.dp)) {
-                        Text("Access URL with distrusted system certs")
+                        Text("Access normal URL with distrusted system certs")
+                    }
+
+                    Button(onClick = {
+                        model.testAccess(url = "https://expired.badssl.com/")
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with expired certificate")
+                    }
+
+                    Button(onClick = {
+                        model.testAccess(url = "https://self-signed.badssl.com/")
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with self-signed certificate")
+                    }
+
+                    Button(onClick = {
+                        model.testAccess(url = "https://wrong.host.badssl.com/")
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with certificate for wrong host name")
+                    }
+
+                    Button(onClick = {
+                        model.testAccess(url = "https://wrong.host.badssl.com/", trustSystemCerts = false)
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with certificate for wrong host name with distrusted system certs")
                     }
 
                     Button(onClick = {
@@ -100,6 +129,10 @@ class MainActivity : ComponentActivity() {
         val appInForeground = MutableStateFlow(true)
         val resultMessage = MutableLiveData<String>()
 
+        init {
+            HttpsURLConnection.setDefaultHostnameVerifier(CustomHostnameVerifier(getApplication(), StrictHostnameVerifier()))
+        }
+
         fun reset() = viewModelScope.launch(Dispatchers.IO) {
             CustomCertStore.getInstance(getApplication()).clearUserDecisions()
         }
@@ -108,9 +141,9 @@ class MainActivity : ComponentActivity() {
             appInForeground.value = foreground
         }
 
-        fun testAccess(trustSystemCerts: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+        fun testAccess(url: String = "https://www.github.com", trustSystemCerts: Boolean = true) = viewModelScope.launch(Dispatchers.IO) {
             try {
-                val urlConn = URL("https://www.github.com").openConnection() as HttpsURLConnection
+                val urlConn = URL(url).openConnection() as HttpsURLConnection
 
                 // set cert4android TrustManager and HostnameVerifier
                 val certMgr = CustomCertManager(
@@ -118,7 +151,6 @@ class MainActivity : ComponentActivity() {
                     trustSystemCerts = trustSystemCerts,
                     appInForeground = appInForeground
                 )
-                urlConn.hostnameVerifier = CustomHostnameVerifier(getApplication(), BrowserCompatHostnameVerifier())
                 urlConn.sslSocketFactory = object : SSLCertificateSocketFactory(1000) {
                     init {
                         setTrustManagers(arrayOf(certMgr))
