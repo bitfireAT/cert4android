@@ -51,7 +51,7 @@ class CustomCertStore private constructor(
     private val systemKeyStore by lazy { Conscrypt.getDefaultX509TrustManager() }
 
     /** custom TrustStore */
-    private val userKeyStoreFile by lazy { File(context.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME) }
+    private val userKeyStoreFile = File(context.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
     private val userKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
 
     /** in-memory store for untrusted certs */
