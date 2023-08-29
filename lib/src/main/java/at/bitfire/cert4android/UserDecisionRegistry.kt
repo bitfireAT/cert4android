@@ -73,7 +73,7 @@ class UserDecisionRegistry private constructor(
             .setSubText(cert.subjectDN.name)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setContentIntent(PendingIntent.getActivity(context, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
-            .setDeleteIntent(PendingIntent.getService(context, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+            .setDeleteIntent(PendingIntent.getActivity(context, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             .build()
         val nm = NotificationUtils.createChannels(context)
         val notificationShown =
