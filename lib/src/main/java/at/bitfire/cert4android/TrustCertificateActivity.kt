@@ -249,11 +249,7 @@ class TrustCertificateActivity : ComponentActivity() {
         initialIntent: Intent
     ) : AndroidViewModel(application) {
 
-        companion object {
-            val certFactory = CertificateFactory.getInstance("X.509")!!
-        }
-
-        private lateinit var cert: X509Certificate
+        private var cert: X509Certificate? = null
         val decided = MutableLiveData<Boolean>(false)
 
         val issuedFor = MutableLiveData<String>()
@@ -272,32 +268,36 @@ class TrustCertificateActivity : ComponentActivity() {
         fun processIntent(intent: Intent) = viewModelScope.launch(Dispatchers.Default) {
             // process EXTRA_CERTIFICATE
             val rawCert = intent.getByteArrayExtra(EXTRA_CERTIFICATE) ?: throw IllegalArgumentException("EXTRA_CERTIFICATE required")
-            cert = certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as X509Certificate
 
-            try {
-                val subject = cert.subjectAlternativeNames?.let { altNames ->
-                    val sb = StringBuilder()
-                    for (altName in altNames) {
-                        val name = altName[1]
-                        if (name is String)
-                            sb.append("[").append(altName[0]).append("]").append(name).append(" ")
-                    }
-                    sb.toString()
-                } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
-                issuedFor.postValue(subject)
+            val certFactory = CertificateFactory.getInstance("X.509")!!
+            val cert = certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate
+            this@Model.cert = cert
 
-                issuedBy.postValue(cert.issuerDN.toString())
+            if (cert != null)
+                try {
+                    val subject = cert.subjectAlternativeNames?.let { altNames ->
+                        val sb = StringBuilder()
+                        for (altName in altNames) {
+                            val name = altName[1]
+                            if (name is String)
+                                sb.append("[").append(altName[0]).append("]").append(name).append(" ")
+                        }
+                        sb.toString()
+                    } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
+                    issuedFor.postValue(subject)
 
-                val formatter = DateFormat.getDateInstance(DateFormat.LONG)
-                validFrom.postValue(formatter.format(cert.notBefore))
-                validTo.postValue(formatter.format(cert.notAfter))
+                    issuedBy.postValue(cert.issuerDN.toString())
 
-                sha1.postValue("SHA1: " + CertUtils.fingerprint(cert, SHA1.digestAlgorithm))
-                sha256.postValue("SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm))
+                    val formatter = DateFormat.getDateInstance(DateFormat.LONG)
+                    validFrom.postValue(formatter.format(cert.notBefore))
+                    validTo.postValue(formatter.format(cert.notAfter))
 
-            } catch(e: CertificateParsingException) {
-                Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
-            }
+                    sha1.postValue("SHA1: " + CertUtils.fingerprint(cert, SHA1.digestAlgorithm))
+                    sha256.postValue("SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm))
+
+                } catch(e: CertificateParsingException) {
+                    Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
+                }
 
             // process EXTRA_TRUSTED
             if (intent.hasExtra(EXTRA_TRUSTED)) {
@@ -308,7 +308,9 @@ class TrustCertificateActivity : ComponentActivity() {
 
         fun registerDecision(trusted: Boolean) {
             // notify user decision registry
-            UserDecisionRegistry.getInstance(getApplication()).onUserDecision(cert, trusted)
+            cert?.let {
+                UserDecisionRegistry.getInstance(getApplication()).onUserDecision(it, trusted)
+            }
 
             // notify UI that the case has been decided (causes Activity to finish)
             decided.postValue(true)

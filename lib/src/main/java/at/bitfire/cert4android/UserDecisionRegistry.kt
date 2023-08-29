@@ -56,8 +56,9 @@ class UserDecisionRegistry private constructor(
 
         // initiate user feedback
         val rawCert = cert.encoded
-        val decisionIntent = Intent(context, TrustCertificateActivity::class.java)
-        decisionIntent.putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
+        val decisionIntent = Intent(context, TrustCertificateActivity::class.java).apply {
+            putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
+        }
 
         val rejectIntent = Intent(context, TrustCertificateActivity::class.java).apply {
             putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
@@ -73,7 +74,7 @@ class UserDecisionRegistry private constructor(
             .setSubText(cert.subjectDN.name)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setContentIntent(PendingIntent.getActivity(context, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
-            .setDeleteIntent(PendingIntent.getActivity(context, id, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+            .setDeleteIntent(PendingIntent.getActivity(context, id + 1, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             .build()
         val nm = NotificationUtils.createChannels(context)
         val notificationShown =
