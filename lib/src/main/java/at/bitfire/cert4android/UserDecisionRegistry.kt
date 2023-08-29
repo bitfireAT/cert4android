@@ -13,22 +13,22 @@ import java.security.cert.X509Certificate
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
-class UserDecisionUi private constructor(
-    val context: Context
+class UserDecisionRegistry private constructor(
+    private val context: Context
 ) {
 
     companion object {
 
         @SuppressLint("StaticFieldLeak")
-        private var instance: UserDecisionUi? = null
+        private var instance: UserDecisionRegistry? = null
 
         @Synchronized
-        fun getInstance(context: Context): UserDecisionUi {
+        fun getInstance(context: Context): UserDecisionRegistry {
             instance?.let {
                 return it
             }
 
-            val newInstance = UserDecisionUi(context.applicationContext)
+            val newInstance = UserDecisionRegistry(context.applicationContext)
             instance = newInstance
             return newInstance
         }

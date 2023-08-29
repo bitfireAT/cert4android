@@ -117,7 +117,7 @@ class CustomCertStore private constructor(
         }
 
         return runBlocking {
-            val ui = UserDecisionUi.getInstance(context)
+            val ui = UserDecisionRegistry.getInstance(context)
 
             try {
                 withTimeout(userTimeout) {
@@ -153,6 +153,7 @@ class CustomCertStore private constructor(
         untrustedCerts += cert
     }
 
+    @Synchronized
     private fun loadUserKeyStore() {
         try {
             FileInputStream(userKeyStoreFile).use {
@@ -169,6 +170,7 @@ class CustomCertStore private constructor(
         }
     }
 
+    @Synchronized
     private fun saveUserKeyStore() {
         try {
             FileOutputStream(userKeyStoreFile).use { userKeyStore.store(it, null) }

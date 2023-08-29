@@ -4,9 +4,11 @@
 
 package at.bitfire.cert4android
 
+import android.app.Application
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
@@ -31,8 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
@@ -41,7 +48,6 @@ import java.security.spec.MGF1ParameterSpec.SHA1
 import java.security.spec.MGF1ParameterSpec.SHA256
 import java.text.DateFormat
 import java.util.logging.Level
-import kotlin.concurrent.thread
 
 class TrustCertificateActivity : ComponentActivity() {
 
@@ -50,27 +56,37 @@ class TrustCertificateActivity : ComponentActivity() {
         const val EXTRA_TRUSTED = "trusted"
     }
 
-    private val model by viewModels<Model>()
+    private val model by viewModels<Model> {
+        object: ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return Model(application, intent) as T
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        model.processIntent(intent)
+
+        addOnNewIntentListener { newIntent ->
+            model.processIntent(newIntent)
+        }
+        onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // treat "back" as reject
+                model.registerDecision(false)
+            }
+        })
+
+        model.decided.observe(this) { decided ->
+            if (decided)
+                // user has decided, close activity
+                finish()
+        }
 
         setContent {
             MainLayout()
         }
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        model.processIntent(intent)
-    }
-
-    private fun sendDecision(trusted: Boolean) {
-        val rawCert: ByteArray = intent?.getByteArrayExtra(EXTRA_CERTIFICATE)!!
-        val cert = Model.certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as X509Certificate
-
-        UserDecisionUi.getInstance(this).onUserDecision(cert, trusted)
     }
 
 
@@ -192,8 +208,7 @@ class TrustCertificateActivity : ComponentActivity() {
                     TextButton(
                         enabled = fingerprintVerified,
                         onClick = {
-                            sendDecision(true)
-                            finish()
+                            model.registerDecision(true)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -201,8 +216,7 @@ class TrustCertificateActivity : ComponentActivity() {
                     ) { Text(stringResource(R.string.trust_certificate_accept).uppercase()) }
                     TextButton(
                         onClick = {
-                            sendDecision(false)
-                            finish()
+                            model.registerDecision(false)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -230,11 +244,17 @@ class TrustCertificateActivity : ComponentActivity() {
     }
 
 
-    class Model : ViewModel() {
+    class Model(
+        application: Application,
+        initialIntent: Intent
+    ) : AndroidViewModel(application) {
 
         companion object {
             val certFactory = CertificateFactory.getInstance("X.509")!!
         }
+
+        private lateinit var cert: X509Certificate
+        val decided = MutableLiveData<Boolean>(false)
 
         val issuedFor = MutableLiveData<String>()
         val issuedBy = MutableLiveData<String>()
@@ -245,37 +265,53 @@ class TrustCertificateActivity : ComponentActivity() {
         val sha1 = MutableLiveData<String>()
         val sha256 = MutableLiveData<String>()
 
-        fun processIntent(intent: Intent?) {
-            intent?.getByteArrayExtra(EXTRA_CERTIFICATE)?.let { raw ->
-                thread {
-                    val cert = certFactory.generateCertificate(ByteArrayInputStream(raw)) as? X509Certificate ?: return@thread
+        init {
+            processIntent(initialIntent)
+        }
 
-                    try {
-                        val subject = cert.subjectAlternativeNames?.let { altNames ->
-                            val sb = StringBuilder()
-                            for (altName in altNames) {
-                                val name = altName[1]
-                                if (name is String)
-                                    sb.append("[").append(altName[0]).append("]").append(name).append(" ")
-                            }
-                            sb.toString()
-                        } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
-                        issuedFor.postValue(subject)
+        fun processIntent(intent: Intent) = viewModelScope.launch(Dispatchers.Default) {
+            // process EXTRA_CERTIFICATE
+            val rawCert = intent.getByteArrayExtra(EXTRA_CERTIFICATE) ?: throw IllegalArgumentException("EXTRA_CERTIFICATE required")
+            cert = certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as X509Certificate
 
-                        issuedBy.postValue(cert.issuerDN.toString())
-
-                        val formatter = DateFormat.getDateInstance(DateFormat.LONG)
-                        validFrom.postValue(formatter.format(cert.notBefore))
-                        validTo.postValue(formatter.format(cert.notAfter))
-
-                        sha1.postValue("SHA1: " + CertUtils.fingerprint(cert, SHA1.digestAlgorithm))
-                        sha256.postValue("SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm))
-
-                    } catch(e: CertificateParsingException) {
-                        Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
+            try {
+                val subject = cert.subjectAlternativeNames?.let { altNames ->
+                    val sb = StringBuilder()
+                    for (altName in altNames) {
+                        val name = altName[1]
+                        if (name is String)
+                            sb.append("[").append(altName[0]).append("]").append(name).append(" ")
                     }
-                }
+                    sb.toString()
+                } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
+                issuedFor.postValue(subject)
+
+                issuedBy.postValue(cert.issuerDN.toString())
+
+                val formatter = DateFormat.getDateInstance(DateFormat.LONG)
+                validFrom.postValue(formatter.format(cert.notBefore))
+                validTo.postValue(formatter.format(cert.notAfter))
+
+                sha1.postValue("SHA1: " + CertUtils.fingerprint(cert, SHA1.digestAlgorithm))
+                sha256.postValue("SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm))
+
+            } catch(e: CertificateParsingException) {
+                Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
             }
+
+            // process EXTRA_TRUSTED
+            if (intent.hasExtra(EXTRA_TRUSTED)) {
+                val trusted = intent.getBooleanExtra(EXTRA_TRUSTED, false)
+                registerDecision(trusted)
+            }
+        }
+
+        fun registerDecision(trusted: Boolean) {
+            // notify user decision registry
+            UserDecisionRegistry.getInstance(getApplication()).onUserDecision(cert, trusted)
+
+            // notify UI that the case has been decided (causes Activity to finish)
+            decided.postValue(true)
         }
 
     }

@@ -11,13 +11,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.Checkbox
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -51,9 +54,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Column {
+                    Row {
+                        Checkbox(model.appInForeground.collectAsState().value, onCheckedChange = { foreground ->
+                            model.setInForeground(foreground)
+                        })
+                        Text("App in foreground")
+                    }
+
                     Button(onClick = {
                         model.testAccess(trustSystemCerts = true)
-                    }) {
+                    }, modifier = Modifier.padding(top = 16.dp)) {
                         Text("Access URL with trusted system certs")
                     }
 
@@ -92,6 +102,10 @@ class MainActivity : ComponentActivity() {
 
         fun reset() = viewModelScope.launch(Dispatchers.IO) {
             CustomCertStore.getInstance(getApplication()).clearUserDecisions()
+        }
+
+        fun setInForeground(foreground: Boolean) {
+            appInForeground.value = foreground
         }
 
         fun testAccess(trustSystemCerts: Boolean) = viewModelScope.launch(Dispatchers.IO) {
