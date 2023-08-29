@@ -102,7 +102,6 @@ class MainActivity : ComponentActivity() {
                 val certMgr = CustomCertManager(
                     getApplication(),
                     trustSystemCerts = trustSystemCerts,
-                    interactive = true,
                     appInForeground = appInForeground
                 )
                 urlConn.hostnameVerifier = CustomHostnameVerifier(getApplication(), BrowserCompatHostnameVerifier())
