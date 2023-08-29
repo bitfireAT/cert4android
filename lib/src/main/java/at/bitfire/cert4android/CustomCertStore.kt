@@ -6,7 +6,6 @@ package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
@@ -63,10 +62,10 @@ class CustomCertStore private constructor(
         Security.insertProviderAt(Conscrypt.newProvider(), 1)
 
         val version = Conscrypt.version()
-        Log.i(Cert4Android.TAG, "Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
+        Cert4Android.log.info("Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
         val engine = SSLContext.getDefault().createSSLEngine()
-        Log.i(Cert4Android.TAG, "Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
-        Log.i(Cert4Android.TAG, "Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
+        Cert4Android.log.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
+        Cert4Android.log.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
 
         loadUserKeyStore()
     }
