@@ -145,6 +145,7 @@ class CustomCertStore private constructor(
         Cert4Android.log.info("Trusted by user: $cert")
         userKeyStore.setCertificateEntry(CertUtils.getTag(cert), cert)
         untrustedCerts -= cert
+        saveUserKeyStore()
     }
 
     @Synchronized
@@ -152,6 +153,7 @@ class CustomCertStore private constructor(
         Cert4Android.log.info("Distrusted by user: $cert")
         userKeyStore.deleteEntry(CertUtils.getTag(cert))
         untrustedCerts += cert
+        saveUserKeyStore()
     }
 
     @Synchronized
