@@ -21,7 +21,7 @@ import java.security.cert.X509Certificate
 import java.util.logging.Level
 import javax.net.ssl.SSLContext
 
-class CustomCertStore private constructor(
+class CustomCertStore internal constructor(
     private val context: Context,
     private val userTimeout: Long = 60000L
 ) {
@@ -32,7 +32,7 @@ class CustomCertStore private constructor(
         const val KEYSTORE_NAME = "KeyStore.bks"
 
         @SuppressLint("StaticFieldLeak")
-        private var instance: CustomCertStore? = null
+        internal var instance: CustomCertStore? = null
 
         init {
             // initialize Conscrypt
@@ -63,10 +63,10 @@ class CustomCertStore private constructor(
 
     /** custom TrustStore */
     private val userKeyStoreFile = File(context.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
-    private val userKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
+    internal val userKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
 
     /** in-memory store for untrusted certs */
-    private var untrustedCerts = HashSet<X509Certificate>()
+    internal var untrustedCerts = HashSet<X509Certificate>()
 
     init {
         loadUserKeyStore()
@@ -143,18 +143,23 @@ class CustomCertStore private constructor(
     @Synchronized
     fun setTrustedByUser(cert: X509Certificate) {
         Cert4Android.log.info("Trusted by user: $cert")
+
         userKeyStore.setCertificateEntry(CertUtils.getTag(cert), cert)
-        untrustedCerts -= cert
         saveUserKeyStore()
+
+        untrustedCerts -= cert
     }
 
     @Synchronized
     fun setUntrustedByUser(cert: X509Certificate) {
         Cert4Android.log.info("Distrusted by user: $cert")
+
         userKeyStore.deleteEntry(CertUtils.getTag(cert))
-        untrustedCerts += cert
         saveUserKeyStore()
+
+        untrustedCerts += cert
     }
+
 
     @Synchronized
     private fun loadUserKeyStore() {

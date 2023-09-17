@@ -84,6 +84,7 @@ class CustomCertManagerTest {
         paranoidCertManager.checkServerTrusted(siteCerts!!.toTypedArray(), "RSA")
     }
 
+
     private fun addTrustedCertificate() {
         CustomCertStore.getInstance(context).setTrustedByUser(siteCerts!!.first())
     }
