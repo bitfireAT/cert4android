@@ -18,26 +18,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.Checkbox
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
@@ -65,6 +53,9 @@ class TrustCertificateActivity : ComponentActivity() {
         }
     }
 
+    private val backPressedCounter = mutableIntStateOf(0)
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -89,33 +80,58 @@ class TrustCertificateActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun onBackPressed() {
+        backPressedCounter.intValue++
+    }
+
 
     @Composable
     @Preview
     fun MainLayout() {
+        val snackbarHostState = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
+
+        backPressedCounter.asIntState().intValue.let { counter ->
+            when {
+                counter == 0 -> { /* back button not pressed yet */ }
+                counter == 1 ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar(getString(R.string.trust_certificate_press_back_to_reject))
+                    }
+                else ->
+                    model.registerDecision(false)
+            }
+        }
+
         Cert4Android.theme {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                Text(
-                    text = stringResource(R.string.trust_certificate_unknown_certificate_found),
-                    style = MaterialTheme.typography.body1,
+            Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                modifier = Modifier.padding(16.dp)
+            ) { paddingValues ->
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
+                        .padding(paddingValues)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Text(
+                        text = stringResource(R.string.trust_certificate_unknown_certificate_found),
+                        style = MaterialTheme.typography.body1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
 
-                CertificateCard()
+                    CertificateCard()
 
-                Text(
-                    text = stringResource(R.string.trust_certificate_reset_info),
-                    style = MaterialTheme.typography.body1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                )
+                    Text(
+                        text = stringResource(R.string.trust_certificate_reset_info),
+                        style = MaterialTheme.typography.body1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                    )
+                }
             }
         }
     }

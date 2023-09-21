@@ -46,6 +46,12 @@ android {
         enable = true
     }
 
+    packaging {
+        resources {
+            excludes.add("META-INF/*.md")
+        }
+    }
+
     publishing {
         // Configure publish variant
         singleVariant("release") {
@@ -93,6 +99,7 @@ dependencies {
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
+    androidTestImplementation("io.mockk:mockk-android:1.13.7")
 
     testImplementation("junit:junit:4.13.2")
 }

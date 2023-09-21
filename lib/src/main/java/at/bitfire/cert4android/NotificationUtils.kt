@@ -4,10 +4,13 @@
 
 package at.bitfire.cert4android
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 
 object NotificationUtils {
@@ -16,6 +19,15 @@ object NotificationUtils {
 
     const val ID_CERT_DECISION = 88809
 
+
+    /**
+     * Checks whether the notifications permission is granted.
+     */
+    fun notificationsPermitted(context: Context) =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        } else
+            true
 
 
     fun createChannels(context: Context): NotificationManagerCompat {
