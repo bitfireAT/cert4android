@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -38,20 +39,36 @@ class UserDecisionRegistry private constructor(
     private val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
 
     suspend fun check(cert: X509Certificate, appInForeground: Boolean): Boolean = suspendCancellableCoroutine { cont ->
-        synchronized(pendingDecisions) {
-            if (pendingDecisions.containsKey(cert))
-                pendingDecisions[cert]!! += cont
-            else
-                pendingDecisions[cert] = mutableListOf(cont)
-        }
+        val nm = NotificationUtils.createChannels(context)
 
-        cont.invokeOnCancellation {
+        // check whether we're able to wait for user feedback (= we can start an Activity and/or show a notification)
+        val notificationPermission =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            } else
+                true
+        val waitingForDecision = appInForeground || notificationPermission
+
+        if (waitingForDecision) {
+            // remember request in pendingDecisions so that a later decision will be applied to this request
             synchronized(pendingDecisions) {
-                pendingDecisions[cert]?.remove(cont)
+                if (pendingDecisions.containsKey(cert))
+                    pendingDecisions[cert]!! += cont
+                else
+                    pendingDecisions[cert] = mutableListOf(cont)
+            }
 
-                val nm = NotificationUtils.createChannels(context)
+            cont.invokeOnCancellation {
+                synchronized(pendingDecisions) {
+                    pendingDecisions[cert]?.remove(cont)
+                }
                 nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
             }
+        } else {
+            // we're not able to get user feedback, directly reject request
+            Cert4Android.log.warning("App not in foreground and missing notification permission, rejecting certificate")
+            cont.resume(false)
+            return@suspendCancellableCoroutine
         }
 
         // initiate user feedback
@@ -76,22 +93,12 @@ class UserDecisionRegistry private constructor(
             .setContentIntent(PendingIntent.getActivity(context, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             .setDeleteIntent(PendingIntent.getActivity(context, id + 1, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             .build()
-        val nm = NotificationUtils.createChannels(context)
-        val notificationShown =
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                nm.notify(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION, notify)
-                true
-            } else
-                false
+        if (notificationPermission)
+            nm.notify(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION, notify)
 
         if (appInForeground) {
             decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(decisionIntent)
-        } else if (!notificationShown) {
-            Cert4Android.log.warning("App not in foreground and missing notification permission, rejecting certificate")
-
-            // return false to caller of suspending function
-            cont.resume(false)
         }
     }
 
@@ -108,10 +115,12 @@ class UserDecisionRegistry private constructor(
             customCertStore.setUntrustedByUser(cert)
 
         // continue work that's waiting for decisions
-        pendingDecisions[cert]?.iterator()?.let { iter ->
-            while (iter.hasNext()) {
-                iter.next().resume(trusted)
-                iter.remove()
+        synchronized(pendingDecisions) {
+            pendingDecisions[cert]?.iterator()?.let { iter ->
+                while (iter.hasNext()) {
+                    iter.next().resume(trusted)
+                    iter.remove()
+                }
             }
         }
     }
