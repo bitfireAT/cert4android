@@ -1,6 +1,10 @@
 name: Development tests
 on: push
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
+
   test:
     name: Tests without emulator
     runs-on: ubuntu-latest
