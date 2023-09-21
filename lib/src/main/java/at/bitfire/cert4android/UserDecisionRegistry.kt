@@ -49,15 +49,18 @@ class UserDecisionRegistry private constructor(
 
         if (userDecisionPossible) {
             // User decision possible → remember request in pendingDecisions so that a later decision will be applied to this request
-            synchronized(pendingDecisions) {
-                // remove from pending decisions on cancellation
-                cont.invokeOnCancellation {
-                    pendingDecisions[cert]?.remove(cont)
 
-                    val nm = NotificationUtils.createChannels(context)
-                    nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
+            cont.invokeOnCancellation {
+                // remove from pending decisions on cancellation
+                synchronized(pendingDecisions) {
+                    pendingDecisions[cert]?.remove(cont)
                 }
 
+                val nm = NotificationUtils.createChannels(context)
+                nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
+            }
+
+            synchronized(pendingDecisions) {
                 if (pendingDecisions.containsKey(cert)) {
                     // There are already pending decisions for this request, just add our request
                     pendingDecisions[cert]!! += cont
