@@ -1,13 +1,9 @@
 package at.bitfire.cert4android
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.cert.X509Certificate
@@ -36,16 +32,21 @@ class UserDecisionRegistry private constructor(
 
     }
 
-    private val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
+    internal val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
 
+    /**
+     * Tries to retrieve a trust decision from the user about a given certificate.
+     *
+     * Thread-safe, can handle multiple requests for various certificates and/or the same certificate at once.
+     *
+     * @param cert              certificate to ask user about
+     * @param appInForeground   whether the app is currently in foreground = whether it can directly launch an Activity
+     * @return *true* if the user explicitly trusts the certificate, *false* if unknown or untrusted
+     */
     suspend fun check(cert: X509Certificate, appInForeground: Boolean): Boolean = suspendCancellableCoroutine { cont ->
         // check whether we're able to retrieve user feedback (= start an Activity and/or show a notification)
-        val notificationPermission =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            } else
-                true
-        val userDecisionPossible = appInForeground || notificationPermission
+        val notificationsPermitted = NotificationUtils.notificationsPermitted(context)
+        val userDecisionPossible = appInForeground || notificationsPermitted
 
         if (userDecisionPossible) {
             // User decision possible → remember request in pendingDecisions so that a later decision will be applied to this request
@@ -60,16 +61,22 @@ class UserDecisionRegistry private constructor(
                 nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
             }
 
+            val requestDecision: Boolean
             synchronized(pendingDecisions) {
                 if (pendingDecisions.containsKey(cert)) {
                     // There are already pending decisions for this request, just add our request
                     pendingDecisions[cert]!! += cont
+                    requestDecision = false
                 } else {
                     // First decision for this certificate, show UI
                     pendingDecisions[cert] = mutableListOf(cont)
-                    retrieveDecision(cert, launchActivity = appInForeground, showNotification = notificationPermission)
+                    requestDecision = true
                 }
             }
+
+            if (requestDecision)
+                requestDecision(cert, launchActivity = appInForeground, showNotification = notificationsPermitted)
+
         } else {
             // We're not able to retrieve user feedback, directly reject request
             Cert4Android.log.warning("App not in foreground and missing notification permission, rejecting certificate")
@@ -89,7 +96,7 @@ class UserDecisionRegistry private constructor(
      *
      * @throws IllegalArgumentException  when both [launchActivity] and [showNotification] are *false*
      */
-    private fun retrieveDecision(cert: X509Certificate, launchActivity: Boolean, showNotification: Boolean) {
+    internal fun requestDecision(cert: X509Certificate, launchActivity: Boolean, showNotification: Boolean) {
         if (!launchActivity && !showNotification)
             throw IllegalArgumentException("User decision requires certificate Activity and/or notification")
 
