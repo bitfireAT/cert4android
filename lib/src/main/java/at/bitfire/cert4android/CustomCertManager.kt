@@ -9,6 +9,7 @@ import android.content.Context
 import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
 
 /**
@@ -26,7 +27,7 @@ class CustomCertManager @JvmOverloads constructor(
     var appInForeground: StateFlow<Boolean>?
 ): X509TrustManager {
 
-    private val certStore = CustomCertStore.getInstance(context)
+    val certStore = CustomCertStore.getInstance(context)
 
 
     @Throws(CertificateException::class)
@@ -35,7 +36,7 @@ class CustomCertManager @JvmOverloads constructor(
     }
 
     /**
-     * Checks whether a certificate is trusted.
+     * Checks whether a certificate is trusted. Allows user to explicitly accept untrusted certificates.
      *
      * @param chain        certificate chain to check
      * @param authType     authentication type (ignored)
@@ -49,5 +50,32 @@ class CustomCertManager @JvmOverloads constructor(
     }
 
     override fun getAcceptedIssuers() = arrayOf<X509Certificate>()
+
+
+    /**
+     * A HostnameVerifier that allows users to explicitly accept untrusted and
+     * non-matching (bad hostname) certificates.
+     */
+    inner class HostnameVerifier(
+        private val defaultHostnameVerifier: javax.net.ssl.HostnameVerifier? = null
+    ): javax.net.ssl.HostnameVerifier {
+
+        override fun verify(hostname: String, session: SSLSession): Boolean {
+            if (defaultHostnameVerifier != null && defaultHostnameVerifier.verify(hostname, session))
+                // default HostnameVerifier says trusted → OK
+                return true
+
+            Cert4Android.log.warning("Host name \"$hostname\" not verified, checking whether certificate is explicitly trusted")
+            // Allow users to explicitly accept certificates that have a bad hostname here
+            (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
+                // Check without trusting system certificates so that the user will be asked even for system-trusted certificates
+                if (certStore.isTrusted(arrayOf(cert), "RSA", false, appInForeground))
+                    return true
+            }
+
+            return false
+        }
+
+    }
 
 }
