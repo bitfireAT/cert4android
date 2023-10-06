@@ -64,8 +64,7 @@ class TrustCertificateActivity : ComponentActivity() {
         }
         onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // treat "back" as reject
-                model.registerDecision(false)
+                backPressedCounter.intValue++
             }
         })
 
@@ -78,11 +77,6 @@ class TrustCertificateActivity : ComponentActivity() {
         setContent {
             MainLayout()
         }
-    }
-
-    @Suppress("OVERRIDE_DEPRECATION")
-    override fun onBackPressed() {
-        backPressedCounter.intValue++
     }
 
 
