@@ -92,10 +92,11 @@ class UserDecisionRegistry private constructor(
      *
      * @param cert              certificate to ask user about
      * @param launchActivity    whether to launch a [TrustCertificateActivity]
-     * @param showNotification  whether to show a certificate notification
+     * @param showNotification  whether to show a certificate notification (caller must check notification permissions before passing *true*)
      *
      * @throws IllegalArgumentException  when both [launchActivity] and [showNotification] are *false*
      */
+    @SuppressLint("MissingPermission")
     internal fun requestDecision(cert: X509Certificate, launchActivity: Boolean, showNotification: Boolean) {
         if (!launchActivity && !showNotification)
             throw IllegalArgumentException("User decision requires certificate Activity and/or notification")
