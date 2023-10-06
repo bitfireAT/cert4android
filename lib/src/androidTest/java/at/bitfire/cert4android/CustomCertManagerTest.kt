@@ -30,12 +30,12 @@ class CustomCertManagerTest {
         }
     }
 
-    val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
+    private val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
 
-    lateinit var certManager: CustomCertManager
-    lateinit var paranoidCertManager: CustomCertManager
+    private lateinit var certManager: CustomCertManager
+    private lateinit var paranoidCertManager: CustomCertManager
 
-    var siteCerts: List<X509Certificate>? = null
+    private var siteCerts: List<X509Certificate>? = null
     init {
         try {
             siteCerts = getSiteCertificates(URL("https://www.davx5.com"))

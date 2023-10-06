@@ -34,6 +34,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier
+import org.apache.http.conn.ssl.StrictHostnameVerifier
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
@@ -147,7 +148,7 @@ class MainActivity : ComponentActivity() {
                     trustSystemCerts = trustSystemCerts,
                     appInForeground = appInForeground
                 )
-                urlConn.hostnameVerifier = certMgr.CustomHostnameVerifier(null)
+                urlConn.hostnameVerifier = certMgr.HostnameVerifier(StrictHostnameVerifier())
                 urlConn.sslSocketFactory = object : SSLCertificateSocketFactory(1000) {
                     init {
                         setTrustManagers(arrayOf(certMgr))

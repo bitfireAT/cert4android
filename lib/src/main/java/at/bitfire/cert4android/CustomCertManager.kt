@@ -9,7 +9,6 @@ import android.content.Context
 import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
 
@@ -57,25 +56,21 @@ class CustomCertManager @JvmOverloads constructor(
      * A HostnameVerifier that allows users to explicitly accept untrusted and
      * non-matching (bad hostname) certificates.
      */
-    inner class CustomHostnameVerifier(
-        private val defaultHostnameVerifier: HostnameVerifier? = null
-    ): HostnameVerifier {
+    inner class HostnameVerifier(
+        private val defaultHostnameVerifier: javax.net.ssl.HostnameVerifier? = null
+    ): javax.net.ssl.HostnameVerifier {
 
         override fun verify(hostname: String, session: SSLSession): Boolean {
             if (defaultHostnameVerifier != null && defaultHostnameVerifier.verify(hostname, session))
+                // default HostnameVerifier says trusted → OK
                 return true
 
             Cert4Android.log.warning("Host name \"$hostname\" not verified, checking whether certificate is explicitly trusted")
-            try {
-                // Allow users to explicitly accept certificates that have a bad hostname here.
-                (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
-                    if (certStore.isTrusted(arrayOf(cert), "RSA",
-                            false,      // don't trust system certificates so that the user will be asked even for system-trusted certificates
-                            appInForeground))
-                        return true
-                }
-            } catch (e: CertificateException) {
-                Cert4Android.log.warning("Certificate for wrong host name \"$hostname\" not explicitly trusted by user, rejecting")
+            // Allow users to explicitly accept certificates that have a bad hostname here
+            (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
+                // Check without trusting system certificates so that the user will be asked even for system-trusted certificates
+                if (certStore.isTrusted(arrayOf(cert), "RSA", false, appInForeground))
+                    return true
             }
 
             return false
