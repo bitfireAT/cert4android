@@ -9,6 +9,7 @@ import android.content.Context
 import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.X509TrustManager
 
 /**
@@ -26,7 +27,7 @@ class CustomCertManager @JvmOverloads constructor(
     var appInForeground: StateFlow<Boolean>?
 ): X509TrustManager {
 
-    private val certStore = CustomCertStore.getInstance(context)
+    val certStore = CustomCertStore.getInstance(context)
 
 
     @Throws(CertificateException::class)
@@ -35,7 +36,7 @@ class CustomCertManager @JvmOverloads constructor(
     }
 
     /**
-     * Checks whether a certificate is trusted.
+     * Checks whether a certificate is trusted. Allows user to explicitly accept untrusted certificates.
      *
      * @param chain        certificate chain to check
      * @param authType     authentication type (ignored)
@@ -49,5 +50,8 @@ class CustomCertManager @JvmOverloads constructor(
     }
 
     override fun getAcceptedIssuers() = arrayOf<X509Certificate>()
+
+    fun hostnameVerifier(defaultHostnameVerifier: HostnameVerifier?) =
+        CustomHostnameVerifier(this, defaultHostnameVerifier)
 
 }

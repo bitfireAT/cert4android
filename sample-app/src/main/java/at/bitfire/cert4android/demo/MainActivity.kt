@@ -129,10 +129,6 @@ class MainActivity : ComponentActivity() {
         val appInForeground = MutableStateFlow(true)
         val resultMessage = MutableLiveData<String>()
 
-        init {
-            HttpsURLConnection.setDefaultHostnameVerifier(CustomHostnameVerifier(getApplication(), StrictHostnameVerifier()))
-        }
-
         fun reset() = viewModelScope.launch(Dispatchers.IO) {
             CustomCertStore.getInstance(getApplication()).clearUserDecisions()
         }
@@ -156,6 +152,7 @@ class MainActivity : ComponentActivity() {
                         setTrustManagers(arrayOf(certMgr))
                     }
                 }
+                urlConn.hostnameVerifier = certMgr.hostnameVerifier(StrictHostnameVerifier())
 
                 // access sample URL
                 Log.i(Cert4Android.TAG, "testAccess(): HTTP ${urlConn.responseCode}")
