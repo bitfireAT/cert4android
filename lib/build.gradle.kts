@@ -1,8 +1,8 @@
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
-    id("org.jetbrains.dokka")
-    id("maven-publish")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.kotlin.android)
+    `maven-publish`
 }
 
 android {
@@ -32,7 +32,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.2"
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     lint {
@@ -77,30 +77,26 @@ publishing {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation(libs.kotlin.stdlib)
 
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-    implementation("com.google.android.material:material:1.10.0")
-    implementation("org.conscrypt:conscrypt-android:2.5.2")
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.lifecycle.livedata)
+    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.android.material)
+    implementation(libs.conscrypt)
 
     // Jetpack Compose
-    val composeBom = platform("androidx.compose:compose-bom:2023.08.00")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
-    implementation("androidx.activity:activity-compose:1.8.0")
-    implementation("androidx.compose.material:material")
-    implementation("androidx.compose.runtime:runtime-livedata")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation(libs.androidx.activityCompose)
+    implementation(libs.compose.material)
+    implementation(libs.compose.runtime.livedata)
+    debugImplementation(libs.compose.ui.tooling)
+    implementation(libs.compose.ui.toolingPreview)
 
-    androidTestImplementation("androidx.test:core-ktx:1.5.0")
-    androidTestImplementation("androidx.test:runner:1.5.2")
-    androidTestImplementation("androidx.test:rules:1.5.0")
-    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
-    androidTestImplementation("io.mockk:mockk-android:1.13.8")
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.okttp3.mockwebserver)
+    androidTestImplementation(libs.mockk.android)
 
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
 }
