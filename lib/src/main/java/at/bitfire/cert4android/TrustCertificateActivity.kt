@@ -26,8 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.observeOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -147,7 +149,7 @@ class TrustCertificateActivity : ComponentActivity() {
                 modifier = Modifier
                     .padding(16.dp),
             ) {
-                val issuedFor by model.issuedFor.observeAsState("")
+                val issuedFor by model.issuedFor.collectAsStateWithLifecycle()
                 val issuedBy by model.issuedBy.observeAsState("")
                 val validFrom by model.validFrom.observeAsState("")
                 val validTo by model.validTo.observeAsState("")
@@ -161,10 +163,9 @@ class TrustCertificateActivity : ComponentActivity() {
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
                 )
-                InfoPack(
-                    R.string.trust_certificate_issued_for,
-                    issuedFor
-                )
+                issuedFor?.let {
+                    InfoPack(R.string.trust_certificate_issued_for, it)
+                }
                 InfoPack(
                     R.string.trust_certificate_issued_by,
                     issuedBy
@@ -269,7 +270,7 @@ class TrustCertificateActivity : ComponentActivity() {
         private var cert: X509Certificate? = null
         val decided = MutableStateFlow(false)
 
-        val issuedFor = MutableLiveData<String>()
+        val issuedFor = MutableStateFlow<String?>(null)
         val issuedBy = MutableLiveData<String>()
 
         val validFrom = MutableLiveData<String>()
@@ -301,7 +302,7 @@ class TrustCertificateActivity : ComponentActivity() {
                         }
                         sb.toString()
                     } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
-                    issuedFor.postValue(subject)
+                    issuedFor.emit(subject)
 
                     issuedBy.postValue(cert.issuerDN.toString())
 
