@@ -27,7 +27,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.observeOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
@@ -68,10 +71,14 @@ class TrustCertificateActivity : ComponentActivity() {
             }
         })
 
-        model.decided.observe(this) { decided ->
-            if (decided)
-                // user has decided, close activity
-                finish()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.decided.collect { decided ->
+                    if (decided)
+                        // user has decided, close activity
+                        finish()
+                }
+            }
         }
 
         setContent {
@@ -260,7 +267,7 @@ class TrustCertificateActivity : ComponentActivity() {
     ) : AndroidViewModel(application) {
 
         private var cert: X509Certificate? = null
-        val decided = MutableLiveData<Boolean>(false)
+        val decided = MutableStateFlow(false)
 
         val issuedFor = MutableLiveData<String>()
         val issuedBy = MutableLiveData<String>()
@@ -316,14 +323,14 @@ class TrustCertificateActivity : ComponentActivity() {
             }
         }
 
-        fun registerDecision(trusted: Boolean) {
+        fun registerDecision(trusted: Boolean) = viewModelScope.launch {
             // notify user decision registry
             cert?.let {
                 UserDecisionRegistry.getInstance(getApplication()).onUserDecision(it, trusted)
             }
 
             // notify UI that the case has been decided (causes Activity to finish)
-            decided.postValue(true)
+            decided.emit(true)
         }
 
     }
