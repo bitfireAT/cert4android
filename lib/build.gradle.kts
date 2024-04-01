@@ -17,6 +17,8 @@ android {
         aarMetadata {
             minCompileSdk = 29
         }
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -39,8 +41,17 @@ android {
         disable += listOf("MissingTranslation", "ExtraTranslation")
     }
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    @Suppress("UnstableApiUsage")
+    testOptions {
+        managedDevices {
+            localDevices {
+                create("virtual") {
+                    device = "Pixel 3"
+                    apiLevel = 33
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
     }
 
     testFixtures {
@@ -82,11 +93,11 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.livedata)
     implementation(libs.androidx.lifecycle.viewmodel)
-    implementation(libs.android.material)
     implementation(libs.conscrypt)
 
     // Jetpack Compose
     implementation(libs.androidx.activityCompose)
+    implementation(platform(libs.compose.bom))
     implementation(libs.compose.material)
     implementation(libs.compose.runtime.livedata)
     debugImplementation(libs.compose.ui.tooling)

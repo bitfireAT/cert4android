@@ -52,7 +52,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
 
     implementation(libs.androidx.appcompat)
-    implementation(libs.android.material)
 
     implementation(libs.androidx.activityCompose)
     implementation(libs.compose.material)
