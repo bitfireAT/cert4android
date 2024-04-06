@@ -8,24 +8,40 @@ import android.app.Application
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.material.Card
+import androidx.compose.material.Checkbox
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
@@ -42,60 +58,70 @@ class TrustCertificateActivity : ComponentActivity() {
     companion object {
         const val EXTRA_CERTIFICATE = "certificate"
         const val EXTRA_TRUSTED = "trusted"
+
+        fun rawCertFromIntent(intent: Intent): ByteArray =
+            intent.getByteArrayExtra(EXTRA_CERTIFICATE) ?: throw IllegalArgumentException("EXTRA_CERTIFICATE required")
     }
 
-    private val model by viewModels<Model> {
-        object: ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return Model(application, intent) as T
-            }
-        }
-    }
-
-    private val backPressedCounter = mutableIntStateOf(0)
+    private val model by viewModels<Model>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        processIntent(intent)
         addOnNewIntentListener { newIntent ->
-            model.processIntent(newIntent)
-        }
-        onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                backPressedCounter.intValue++
-            }
-        })
-
-        model.decided.observe(this) { decided ->
-            if (decided)
-                // user has decided, close activity
-                finish()
+            processIntent(newIntent)
         }
 
         setContent {
-            MainLayout()
+            MainLayout(
+                onRegisterDecision = { trusted -> model.registerDecision(trusted) },
+                onFinish = { finish() }
+            )
+        }
+    }
+
+    private fun processIntent(intent: Intent) {
+        // process certificate
+        model.parseCertificate(rawCertFromIntent(intent))
+
+        // process EXTRA_TRUSTED, if available
+        if (intent.hasExtra(EXTRA_TRUSTED)) {
+            val trusted = intent.getBooleanExtra(EXTRA_TRUSTED, false)
+            model.registerDecision(trusted)
         }
     }
 
 
     @Composable
     @Preview
-    fun MainLayout() {
+    fun MainLayout(
+        onRegisterDecision: (Boolean) -> Unit = {},
+        onFinish: () -> Unit = {}
+    ) {
         val snackbarHostState = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
 
-        backPressedCounter.asIntState().intValue.let { counter ->
-            when {
-                counter == 0 -> { /* back button not pressed yet */ }
-                counter == 1 ->
+        val uiState = model.uiState
+        LaunchedEffect(uiState.decided) {
+            if (uiState.decided)
+                onFinish()
+        }
+
+        var backPressedCounter by remember { mutableIntStateOf(0) }
+        BackHandler {
+            val newBackPressedCounter = backPressedCounter + 1
+            when (newBackPressedCounter) {
+                0 -> { /* back button not pressed yet */ }
+                1 ->
                     scope.launch {
                         snackbarHostState.showSnackbar(getString(R.string.trust_certificate_press_back_to_reject))
                     }
                 else ->
-                    model.registerDecision(false)
+                    onRegisterDecision(false)
             }
+            backPressedCounter = newBackPressedCounter
         }
 
         Cert4Android.theme {
@@ -116,7 +142,10 @@ class TrustCertificateActivity : ComponentActivity() {
                             .padding(bottom = 16.dp)
                     )
 
-                    CertificateCard()
+                    CertificateCard(
+                        uiState = uiState,
+                        onRegisterDecision = onRegisterDecision
+                    )
 
                     Text(
                         text = stringResource(R.string.trust_certificate_reset_info),
@@ -131,7 +160,10 @@ class TrustCertificateActivity : ComponentActivity() {
     }
 
     @Composable
-    fun CertificateCard() {
+    fun CertificateCard(
+        uiState: UiState,
+        onRegisterDecision: (Boolean) -> Unit
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -140,13 +172,6 @@ class TrustCertificateActivity : ComponentActivity() {
                 modifier = Modifier
                     .padding(16.dp),
             ) {
-                val issuedFor by model.issuedFor.observeAsState("")
-                val issuedBy by model.issuedBy.observeAsState("")
-                val validFrom by model.validFrom.observeAsState("")
-                val validTo by model.validTo.observeAsState("")
-                val sha1 by model.sha1.observeAsState("")
-                val sha256 by model.sha256.observeAsState("")
-
                 Text(
                     text = stringResource(R.string.trust_certificate_x509_certificate_details),
                     style = MaterialTheme.typography.h5,
@@ -154,43 +179,50 @@ class TrustCertificateActivity : ComponentActivity() {
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
                 )
-                InfoPack(
-                    R.string.trust_certificate_issued_for,
-                    issuedFor
-                )
-                InfoPack(
-                    R.string.trust_certificate_issued_by,
-                    issuedBy
-                )
-                InfoPack(
-                    R.string.trust_certificate_validity_period,
-                    stringResource(
-                        R.string.trust_certificate_validity_period_value,
-                        validFrom,
-                        validTo
-                    )
-                )
+                if (uiState.issuedFor != null)
+                    InfoPack(R.string.trust_certificate_issued_for, uiState.issuedFor)
+                if (uiState.issuedBy != null)
+                    InfoPack(R.string.trust_certificate_issued_by, uiState.issuedBy)
 
-                Text(
-                    text = stringResource(R.string.trust_certificate_fingerprints).uppercase(),
-                    style = MaterialTheme.typography.overline,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                )
-                Text(
-                    text = sha1,
-                    style = MaterialTheme.typography.body1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp, top = 4.dp),
-                )
-                Text(
-                    text = sha256,
-                    style = MaterialTheme.typography.body1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp, top = 4.dp),
-                )
+                val validFrom = uiState.validFrom
+                val validTo = uiState.validTo
+                if (validFrom != null && validTo != null)
+                    InfoPack(
+                        R.string.trust_certificate_validity_period,
+                        stringResource(
+                            R.string.trust_certificate_validity_period_value,
+                            validFrom,
+                            validTo
+                        )
+                    )
+
+                val sha1 = uiState.sha1
+                val sha256 = uiState.sha256
+                if (sha1 != null || sha256 != null) {
+                    Text(
+                        text = stringResource(R.string.trust_certificate_fingerprints).uppercase(),
+                        style = MaterialTheme.typography.body2,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    if (sha1 != null)
+                        Text(
+                            text = sha1,
+                            style = MaterialTheme.typography.body2,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp, top = 4.dp),
+                        )
+
+                    if (sha256 != null)
+                        Text(
+                            text = sha256,
+                            style = MaterialTheme.typography.body2,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp, top = 4.dp),
+                        )
+                }
 
                 var fingerprintVerified by remember { mutableStateOf(false) }
                 Row(
@@ -205,6 +237,9 @@ class TrustCertificateActivity : ComponentActivity() {
                     Text(
                         text = stringResource(R.string.trust_certificate_fingerprint_verified),
                         modifier = Modifier
+                            .clickable {
+                                fingerprintVerified = !fingerprintVerified
+                            }
                             .weight(1f)
                             .padding(bottom = 8.dp),
                         style = MaterialTheme.typography.body2
@@ -212,13 +247,12 @@ class TrustCertificateActivity : ComponentActivity() {
                 }
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     TextButton(
                         enabled = fingerprintVerified,
                         onClick = {
-                            model.registerDecision(true)
+                            onRegisterDecision(true)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -226,7 +260,7 @@ class TrustCertificateActivity : ComponentActivity() {
                     ) { Text(stringResource(R.string.trust_certificate_accept).uppercase()) }
                     TextButton(
                         onClick = {
-                            model.registerDecision(false)
+                            onRegisterDecision(false)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -240,7 +274,7 @@ class TrustCertificateActivity : ComponentActivity() {
     fun InfoPack(@StringRes labelStringRes: Int, text: String) {
         Text(
             text = stringResource(labelStringRes).uppercase(),
-            style = MaterialTheme.typography.overline,
+            style = MaterialTheme.typography.body2,
             modifier = Modifier
                 .fillMaxWidth(),
         )
@@ -254,36 +288,29 @@ class TrustCertificateActivity : ComponentActivity() {
     }
 
 
-    class Model(
-        application: Application,
-        initialIntent: Intent
-    ) : AndroidViewModel(application) {
+    data class UiState(
+        val issuedFor: String? = null,
+        val issuedBy: String? = null,
+        val validFrom: String? = null,
+        val validTo: String? = null,
+        val sha1: String? = null,
+        val sha256: String? = null,
+
+        val decided: Boolean = false
+    )
+
+    class Model(application: Application) : AndroidViewModel(application) {
 
         private var cert: X509Certificate? = null
-        val decided = MutableLiveData<Boolean>(false)
 
-        val issuedFor = MutableLiveData<String>()
-        val issuedBy = MutableLiveData<String>()
+        var uiState by mutableStateOf(UiState())
+            private set
 
-        val validFrom = MutableLiveData<String>()
-        val validTo = MutableLiveData<String>()
-
-        val sha1 = MutableLiveData<String>()
-        val sha256 = MutableLiveData<String>()
-
-        init {
-            processIntent(initialIntent)
-        }
-
-        fun processIntent(intent: Intent) = viewModelScope.launch(Dispatchers.Default) {
-            // process EXTRA_CERTIFICATE
-            val rawCert = intent.getByteArrayExtra(EXTRA_CERTIFICATE) ?: throw IllegalArgumentException("EXTRA_CERTIFICATE required")
-
+        fun parseCertificate(rawCert: ByteArray) = viewModelScope.launch(Dispatchers.Default) {
             val certFactory = CertificateFactory.getInstance("X.509")!!
-            val cert = certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate
-            this@Model.cert = cert
+            (certFactory.generateCertificate(ByteArrayInputStream(rawCert)) as? X509Certificate)?.let { cert ->
+                this@Model.cert = cert
 
-            if (cert != null)
                 try {
                     val subject = cert.subjectAlternativeNames?.let { altNames ->
                         val sb = StringBuilder()
@@ -294,25 +321,21 @@ class TrustCertificateActivity : ComponentActivity() {
                         }
                         sb.toString()
                     } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
-                    issuedFor.postValue(subject)
 
-                    issuedBy.postValue(cert.issuerDN.toString())
-
-                    val formatter = DateFormat.getDateInstance(DateFormat.LONG)
-                    validFrom.postValue(formatter.format(cert.notBefore))
-                    validTo.postValue(formatter.format(cert.notAfter))
-
-                    sha1.postValue("SHA1: " + CertUtils.fingerprint(cert, SHA1.digestAlgorithm))
-                    sha256.postValue("SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm))
-
-                } catch(e: CertificateParsingException) {
+                    val timeFormatter = DateFormat.getDateInstance(DateFormat.LONG)
+                    Snapshot.withMutableSnapshot {      // thread-safe update of UI state
+                        uiState = uiState.copy(
+                            issuedFor = subject,
+                            issuedBy = cert.issuerDN.toString(),
+                            validFrom = timeFormatter.format(cert.notBefore),
+                            validTo = timeFormatter.format(cert.notAfter),
+                            sha1 = "SHA1: " + CertUtils.fingerprint(cert, SHA1.digestAlgorithm),
+                            sha256 = "SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm)
+                        )
+                    }
+                } catch (e: CertificateParsingException) {
                     Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
                 }
-
-            // process EXTRA_TRUSTED
-            if (intent.hasExtra(EXTRA_TRUSTED)) {
-                val trusted = intent.getBooleanExtra(EXTRA_TRUSTED, false)
-                registerDecision(trusted)
             }
         }
 
@@ -320,10 +343,10 @@ class TrustCertificateActivity : ComponentActivity() {
             // notify user decision registry
             cert?.let {
                 UserDecisionRegistry.getInstance(getApplication()).onUserDecision(it, trusted)
-            }
 
-            // notify UI that the case has been decided (causes Activity to finish)
-            decided.postValue(true)
+                // notify UI that the case has been decided (causes Activity to finish)
+                uiState = uiState.copy(decided = true)
+            }
         }
 
     }
