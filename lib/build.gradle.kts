@@ -92,7 +92,6 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.livedata)
-    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.conscrypt)
 
