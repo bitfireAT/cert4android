@@ -323,7 +323,7 @@ class TrustCertificateActivity : ComponentActivity() {
                     } ?: /* use CN if alternative names are not available */ cert.subjectDN.name
 
                     val timeFormatter = DateFormat.getDateInstance(DateFormat.LONG)
-                    Snapshot.withMutableSnapshot {
+                    Snapshot.withMutableSnapshot {      // thread-safe update of UI state
                         uiState = uiState.copy(
                             issuedFor = subject,
                             issuedBy = cert.issuerDN.toString(),
@@ -339,7 +339,7 @@ class TrustCertificateActivity : ComponentActivity() {
             }
         }
 
-        fun registerDecision(trusted: Boolean) = viewModelScope.launch {
+        fun registerDecision(trusted: Boolean) {
             // notify user decision registry
             cert?.let {
                 UserDecisionRegistry.getInstance(getApplication()).onUserDecision(it, trusted)
