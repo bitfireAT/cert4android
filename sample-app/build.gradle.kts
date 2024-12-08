@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "at.bitfire.cert4android.demo"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "at.bitfire.cert4android.demo"
@@ -14,7 +14,7 @@ android {
         versionName = "1.0.0"
 
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
