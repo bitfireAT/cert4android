@@ -5,7 +5,7 @@
 package at.bitfire.cert4android
 
 import android.util.Log
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import java.util.logging.Level
 import java.util.logging.Logger
