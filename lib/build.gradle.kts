@@ -9,11 +9,10 @@ plugins {
 android {
     namespace = "at.bitfire.cert4android"
 
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21            // Android 5
-        targetSdk = 34
 
         aarMetadata {
             minCompileSdk = 29
@@ -23,11 +22,11 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlin {
-        jvmToolchain(17)
+        jvmToolchain(21)
     }
 
     buildFeatures {
