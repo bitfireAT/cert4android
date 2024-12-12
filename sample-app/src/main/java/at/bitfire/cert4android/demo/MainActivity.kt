@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
 
         setContent {
-            MaterialTheme {
+            Cert4Android.theme {
                 Column(Modifier
                     .padding(8.dp)
                     .verticalScroll(rememberScrollState())) {

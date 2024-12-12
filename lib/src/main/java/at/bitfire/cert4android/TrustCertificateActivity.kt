@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -42,6 +43,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.CertificateParsingException
@@ -50,8 +53,6 @@ import java.security.spec.MGF1ParameterSpec.SHA1
 import java.security.spec.MGF1ParameterSpec.SHA256
 import java.text.DateFormat
 import java.util.logging.Level
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class TrustCertificateActivity : ComponentActivity() {
 
@@ -74,11 +75,15 @@ class TrustCertificateActivity : ComponentActivity() {
             processIntent(newIntent)
         }
 
+        enableEdgeToEdge()
+
         setContent {
-            MainLayout(
-                onRegisterDecision = { trusted -> model.registerDecision(trusted) },
-                onFinish = { finish() }
-            )
+            Cert4Android.theme {
+                MainLayout(
+                    onRegisterDecision = { trusted -> model.registerDecision(trusted) },
+                    onFinish = { finish() }
+                )
+            }
         }
     }
 
@@ -124,37 +129,35 @@ class TrustCertificateActivity : ComponentActivity() {
             backPressedCounter = newBackPressedCounter
         }
 
-        Cert4Android.theme {
-            Scaffold(
-                snackbarHost = { SnackbarHost(snackbarHostState) },
-                modifier = Modifier.padding(16.dp)
-            ) { paddingValues ->
-                Column(
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            modifier = Modifier.padding(16.dp)
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    text = stringResource(R.string.trust_certificate_unknown_certificate_found),
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
-                        .padding(paddingValues)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    Text(
-                        text = stringResource(R.string.trust_certificate_unknown_certificate_found),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                    )
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
 
-                    CertificateCard(
-                        uiState = uiState,
-                        onRegisterDecision = onRegisterDecision
-                    )
+                CertificateCard(
+                    uiState = uiState,
+                    onRegisterDecision = onRegisterDecision
+                )
 
-                    Text(
-                        text = stringResource(R.string.trust_certificate_reset_info),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.trust_certificate_reset_info),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                )
             }
         }
     }
