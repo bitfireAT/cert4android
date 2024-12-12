@@ -53,7 +53,7 @@ dependencies {
 
     implementation(libs.androidx.activityCompose)
     implementation(platform(libs.compose.bom))
-    implementation(libs.compose.material)
+    implementation(libs.compose.material3)
     implementation(libs.compose.ui.base)
     implementation(libs.compose.ui.graphics)
     debugImplementation(libs.compose.ui.toolingPreview)

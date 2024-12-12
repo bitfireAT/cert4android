@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -19,14 +20,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.Checkbox
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,11 +75,15 @@ class TrustCertificateActivity : ComponentActivity() {
             processIntent(newIntent)
         }
 
+        enableEdgeToEdge()
+
         setContent {
-            MainLayout(
-                onRegisterDecision = { trusted -> model.registerDecision(trusted) },
-                onFinish = { finish() }
-            )
+            Cert4Android.theme {
+                MainLayout(
+                    onRegisterDecision = { trusted -> model.registerDecision(trusted) },
+                    onFinish = { finish() }
+                )
+            }
         }
     }
 
@@ -124,37 +129,35 @@ class TrustCertificateActivity : ComponentActivity() {
             backPressedCounter = newBackPressedCounter
         }
 
-        Cert4Android.theme {
-            Scaffold(
-                snackbarHost = { SnackbarHost(snackbarHostState) },
-                modifier = Modifier.padding(16.dp)
-            ) { paddingValues ->
-                Column(
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            modifier = Modifier.padding(16.dp)
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    text = stringResource(R.string.trust_certificate_unknown_certificate_found),
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
-                        .padding(paddingValues)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    Text(
-                        text = stringResource(R.string.trust_certificate_unknown_certificate_found),
-                        style = MaterialTheme.typography.body1,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                    )
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
 
-                    CertificateCard(
-                        uiState = uiState,
-                        onRegisterDecision = onRegisterDecision
-                    )
+                CertificateCard(
+                    uiState = uiState,
+                    onRegisterDecision = onRegisterDecision
+                )
 
-                    Text(
-                        text = stringResource(R.string.trust_certificate_reset_info),
-                        style = MaterialTheme.typography.body1,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.trust_certificate_reset_info),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                )
             }
         }
     }
@@ -174,7 +177,7 @@ class TrustCertificateActivity : ComponentActivity() {
             ) {
                 Text(
                     text = stringResource(R.string.trust_certificate_x509_certificate_details),
-                    style = MaterialTheme.typography.h5,
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
@@ -201,14 +204,14 @@ class TrustCertificateActivity : ComponentActivity() {
                 if (sha1 != null || sha256 != null) {
                     Text(
                         text = stringResource(R.string.trust_certificate_fingerprints).uppercase(),
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     if (sha1 != null)
                         Text(
                             text = sha1,
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp, top = 4.dp),
@@ -217,7 +220,7 @@ class TrustCertificateActivity : ComponentActivity() {
                     if (sha256 != null)
                         Text(
                             text = sha256,
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp, top = 4.dp),
@@ -242,7 +245,7 @@ class TrustCertificateActivity : ComponentActivity() {
                             }
                             .weight(1f)
                             .padding(bottom = 8.dp),
-                        style = MaterialTheme.typography.body2
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
@@ -274,13 +277,13 @@ class TrustCertificateActivity : ComponentActivity() {
     fun InfoPack(@StringRes labelStringRes: Int, text: String) {
         Text(
             text = stringResource(labelStringRes).uppercase(),
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
                 .fillMaxWidth(),
         )
         Text(
             text = text,
-            style = MaterialTheme.typography.body1,
+            style = MaterialTheme.typography.bodySmall,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),

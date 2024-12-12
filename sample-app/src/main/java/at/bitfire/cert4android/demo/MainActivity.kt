@@ -16,7 +16,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
@@ -30,13 +35,13 @@ import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.Cert4Android
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
+import java.net.URL
+import javax.net.ssl.HttpsURLConnection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier
 import org.apache.http.conn.ssl.StrictHostnameVerifier
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
 
 class MainActivity : ComponentActivity() {
 
@@ -50,7 +55,7 @@ class MainActivity : ComponentActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
 
         setContent {
-            MaterialTheme {
+            Cert4Android.theme {
                 Column(Modifier
                     .padding(8.dp)
                     .verticalScroll(rememberScrollState())) {

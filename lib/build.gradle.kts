@@ -94,7 +94,7 @@ dependencies {
     // Jetpack Compose
     implementation(libs.androidx.activityCompose)
     implementation(platform(libs.compose.bom))
-    implementation(libs.compose.material)
+    implementation(libs.compose.material3)
     implementation(libs.compose.runtime.livedata)
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.toolingPreview)
