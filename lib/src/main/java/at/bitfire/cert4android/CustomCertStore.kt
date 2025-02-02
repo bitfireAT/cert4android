@@ -133,8 +133,7 @@ class CustomCertStore internal constructor(
     @Synchronized
     fun setTrustedByUser(cert: X509Certificate) {
         val tag = CertUtils.getTag(cert)
-        Cert4Android.log.info("Trusted by user: ${cert.javaClass.name} ${cert.subjectDN.name} ($tag)")
-        Cert4Android.log.info(cert.toString())
+        Cert4Android.log.info("Trusted by user: ${cert.subjectDN.name} ($tag)")
 
         userKeyStore.setCertificateEntry(tag, cert)
         saveUserKeyStore()

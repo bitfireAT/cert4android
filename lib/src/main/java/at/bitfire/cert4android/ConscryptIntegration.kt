@@ -6,7 +6,7 @@ import javax.net.ssl.SSLContext
 
 object ConscryptIntegration {
 
-    var initialized = false
+    private var initialized = false
 
     @Synchronized
     fun initialize() {
