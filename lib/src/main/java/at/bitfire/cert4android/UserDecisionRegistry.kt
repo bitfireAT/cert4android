@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.cert.X509Certificate
 import kotlin.coroutines.Continuation
@@ -120,8 +121,16 @@ class UserDecisionRegistry private constructor(
                 .setContentText(context.getString(R.string.certificate_notification_user_interaction))
                 .setSubText(cert.subjectDN.name)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setContentIntent(PendingIntent.getActivity(context, id, decisionIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
-                .setDeleteIntent(PendingIntent.getActivity(context, id + 1, rejectIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+                .setContentIntent(
+                    TaskStackBuilder.create(context)
+                        .addNextIntent(decisionIntent)
+                        .getPendingIntent(id, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                )
+                .setDeleteIntent(
+                    TaskStackBuilder.create(context)
+                        .addNextIntent(rejectIntent)
+                        .getPendingIntent(id + 1, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                )
                 .build()
 
             val nm = NotificationUtils.createChannels(context)
