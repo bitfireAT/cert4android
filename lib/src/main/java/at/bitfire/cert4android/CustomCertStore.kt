@@ -34,17 +34,6 @@ class CustomCertStore internal constructor(
         @SuppressLint("StaticFieldLeak")
         internal var instance: CustomCertStore? = null
 
-        init {
-            // initialize Conscrypt
-            Security.insertProviderAt(Conscrypt.newProvider(), 1)
-
-            val version = Conscrypt.version()
-            Cert4Android.log.info("Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
-            val engine = SSLContext.getDefault().createSSLEngine()
-            Cert4Android.log.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
-            Cert4Android.log.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
-        }
-
         @Synchronized
         fun getInstance(context: Context): CustomCertStore {
             instance?.let {
