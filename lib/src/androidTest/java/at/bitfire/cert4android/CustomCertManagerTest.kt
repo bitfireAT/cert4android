@@ -12,38 +12,23 @@ import java.io.IOException
 import java.net.URL
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import javax.net.ssl.HttpsURLConnection
 
 class CustomCertManagerTest {
-
-    companion object {
-        private fun getSiteCertificates(url: URL): List<X509Certificate> {
-            val conn = url.openConnection() as HttpsURLConnection
-            try {
-                conn.inputStream.read()
-                val certs = mutableListOf<X509Certificate>()
-                conn.serverCertificates.forEach { certs += it as X509Certificate }
-                return certs
-            } finally {
-                conn.disconnect()
-            }
-        }
-    }
 
     private val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
 
     private lateinit var certManager: CustomCertManager
     private lateinit var paranoidCertManager: CustomCertManager
 
-    private var siteCerts: List<X509Certificate>? = null
-    init {
+    private var siteCerts: List<X509Certificate>? =
         try {
-            siteCerts = getSiteCertificates(URL("https://www.davx5.com"))
+            TestCertificates.getSiteCertificates(URL("https://www.davx5.com"))
         } catch(_: IOException) {
+            null
         }
-        assumeNotNull(siteCerts)
+    init {
+        assumeNotNull("Couldn't load certificate from Web", siteCerts)
     }
-
 
     @Before
     fun createCertManager() {
@@ -84,6 +69,8 @@ class CustomCertManagerTest {
         paranoidCertManager.checkServerTrusted(siteCerts!!.toTypedArray(), "RSA")
     }
 
+
+    // helpers
 
     private fun addTrustedCertificate() {
         CustomCertStore.getInstance(context).setTrustedByUser(siteCerts!!.first())

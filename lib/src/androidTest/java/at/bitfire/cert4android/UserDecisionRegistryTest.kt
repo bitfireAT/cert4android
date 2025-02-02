@@ -22,7 +22,7 @@ class UserDecisionRegistryTest {
     private val certStore = CustomCertStore.getInstance(context)
     private val registry = UserDecisionRegistry.getInstance(context)
 
-    private val testCert = TestCertificate.testCert
+    private val testCert = TestCertificates.testCert
 
 
     @Before
