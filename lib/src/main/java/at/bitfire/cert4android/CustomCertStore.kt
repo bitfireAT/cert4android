@@ -6,6 +6,7 @@ package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
@@ -15,11 +16,9 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.security.KeyStore
-import java.security.Security
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.util.logging.Level
-import javax.net.ssl.SSLContext
 
 class CustomCertStore internal constructor(
     private val context: Context,
@@ -28,11 +27,11 @@ class CustomCertStore internal constructor(
 
     companion object {
 
-        const val KEYSTORE_DIR = "KeyStore"
-        const val KEYSTORE_NAME = "KeyStore.bks"
+        private const val KEYSTORE_DIR = "KeyStore"
+        private const val KEYSTORE_NAME = "KeyStore.bks"
 
-        @SuppressLint("StaticFieldLeak")
-        internal var instance: CustomCertStore? = null
+        @SuppressLint("StaticFieldLeak")    // we only store the applicationContext, so this is safe
+        private var instance: CustomCertStore? = null
 
         @Synchronized
         fun getInstance(context: Context): CustomCertStore {
@@ -51,10 +50,12 @@ class CustomCertStore internal constructor(
     private val systemKeyStore by lazy { Conscrypt.getDefaultX509TrustManager() }
 
     /** custom TrustStore */
-    private val userKeyStoreFile = File(context.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
+    @VisibleForTesting
     internal val userKeyStore = KeyStore.getInstance(KeyStore.getDefaultType())!!
+    private val userKeyStoreFile = File(context.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE), KEYSTORE_NAME)
 
     /** in-memory store for untrusted certs */
+    @VisibleForTesting
     internal var untrustedCerts = HashSet<X509Certificate>()
 
     init {
@@ -97,7 +98,7 @@ class CustomCertStore internal constructor(
 
                     // trusted by system
                     return true
-                } catch (ignored: CertificateException) {
+                } catch (_: CertificateException) {
                     // not trusted by system, ask user
                 }
         }
@@ -114,7 +115,7 @@ class CustomCertStore internal constructor(
                 withTimeout(userTimeout) {
                     ui.check(cert, appInForeground.value)
                 }
-            } catch (e: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
                 Cert4Android.log.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")
                 false
             }
@@ -131,9 +132,11 @@ class CustomCertStore internal constructor(
 
     @Synchronized
     fun setTrustedByUser(cert: X509Certificate) {
-        Cert4Android.log.info("Trusted by user: $cert")
+        val tag = CertUtils.getTag(cert)
+        Cert4Android.log.info("Trusted by user: ${cert.javaClass.name} ${cert.subjectDN.name} ($tag)")
+        Cert4Android.log.info(cert.toString())
 
-        userKeyStore.setCertificateEntry(CertUtils.getTag(cert), cert)
+        userKeyStore.setCertificateEntry(tag, cert)
         saveUserKeyStore()
 
         untrustedCerts -= cert
@@ -141,9 +144,10 @@ class CustomCertStore internal constructor(
 
     @Synchronized
     fun setUntrustedByUser(cert: X509Certificate) {
-        Cert4Android.log.info("Distrusted by user: $cert")
+        val tag = CertUtils.getTag(cert)
+        Cert4Android.log.info("Distrusted by user: ${cert.subjectDN.name} ($tag)")
 
-        userKeyStore.deleteEntry(CertUtils.getTag(cert))
+        userKeyStore.deleteEntry(tag)
         saveUserKeyStore()
 
         untrustedCerts += cert
@@ -157,7 +161,7 @@ class CustomCertStore internal constructor(
                 userKeyStore.load(it, null)
                 Cert4Android.log.fine("Loaded ${userKeyStore.size()} trusted certificate(s)")
             }
-        } catch(e: Exception) {
+        } catch(_: Exception) {
             Cert4Android.log.fine("No key store for trusted certificates (yet); creating in-memory key store.")
             try {
                 userKeyStore.load(null, null)

@@ -6,7 +6,13 @@ import javax.net.ssl.SSLContext
 
 object ConscryptIntegration {
 
+    var initialized = false
+
+    @Synchronized
     fun initialize() {
+        if (initialized)
+            return
+
         // initialize Conscrypt
         Security.insertProviderAt(Conscrypt.newProvider(), 1)
 
@@ -16,6 +22,8 @@ object ConscryptIntegration {
         val engine = SSLContext.getDefault().createSSLEngine()
         Cert4Android.log.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
         Cert4Android.log.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
+
+        initialized = true
     }
 
 }

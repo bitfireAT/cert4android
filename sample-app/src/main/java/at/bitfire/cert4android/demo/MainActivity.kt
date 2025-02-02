@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -35,13 +34,13 @@ import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.Cert4Android
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier
 import org.apache.http.conn.ssl.StrictHostnameVerifier
+import java.net.URL
+import javax.net.ssl.HttpsURLConnection
 
 class MainActivity : ComponentActivity() {
 
@@ -124,7 +123,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    @SuppressLint("AllowAllHostnameVerifier")
     class Model(application: Application): AndroidViewModel(application) {
 
         val appInForeground = MutableStateFlow(true)
@@ -132,6 +130,7 @@ class MainActivity : ComponentActivity() {
 
         init {
             // The default HostnameVerifier is called before our per-connection HostnameVerifier.
+            @SuppressLint("AllowAllHostnameVerifier")
             HttpsURLConnection.setDefaultHostnameVerifier(AllowAllHostnameVerifier())
         }
 
@@ -154,7 +153,7 @@ class MainActivity : ComponentActivity() {
                     appInForeground = appInForeground
                 )
                 urlConn.hostnameVerifier = certMgr.HostnameVerifier(StrictHostnameVerifier())
-                urlConn.sslSocketFactory = object : SSLCertificateSocketFactory(1000) {
+                urlConn.sslSocketFactory = object : SSLCertificateSocketFactory(/* handshakeTimeoutMillis = */ 1000) {
                     init {
                         setTrustManagers(arrayOf(certMgr))
                     }
