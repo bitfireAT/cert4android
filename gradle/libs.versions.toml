@@ -7,7 +7,7 @@ androidx-lifecycle = "2.8.7"
 androidx-test-core = "1.6.1"
 androidx-test-runner = "1.6.2"
 androidx-test-rules = "1.6.1"
-# don't updated to 2.5.3 / until https://github.com/google/conscrypt/issues/1268 is fixed
+# don't update to 2.5.3 / until https://github.com/google/conscrypt/issues/1268 is fixed
 conscrypt = "2.5.2"
 compose-bom = "2025.01.01"
 dokka = "1.9.20"
