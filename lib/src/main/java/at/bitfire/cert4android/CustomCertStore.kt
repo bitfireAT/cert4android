@@ -132,10 +132,10 @@ class CustomCertStore internal constructor(
 
     @Synchronized
     fun setTrustedByUser(cert: X509Certificate) {
-        val tag = CertUtils.getTag(cert)
-        Cert4Android.log.info("Trusted by user: ${cert.subjectDN.name} ($tag)")
+        val alias = CertUtils.getTag(cert)
+        Cert4Android.log.info("Trusted by user: ${cert.subjectDN.name} ($alias)")
 
-        userKeyStore.setCertificateEntry(tag, cert)
+        userKeyStore.setCertificateEntry(alias, cert)
         saveUserKeyStore()
 
         untrustedCerts -= cert
@@ -143,11 +143,15 @@ class CustomCertStore internal constructor(
 
     @Synchronized
     fun setUntrustedByUser(cert: X509Certificate) {
-        val tag = CertUtils.getTag(cert)
-        Cert4Android.log.info("Distrusted by user: ${cert.subjectDN.name} ($tag)")
+        Cert4Android.log.info("Distrusted by user: ${cert.subjectDN.name}")
 
-        userKeyStore.deleteEntry(tag)
-        saveUserKeyStore()
+        // find certificate
+        val alias = userKeyStore.getCertificateAlias(cert)
+        if (alias != null) {
+            // and delete, if applicable
+            userKeyStore.deleteEntry(alias)
+            saveUserKeyStore()
+        }
 
         untrustedCerts += cert
     }
