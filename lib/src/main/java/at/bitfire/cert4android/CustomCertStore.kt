@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.conscrypt.Conscrypt
@@ -77,7 +76,12 @@ class CustomCertStore internal constructor(
     /**
      * Determines whether a certificate chain is trusted.
      */
-    fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean {
+    fun isTrusted(
+        chain: Array<X509Certificate>,
+        authType: String,
+        trustSystemCerts: Boolean,
+        getUserDecision: suspend (X509Certificate) -> Boolean
+    ): Boolean {
         if (chain.isEmpty())
             throw IllegalArgumentException("Certificate chain must not be empty")
         val cert = chain[0]
@@ -103,17 +107,12 @@ class CustomCertStore internal constructor(
                 }
         }
 
-        if (appInForeground == null) {
-            Cert4Android.log.log(Level.INFO, "Certificate not known and running in non-interactive mode, rejecting")
-            return false
-        }
-
         return runBlocking {
             val ui = UserDecisionRegistry.getInstance(context)
 
             try {
                 withTimeout(userTimeout) {
-                    ui.check(cert, appInForeground.value)
+                    ui.check(cert, getUserDecision)
                 }
             } catch (_: TimeoutCancellationException) {
                 Cert4Android.log.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")

@@ -1,11 +1,8 @@
 package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import androidx.core.app.NotificationCompat
-import androidx.core.app.TaskStackBuilder
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.cert.X509Certificate
 import kotlin.coroutines.Continuation
@@ -41,113 +38,46 @@ class UserDecisionRegistry private constructor(
      * Thread-safe, can handle multiple requests for various certificates and/or the same certificate at once.
      *
      * @param cert              certificate to ask user about
-     * @param appInForeground   whether the app is currently in foreground = whether it can directly launch an Activity
+     * @param getUserDecision   anonymous function to retrieve user decision
      * @return *true* if the user explicitly trusts the certificate, *false* if unknown or untrusted
      */
-    suspend fun check(cert: X509Certificate, appInForeground: Boolean): Boolean = suspendCancellableCoroutine { cont ->
-        // check whether we're able to retrieve user feedback (= start an Activity and/or show a notification)
-        val notificationsPermitted = NotificationUtils.notificationsPermitted(context)
-        val userDecisionPossible = appInForeground || notificationsPermitted
-
-        if (userDecisionPossible) {
-            // User decision possible → remember request in pendingDecisions so that a later decision will be applied to this request
-
-            cont.invokeOnCancellation {
-                // remove from pending decisions on cancellation
-                synchronized(pendingDecisions) {
-                    pendingDecisions[cert]?.remove(cont)
-                }
-
-                val nm = NotificationUtils.createChannels(context)
-                nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
-            }
-
-            val requestDecision: Boolean
+    suspend fun check(cert: X509Certificate, getUserDecision: suspend (X509Certificate) -> Boolean): Boolean = suspendCancellableCoroutine { cont ->
+        cont.invokeOnCancellation {
+            // remove from pending decisions on cancellation
             synchronized(pendingDecisions) {
-                if (pendingDecisions.containsKey(cert)) {
-                    // There are already pending decisions for this request, just add our request
-                    pendingDecisions[cert]!! += cont
-                    requestDecision = false
-                } else {
-                    // First decision for this certificate, show UI
-                    pendingDecisions[cert] = mutableListOf(cont)
-                    requestDecision = true
-                }
+                pendingDecisions[cert]?.remove(cont)
             }
-
-            if (requestDecision)
-                requestDecision(cert, launchActivity = appInForeground, showNotification = notificationsPermitted)
-
-        } else {
-            // We're not able to retrieve user feedback, directly reject request
-            Cert4Android.log.warning("App not in foreground and missing notification permission, rejecting certificate")
-            cont.resume(false)
         }
+
+        val requestDecision: Boolean
+        synchronized(pendingDecisions) {
+            if (pendingDecisions.containsKey(cert)) {
+                // There are already pending decisions for this request, just add our request
+                pendingDecisions[cert]!! += cont
+                requestDecision = false
+            } else {
+                // First decision for this certificate, show UI
+                pendingDecisions[cert] = mutableListOf(cont)
+                requestDecision = true
+            }
+        }
+
+        if (requestDecision)
+            runBlocking {
+                requestDecision(cert, getUserDecision)
+            }
     }
 
     /**
-     * Starts UI for retrieving feedback (accept/reject) for a certificate from the user.
+     * ...
      *
-     * Ensure that required permissions are granted/conditions are met before setting [launchActivity]
-     * or [showNotification].
-     *
-     * @param cert              certificate to ask user about
-     * @param launchActivity    whether to launch a [TrustCertificateActivity]
-     * @param showNotification  whether to show a certificate notification (caller must check notification permissions before passing *true*)
-     *
-     * @throws IllegalArgumentException  when both [launchActivity] and [showNotification] are *false*
      */
-    @SuppressLint("MissingPermission")
-    internal fun requestDecision(cert: X509Certificate, launchActivity: Boolean, showNotification: Boolean) {
-        if (!launchActivity && !showNotification)
-            throw IllegalArgumentException("User decision requires certificate Activity and/or notification")
-
-        val rawCert = cert.encoded
-        val decisionIntent = Intent(context, TrustCertificateActivity::class.java).apply {
-            putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
-        }
-
-        if (showNotification) {
-            val rejectIntent = Intent(context, TrustCertificateActivity::class.java).apply {
-                putExtra(TrustCertificateActivity.EXTRA_CERTIFICATE, rawCert)
-                putExtra(TrustCertificateActivity.EXTRA_TRUSTED, false)
-            }
-
-            val id = rawCert.contentHashCode()
-            val notify = NotificationCompat.Builder(context, NotificationUtils.CHANNEL_CERTIFICATES)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setSmallIcon(R.drawable.ic_lock_open_white)
-                .setContentTitle(context.getString(R.string.certificate_notification_connection_security))
-                .setContentText(context.getString(R.string.certificate_notification_user_interaction))
-                .setSubText(cert.subjectDN.name)
-                .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setContentIntent(
-                    TaskStackBuilder.create(context)
-                        .addNextIntent(decisionIntent)
-                        .getPendingIntent(id, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                )
-                .setDeleteIntent(
-                    TaskStackBuilder.create(context)
-                        .addNextIntent(rejectIntent)
-                        .getPendingIntent(id + 1, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                )
-                .build()
-
-            val nm = NotificationUtils.createChannels(context)
-            nm.notify(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION, notify)
-        }
-
-        if (launchActivity) {
-            decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(decisionIntent)
-        }
+    internal suspend fun requestDecision(cert: X509Certificate, getUserDecision: suspend (X509Certificate) -> Boolean) {
+        val userDecision = getUserDecision(cert)
+        onUserDecision(cert, userDecision)
     }
 
     fun onUserDecision(cert: X509Certificate, trusted: Boolean) {
-        // cancel notification
-        val nm = NotificationUtils.createChannels(context)
-        nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
-
         // save decision
         val customCertStore = CustomCertStore.getInstance(context)
         if (trusted)

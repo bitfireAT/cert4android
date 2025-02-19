@@ -18,15 +18,14 @@ import javax.net.ssl.X509TrustManager
  * Initializes Conscrypt when it is first loaded.
  *
  * @param trustSystemCerts whether system certificates will be trusted
- * @param appInForeground  - `true`: if needed, directly launches [TrustCertificateActivity] and shows notification (if possible)
- *                         - `false`: if needed, shows notification (if possible)
- *                         - `null`: non-interactive mode: does not show notification or launch activity
+ * @param getUserDecision  anonymous function to retrieve user decision on whether to trust a
+ *                         certificate; should return *true* if the user trusts the certificate
  */
 @SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
     context: Context,
     val trustSystemCerts: Boolean = true,
-    var appInForeground: StateFlow<Boolean>?
+    private val getUserDecision: suspend (X509Certificate) -> Boolean
 ): X509TrustManager {
 
     val certStore = CustomCertStore.getInstance(context)
@@ -47,7 +46,7 @@ class CustomCertManager @JvmOverloads constructor(
      */
     @Throws(CertificateException::class)
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
-        if (!certStore.isTrusted(chain, authType, trustSystemCerts, appInForeground))
+        if (!certStore.isTrusted(chain, authType, trustSystemCerts, getUserDecision))
             throw CertificateException("Certificate chain not trusted")
     }
 
@@ -71,7 +70,7 @@ class CustomCertManager @JvmOverloads constructor(
             // Allow users to explicitly accept certificates that have a bad hostname here
             (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
                 // Check without trusting system certificates so that the user will be asked even for system-trusted certificates
-                if (certStore.isTrusted(arrayOf(cert), "RSA", false, appInForeground))
+                if (certStore.isTrusted(arrayOf(cert), "RSA", false, getUserDecision))
                     return true
             }
 
