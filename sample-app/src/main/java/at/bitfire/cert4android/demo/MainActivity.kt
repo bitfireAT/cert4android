@@ -194,7 +194,7 @@ class MainActivity : ComponentActivity() {
         }
 
         fun reset() = viewModelScope.launch(Dispatchers.IO) {
-            CustomCertStore.getInstance(getApplication()).clearUserDecisions()
+            CustomCertStore.getInstance(getApplication(), viewModelScope).clearUserDecisions()
         }
 
         fun testAccess(url: String, trustSystemCerts: Boolean = true) =
@@ -205,6 +205,7 @@ class MainActivity : ComponentActivity() {
                     // set cert4android TrustManager and HostnameVerifier
                     val certMgr = CustomCertManager(
                         getApplication(),
+                        viewModelScope,
                         trustSystemCerts = trustSystemCerts,
                         getUserDecision = { cert ->
                             // Called by cert4android to get user decision on whether to trust this certificate

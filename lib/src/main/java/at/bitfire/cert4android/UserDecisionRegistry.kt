@@ -2,14 +2,16 @@ package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
 import android.content.Context
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.cert.X509Certificate
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
 class UserDecisionRegistry private constructor(
-    private val context: Context
+    private val context: Context,
+    private val scope: CoroutineScope
 ) {
 
     companion object {
@@ -18,12 +20,12 @@ class UserDecisionRegistry private constructor(
         private var instance: UserDecisionRegistry? = null
 
         @Synchronized
-        fun getInstance(context: Context): UserDecisionRegistry {
+        fun getInstance(context: Context, scope: CoroutineScope): UserDecisionRegistry {
             instance?.let {
                 return it
             }
 
-            val newInstance = UserDecisionRegistry(context.applicationContext)
+            val newInstance = UserDecisionRegistry(context.applicationContext, scope)
             instance = newInstance
             return newInstance
         }
@@ -41,7 +43,10 @@ class UserDecisionRegistry private constructor(
      * @param getUserDecision   anonymous function to retrieve user decision
      * @return *true* if the user explicitly trusts the certificate, *false* if unknown or untrusted
      */
-    suspend fun check(cert: X509Certificate, getUserDecision: suspend (X509Certificate) -> Boolean): Boolean = suspendCancellableCoroutine { cont ->
+    suspend fun check(
+        cert: X509Certificate,
+        getUserDecision: suspend (X509Certificate) -> Boolean
+    ): Boolean = suspendCancellableCoroutine { cont ->
         cont.invokeOnCancellation {
             // remove from pending decisions on cancellation
             synchronized(pendingDecisions) {
@@ -63,23 +68,15 @@ class UserDecisionRegistry private constructor(
         }
 
         if (requestDecision)
-            runBlocking {
-                requestDecision(cert, getUserDecision)
+            scope.launch {
+                val userDecision = getUserDecision(cert)
+                onUserDecision(cert, userDecision)
             }
-    }
-
-    /**
-     * ...
-     *
-     */
-    internal suspend fun requestDecision(cert: X509Certificate, getUserDecision: suspend (X509Certificate) -> Boolean) {
-        val userDecision = getUserDecision(cert)
-        onUserDecision(cert, userDecision)
     }
 
     fun onUserDecision(cert: X509Certificate, trusted: Boolean) {
         // save decision
-        val customCertStore = CustomCertStore.getInstance(context)
+        val customCertStore = CustomCertStore.getInstance(context, scope)
         if (trusted)
             customCertStore.setTrustedByUser(cert)
         else

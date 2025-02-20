@@ -7,6 +7,7 @@ package at.bitfire.cert4android
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -21,6 +22,7 @@ import java.util.logging.Level
 
 class CustomCertStore internal constructor(
     private val context: Context,
+    private val scope: CoroutineScope,
     private val userTimeout: Long = 60000L
 ) {
 
@@ -33,12 +35,12 @@ class CustomCertStore internal constructor(
         private var instance: CustomCertStore? = null
 
         @Synchronized
-        fun getInstance(context: Context): CustomCertStore {
+        fun getInstance(context: Context, scope: CoroutineScope): CustomCertStore {
             instance?.let {
                 return it
             }
 
-            val newInstance = CustomCertStore(context.applicationContext)
+            val newInstance = CustomCertStore(context.applicationContext, scope)
             instance = newInstance
             return newInstance
         }
@@ -108,7 +110,7 @@ class CustomCertStore internal constructor(
         }
 
         return runBlocking {
-            val ui = UserDecisionRegistry.getInstance(context)
+            val ui = UserDecisionRegistry.getInstance(context, scope)
 
             try {
                 withTimeout(userTimeout) {
