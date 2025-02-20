@@ -38,10 +38,10 @@ import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.Cert4Android
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier
 import org.apache.http.conn.ssl.StrictHostnameVerifier
@@ -179,10 +179,10 @@ class MainActivity : ComponentActivity() {
         private val _certificateFlow = MutableStateFlow<X509Certificate?>(null)
         val certificateFlow: StateFlow<X509Certificate?> = _certificateFlow
 
-        private val _userDecisionFlow = MutableStateFlow<Boolean?>(null)
+        private var userDecision: CompletableDeferred<Boolean> = CompletableDeferred()
 
         fun setUserDecision(decision: Boolean) {
-            _userDecisionFlow.value = decision
+            userDecision.complete(decision)
             _certificateFlow.value = null
         }
 
@@ -208,21 +208,14 @@ class MainActivity : ComponentActivity() {
                         viewModelScope,
                         trustSystemCerts = trustSystemCerts,
                         getUserDecision = { cert ->
-                            // Called by cert4android to get user decision on whether to trust this certificate
-                            Log.i(Cert4Android.TAG, "getUserDecision(${cert.encoded}): ?")
+                            // Reset user decision
+                            userDecision = CompletableDeferred()
 
                             // Show TrustDecisionDialog with certificate to user
                             _certificateFlow.value = cert
 
-                            // ... wait for user decision and save it
-                            val userDecision: Boolean = _userDecisionFlow.first { it != null } == true
-
-                            // ... reset user decision
-                            _userDecisionFlow.value = null
-
-                            // return the decision to cert4android
-                            Log.i(Cert4Android.TAG, "getUserDecision(${cert.encoded}): $userDecision")
-                            userDecision
+                            // Wait for user decision and return it
+                            userDecision.await()
                         }
                     )
                     urlConn.hostnameVerifier = certMgr.HostnameVerifier(StrictHostnameVerifier())
