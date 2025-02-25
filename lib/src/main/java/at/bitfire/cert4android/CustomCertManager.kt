@@ -24,12 +24,12 @@ import javax.net.ssl.X509TrustManager
 @SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
     context: Context,
-    scope: CoroutineScope,
+    private val scope: CoroutineScope,
     val trustSystemCerts: Boolean = true,
     private val getUserDecision: suspend (X509Certificate) -> Boolean
 ): X509TrustManager {
 
-    val certStore = CustomCertStore.getInstance(context, scope)
+    val certStore = CustomCertStore.getInstance(context)
 
 
     @Throws(CertificateException::class)
@@ -47,7 +47,7 @@ class CustomCertManager @JvmOverloads constructor(
      */
     @Throws(CertificateException::class)
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
-        if (!certStore.isTrusted(chain, authType, trustSystemCerts, getUserDecision))
+        if (!certStore.isTrusted(chain, authType, trustSystemCerts, scope, getUserDecision))
             throw CertificateException("Certificate chain not trusted")
     }
 
@@ -71,7 +71,7 @@ class CustomCertManager @JvmOverloads constructor(
             // Allow users to explicitly accept certificates that have a bad hostname here
             (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
                 // Check without trusting system certificates so that the user will be asked even for system-trusted certificates
-                if (certStore.isTrusted(arrayOf(cert), "RSA", false, getUserDecision))
+                if (certStore.isTrusted(arrayOf(cert), "RSA", false, scope, getUserDecision))
                     return true
             }
 

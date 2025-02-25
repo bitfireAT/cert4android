@@ -194,7 +194,7 @@ class MainActivity : ComponentActivity() {
         }
 
         fun reset() = viewModelScope.launch(Dispatchers.IO) {
-            CustomCertStore.getInstance(getApplication(), viewModelScope).clearUserDecisions()
+            CustomCertStore.getInstance(getApplication()).clearUserDecisions()
         }
 
         fun testAccess(url: String, trustSystemCerts: Boolean = true) =

@@ -22,7 +22,6 @@ import java.util.logging.Level
 
 class CustomCertStore internal constructor(
     private val context: Context,
-    private val scope: CoroutineScope,
     private val userTimeout: Long = 60000L
 ) {
 
@@ -35,12 +34,12 @@ class CustomCertStore internal constructor(
         private var instance: CustomCertStore? = null
 
         @Synchronized
-        fun getInstance(context: Context, scope: CoroutineScope): CustomCertStore {
+        fun getInstance(context: Context): CustomCertStore {
             instance?.let {
                 return it
             }
 
-            val newInstance = CustomCertStore(context.applicationContext, scope)
+            val newInstance = CustomCertStore(context.applicationContext)
             instance = newInstance
             return newInstance
         }
@@ -82,6 +81,7 @@ class CustomCertStore internal constructor(
         chain: Array<X509Certificate>,
         authType: String,
         trustSystemCerts: Boolean,
+        scope: CoroutineScope,
         getUserDecision: suspend (X509Certificate) -> Boolean
     ): Boolean {
         if (chain.isEmpty())
@@ -110,11 +110,11 @@ class CustomCertStore internal constructor(
         }
 
         return runBlocking {
-            val ui = UserDecisionRegistry.getInstance(context, scope)
+            val ui = UserDecisionRegistry.getInstance(context)
 
             try {
                 withTimeout(userTimeout) {
-                    ui.check(cert, getUserDecision)
+                    ui.check(cert, scope, getUserDecision)
                 }
             } catch (_: TimeoutCancellationException) {
                 Cert4Android.log.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")

@@ -10,8 +10,7 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
 class UserDecisionRegistry private constructor(
-    private val context: Context,
-    private val scope: CoroutineScope
+    private val context: Context
 ) {
 
     companion object {
@@ -20,12 +19,12 @@ class UserDecisionRegistry private constructor(
         private var instance: UserDecisionRegistry? = null
 
         @Synchronized
-        fun getInstance(context: Context, scope: CoroutineScope): UserDecisionRegistry {
+        fun getInstance(context: Context): UserDecisionRegistry {
             instance?.let {
                 return it
             }
 
-            val newInstance = UserDecisionRegistry(context.applicationContext, scope)
+            val newInstance = UserDecisionRegistry(context.applicationContext)
             instance = newInstance
             return newInstance
         }
@@ -45,6 +44,7 @@ class UserDecisionRegistry private constructor(
      */
     suspend fun check(
         cert: X509Certificate,
+        scope: CoroutineScope,
         getUserDecision: suspend (X509Certificate) -> Boolean
     ): Boolean = suspendCancellableCoroutine { cont ->
         cont.invokeOnCancellation {
@@ -67,16 +67,17 @@ class UserDecisionRegistry private constructor(
             }
         }
 
-        if (requestDecision)
+        if (requestDecision) {
             scope.launch {
-                val userDecision = getUserDecision(cert)
+                val userDecision = getUserDecision(cert) // Suspends until user decision is made
                 onUserDecision(cert, userDecision)
             }
+        }
     }
 
     fun onUserDecision(cert: X509Certificate, trusted: Boolean) {
         // save decision
-        val customCertStore = CustomCertStore.getInstance(context, scope)
+        val customCertStore = CustomCertStore.getInstance(context)
         if (trusted)
             customCertStore.setTrustedByUser(cert)
         else
