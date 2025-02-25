@@ -67,12 +67,11 @@ class UserDecisionRegistry private constructor(
             }
         }
 
-        if (requestDecision) {
+        if (requestDecision)
             scope.launch {
                 val userDecision = getUserDecision(cert) // Suspends until user decision is made
                 onUserDecision(cert, userDecision)
             }
-        }
     }
 
     fun onUserDecision(cert: X509Certificate, trusted: Boolean) {

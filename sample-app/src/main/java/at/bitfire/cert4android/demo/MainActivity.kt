@@ -205,8 +205,8 @@ class MainActivity : ComponentActivity() {
                     // set cert4android TrustManager and HostnameVerifier
                     val certMgr = CustomCertManager(
                         getApplication(),
-                        viewModelScope,
                         trustSystemCerts = trustSystemCerts,
+                        viewModelScope,
                         getUserDecision = { cert ->
                             // Reset user decision
                             userDecision = CompletableDeferred()

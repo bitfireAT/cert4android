@@ -24,8 +24,8 @@ import javax.net.ssl.X509TrustManager
 @SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
     context: Context,
-    private val scope: CoroutineScope,
     val trustSystemCerts: Boolean = true,
+    private val scope: CoroutineScope,
     private val getUserDecision: suspend (X509Certificate) -> Boolean
 ): X509TrustManager {
 
