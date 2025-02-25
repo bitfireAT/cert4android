@@ -179,6 +179,7 @@ class MainActivity : ComponentActivity() {
         private val _certificateFlow = MutableStateFlow<X509Certificate?>(null)
         val certificateFlow: StateFlow<X509Certificate?> = _certificateFlow
 
+        @Volatile
         private var userDecision: CompletableDeferred<Boolean> = CompletableDeferred()
 
         fun setUserDecision(decision: Boolean) {
