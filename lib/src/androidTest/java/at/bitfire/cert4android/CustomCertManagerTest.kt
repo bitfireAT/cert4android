@@ -5,6 +5,10 @@
 package at.bitfire.cert4android
 
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import org.junit.After
 import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
@@ -19,6 +23,7 @@ class CustomCertManagerTest {
 
     private lateinit var certManager: CustomCertManager
     private lateinit var paranoidCertManager: CustomCertManager
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var siteCerts: List<X509Certificate>? =
         try {
@@ -32,10 +37,14 @@ class CustomCertManagerTest {
 
     @Before
     fun createCertManager() {
-        certManager = CustomCertManager(context, true, null)
-        paranoidCertManager = CustomCertManager(context, false, null)
+        certManager = CustomCertManager(context, true, scope, getUserDecision = { true })
+        paranoidCertManager = CustomCertManager(context, false, scope, getUserDecision = { false })
     }
 
+    @After
+    fun cleanUp() {
+        scope.cancel()
+    }
 
     @Test(expected = CertificateException::class)
     fun testCheckClientCertificate() {
