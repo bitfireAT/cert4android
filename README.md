@@ -80,11 +80,6 @@ Example of initialzing an okhttp client:
     }
 
 
-You can overwrite resources when you want, just have a look at the `res/strings`
-directory. Especially `certificate_notification_connection_security` and
-`trust_certificate_unknown_certificate_found` should contain your app name.
-
-
 # License 
 
 Copyright (C) Ricki Hirner and [contributors](https://github.com/bitfireAT/cert4android/graphs/contributors).
