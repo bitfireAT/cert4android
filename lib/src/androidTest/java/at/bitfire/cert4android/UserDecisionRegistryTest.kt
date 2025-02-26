@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -28,7 +29,6 @@ class UserDecisionRegistryTest {
 
     @Before
     fun setUp() {
-        mockkObject(NotificationUtils)
         mockkObject(registry)
     }
 
@@ -58,25 +58,29 @@ class UserDecisionRegistryTest {
         val canSendFeedback = Semaphore(0)
         val getUserDecision: suspend (X509Certificate) -> Boolean = mockk {
             coEvery { this@mockk(testCert) } coAnswers {
-                canSendFeedback.acquire()
+                canSendFeedback.acquire() // block call until released
                 false
             }
         }
         val results = Collections.synchronizedList(mutableListOf<Boolean>())
-        runBlocking {
+        runBlocking(Dispatchers.Default) {
+            // launch 5 getUserDecision calls (each will be blocked by the semaphore)
             repeat(5) {
-                launch(Dispatchers.Default) {
+                launch {
                     results += registry.check(testCert, this, getUserDecision)
                 }
             }
-            canSendFeedback.release()
+            delay(1000) // wait a bit for all getUserDecision calls to be launched and blocked
+            canSendFeedback.release() // now unblock all calls at the same time
         }
+
+        // pendingDecisions should be empty
         synchronized(registry.pendingDecisions) {
             assertFalse(registry.pendingDecisions.containsKey(testCert))
         }
-        assertEquals(5, results.size)
-        assertTrue(results.all { !it })
-        coVerify(exactly = 1) { getUserDecision(testCert) }
+        assertEquals(5, results.size) // should be 5 results
+        assertTrue(results.all { result -> !result }) // all results should be false
+        coVerify(exactly = 1) { getUserDecision(testCert) } // getUserDecision should be called only once
     }
 
     @Test
@@ -89,12 +93,13 @@ class UserDecisionRegistryTest {
             }
         }
         val results = Collections.synchronizedList(mutableListOf<Boolean>())
-        runBlocking {
+        runBlocking(Dispatchers.Default) {
             repeat(5) {
-                launch(Dispatchers.Default) {
+                launch {
                     results += registry.check(testCert, this, getUserDecision)
                 }
             }
+            delay(1000)
             canSendFeedback.release()
         }
         synchronized(registry.pendingDecisions) {
