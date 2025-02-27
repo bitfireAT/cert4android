@@ -1,6 +1,6 @@
 [versions]
-agp = "8.8.0"
-androidx-activityCompose = "1.10.0"
+agp = "8.8.2"
+androidx-activityCompose = "1.10.1"
 androidx-appcompat = "1.7.0"
 androidx-core = "1.15.0"
 androidx-lifecycle = "2.8.7"
@@ -8,11 +8,12 @@ androidx-test-core = "1.6.1"
 androidx-test-runner = "1.6.2"
 androidx-test-rules = "1.6.1"
 # don't update to 2.5.3 / until https://github.com/google/conscrypt/issues/1268 is fixed
+#noinspection GradleDependency
 conscrypt = "2.5.2"
-compose-bom = "2025.01.01"
+compose-bom = "2025.02.00"
 dokka = "1.9.20"
 junit = "4.13.2"
-kotlin = "2.1.0"
+kotlin = "2.1.10"
 mockk = "1.13.16"
 okhttp3 = "4.12.0"
 
