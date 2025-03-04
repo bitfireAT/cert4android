@@ -14,24 +14,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.Cert4Android
+import at.bitfire.cert4android.TrustCertificateDialog
+import at.bitfire.cert4android.CertificateDetails
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
 import kotlinx.coroutines.CompletableDeferred
@@ -42,49 +41,21 @@ import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier
 import org.apache.http.conn.ssl.StrictHostnameVerifier
 import java.net.URL
-import java.security.cert.X509Certificate
 import javax.net.ssl.HttpsURLConnection
 
+/**
+ * Example implementation for testing and to showcase usage of [CustomCertManager].
+ */
 class MainActivity : ComponentActivity() {
 
     private val model by viewModels<Model>()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Cert4Android.theme {
-                @Composable
-                fun TrustDecisionDialog(cert: X509Certificate, onDismiss: (Boolean) -> Unit) {
-                    AlertDialog(
-                        onDismissRequest = { onDismiss(false) },
-                        title = { Text(text = "Trust Decision") },
-                        text = { Text("Do you trust this certificate?\n\n ${cert.subjectDN.name}") },
-                        confirmButton = {
-                            Button(onClick = {
-                                onDismiss(true)
-                            }) {
-                                Text("Trust")
-                            }
-                        },
-                        dismissButton = {
-                            Button(onClick = {
-                                onDismiss(false)
-                            }) {
-                                Text("Distrust")
-                            }
-                        },
-                        properties = DialogProperties(dismissOnClickOutside = false)
-                    )
-                }
-
                 val snackBarHostState = remember { SnackbarHostState() }
-
-                val certificateState = model.certificateFlow.collectAsState()
-                val certificate = certificateState.value
-
-                if (certificate != null)
-                    TrustDecisionDialog(certificate, model::setUserDecision)
+                val certificateDetails = model.certificateDetailsFlow.collectAsStateWithLifecycle().value
 
                 Box(Modifier.fillMaxSize()) {
                     Column(
@@ -146,6 +117,10 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
                     }
+
+                    if (certificateDetails != null)
+                        TrustCertificateDialog(certificateDetails, model::registerUserDecision)
+
                     SnackbarHost(
                         snackBarHostState,
                         modifier = Modifier.align(Alignment.BottomCenter)
@@ -160,15 +135,15 @@ class MainActivity : ComponentActivity() {
 
         val resultMessage = MutableLiveData<String>()
 
-        private val _certificateFlow = MutableStateFlow<X509Certificate?>(null)
-        val certificateFlow: StateFlow<X509Certificate?> = _certificateFlow
+        private val _certificateDetailsFlow = MutableStateFlow<CertificateDetails?>(null)
+        val certificateDetailsFlow: StateFlow<CertificateDetails?> = _certificateDetailsFlow
 
         @Volatile
         private var userDecision: CompletableDeferred<Boolean> = CompletableDeferred()
 
-        fun setUserDecision(decision: Boolean) {
+        fun registerUserDecision(decision: Boolean) {
             userDecision.complete(decision)
-            _certificateFlow.value = null
+            _certificateDetailsFlow.value = null
         }
 
 
@@ -196,8 +171,8 @@ class MainActivity : ComponentActivity() {
                             // Reset user decision
                             userDecision = CompletableDeferred()
 
-                            // Show TrustDecisionDialog with certificate to user
-                            _certificateFlow.value = cert
+                            // Show TrustDecisionDialog with certificate details to user
+                            _certificateDetailsFlow.value = CertificateDetails.create(cert)
 
                             // Wait for user decision and return it
                             userDecision.await()
