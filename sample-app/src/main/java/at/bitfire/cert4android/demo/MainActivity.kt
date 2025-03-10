@@ -53,79 +53,77 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Cert4Android.theme {
-                val snackBarHostState = remember { SnackbarHostState() }
-                val certificateDetails = model.certificateDetailsFlow.collectAsStateWithLifecycle().value
+            val snackBarHostState = remember { SnackbarHostState() }
+            val certificateDetails = model.certificateDetailsFlow.collectAsStateWithLifecycle().value
 
-                Box(Modifier.fillMaxSize()) {
-                    Column(
-                        Modifier
-                            .padding(8.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        Button(onClick = {
-                            model.testAccess("https://www.github.com")
-                        }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Access normal URL with trusted system certs")
-                        }
-
-                        Button(onClick = {
-                            model.testAccess("https://www.github.com", trustSystemCerts = false)
-                        }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Access normal URL with distrusted system certs")
-                        }
-
-                        Button(onClick = {
-                            model.testAccess("https://expired.badssl.com/")
-                        }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Access URL with expired certificate")
-                        }
-
-                        Button(onClick = {
-                            model.testAccess("https://self-signed.badssl.com/")
-                        }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Access URL with self-signed certificate")
-                        }
-
-                        Button(onClick = {
-                            model.testAccess("https://wrong.host.badssl.com/")
-                        }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Access URL with certificate for wrong host name")
-                        }
-
-                        Button(onClick = {
-                            model.testAccess(
-                                "https://wrong.host.badssl.com/",
-                                trustSystemCerts = false
-                            )
-                        }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Access URL with certificate for wrong host name with distrusted system certs")
-                        }
-
-                        Button(onClick = {
-                            model.reset()
-                        }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Clear trusted certs")
-                        }
-
-                        val result = model.resultMessage.observeAsState()
-                        result.value?.let { msg ->
-                            if (msg.isNotEmpty())
-                                LaunchedEffect(snackBarHostState) {
-                                    snackBarHostState.showSnackbar(msg)
-                                    model.resultMessage.value = null
-                                }
-                        }
+            Box(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier
+                        .padding(8.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Button(onClick = {
+                        model.testAccess("https://www.github.com")
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access normal URL with trusted system certs")
                     }
 
-                    if (certificateDetails != null)
-                        TrustCertificateDialog(certificateDetails, model::registerUserDecision)
+                    Button(onClick = {
+                        model.testAccess("https://www.github.com", trustSystemCerts = false)
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access normal URL with distrusted system certs")
+                    }
 
-                    SnackbarHost(
-                        snackBarHostState,
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    )
+                    Button(onClick = {
+                        model.testAccess("https://expired.badssl.com/")
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with expired certificate")
+                    }
+
+                    Button(onClick = {
+                        model.testAccess("https://self-signed.badssl.com/")
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with self-signed certificate")
+                    }
+
+                    Button(onClick = {
+                        model.testAccess("https://wrong.host.badssl.com/")
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with certificate for wrong host name")
+                    }
+
+                    Button(onClick = {
+                        model.testAccess(
+                            "https://wrong.host.badssl.com/",
+                            trustSystemCerts = false
+                        )
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Access URL with certificate for wrong host name with distrusted system certs")
+                    }
+
+                    Button(onClick = {
+                        model.reset()
+                    }, modifier = Modifier.padding(top = 16.dp)) {
+                        Text("Clear trusted certs")
+                    }
+
+                    val result = model.resultMessage.observeAsState()
+                    result.value?.let { msg ->
+                        if (msg.isNotEmpty())
+                            LaunchedEffect(snackBarHostState) {
+                                snackBarHostState.showSnackbar(msg)
+                                model.resultMessage.value = null
+                            }
+                    }
                 }
+
+                if (certificateDetails != null)
+                    TrustCertificateDialog(certificateDetails, model::registerUserDecision)
+
+                SnackbarHost(
+                    snackBarHostState,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }
