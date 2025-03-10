@@ -1,70 +1,67 @@
 package at.bitfire.cert4android.demo
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.pm.PackageManager
 import android.net.SSLCertificateSocketFactory
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.Cert4Android
+import at.bitfire.cert4android.TrustCertificateDialog
+import at.bitfire.cert4android.CertificateDetails
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier
 import org.apache.http.conn.ssl.StrictHostnameVerifier
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
+/**
+ * Example implementation for testing and to showcase usage of [CustomCertManager].
+ */
 class MainActivity : ComponentActivity() {
 
     private val model by viewModels<Model>()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if (Build.VERSION.SDK_INT >= 33 && ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-
         setContent {
-            Cert4Android.theme {
-                Column(Modifier
-                    .padding(8.dp)
-                    .verticalScroll(rememberScrollState())) {
-                    Row {
-                        Checkbox(model.appInForeground.collectAsState().value, onCheckedChange = { foreground ->
-                            model.setInForeground(foreground)
-                        })
-                        Text("App in foreground")
-                    }
+            val snackBarHostState = remember { SnackbarHostState() }
+            val certificateDetails = model.certificateDetailsFlow.collectAsStateWithLifecycle().value
 
+            Box(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier
+                        .padding(8.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
                     Button(onClick = {
                         model.testAccess("https://www.github.com")
                     }, modifier = Modifier.padding(top = 16.dp)) {
@@ -96,7 +93,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                     Button(onClick = {
-                        model.testAccess("https://wrong.host.badssl.com/", trustSystemCerts = false)
+                        model.testAccess(
+                            "https://wrong.host.badssl.com/",
+                            trustSystemCerts = false
+                        )
                     }, modifier = Modifier.padding(top = 16.dp)) {
                         Text("Access URL with certificate for wrong host name with distrusted system certs")
                     }
@@ -107,7 +107,6 @@ class MainActivity : ComponentActivity() {
                         Text("Clear trusted certs")
                     }
 
-                    val snackBarHostState = remember { SnackbarHostState() }
                     val result = model.resultMessage.observeAsState()
                     result.value?.let { msg ->
                         if (msg.isNotEmpty())
@@ -116,17 +115,35 @@ class MainActivity : ComponentActivity() {
                                 model.resultMessage.value = null
                             }
                     }
-                    SnackbarHost(snackBarHostState)
                 }
+
+                if (certificateDetails != null)
+                    TrustCertificateDialog(certificateDetails, model::registerUserDecision)
+
+                SnackbarHost(
+                    snackBarHostState,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }
 
 
-    class Model(application: Application): AndroidViewModel(application) {
+    class Model(application: Application) : AndroidViewModel(application) {
 
-        val appInForeground = MutableStateFlow(true)
         val resultMessage = MutableLiveData<String>()
+
+        private val _certificateDetailsFlow = MutableStateFlow<CertificateDetails?>(null)
+        val certificateDetailsFlow: StateFlow<CertificateDetails?> = _certificateDetailsFlow
+
+        @Volatile
+        private var userDecision: CompletableDeferred<Boolean> = CompletableDeferred()
+
+        fun registerUserDecision(decision: Boolean) {
+            userDecision.complete(decision)
+            _certificateDetailsFlow.value = null
+        }
+
 
         init {
             // The default HostnameVerifier is called before our per-connection HostnameVerifier.
@@ -138,36 +155,44 @@ class MainActivity : ComponentActivity() {
             CustomCertStore.getInstance(getApplication()).clearUserDecisions()
         }
 
-        fun setInForeground(foreground: Boolean) {
-            appInForeground.value = foreground
-        }
+        fun testAccess(url: String, trustSystemCerts: Boolean = true) =
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val urlConn = URL(url).openConnection() as HttpsURLConnection
 
-        fun testAccess(url: String, trustSystemCerts: Boolean = true) = viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val urlConn = URL(url).openConnection() as HttpsURLConnection
+                    // set cert4android TrustManager and HostnameVerifier
+                    val certMgr = CustomCertManager(
+                        getApplication(),
+                        trustSystemCerts = trustSystemCerts,
+                        viewModelScope,
+                        getUserDecision = { cert ->
+                            // Reset user decision
+                            userDecision = CompletableDeferred()
 
-                // set cert4android TrustManager and HostnameVerifier
-                val certMgr = CustomCertManager(
-                    getApplication(),
-                    trustSystemCerts = trustSystemCerts,
-                    appInForeground = appInForeground
-                )
-                urlConn.hostnameVerifier = certMgr.HostnameVerifier(StrictHostnameVerifier())
-                urlConn.sslSocketFactory = object : SSLCertificateSocketFactory(/* handshakeTimeoutMillis = */ 1000) {
-                    init {
-                        setTrustManagers(arrayOf(certMgr))
-                    }
+                            // Show TrustDecisionDialog with certificate details to user
+                            _certificateDetailsFlow.value = CertificateDetails.create(cert)
+
+                            // Wait for user decision and return it
+                            userDecision.await()
+                        }
+                    )
+                    urlConn.hostnameVerifier = certMgr.HostnameVerifier(StrictHostnameVerifier())
+                    urlConn.sslSocketFactory =
+                        object : SSLCertificateSocketFactory(/* handshakeTimeoutMillis = */ 1000) {
+                            init {
+                                setTrustManagers(arrayOf(certMgr))
+                            }
+                        }
+
+                    // access sample URL
+                    Log.i(Cert4Android.TAG, "testAccess(): HTTP ${urlConn.responseCode}")
+                    resultMessage.postValue("${urlConn.responseCode} ${urlConn.responseMessage}")
+                    urlConn.inputStream.close()
+                } catch (e: Exception) {
+                    resultMessage.postValue("testAccess() ERROR: ${e.message}")
+                    Log.w(Cert4Android.TAG, "testAccess(): ERROR: ${e.message}")
                 }
-
-                // access sample URL
-                Log.i(Cert4Android.TAG, "testAccess(): HTTP ${urlConn.responseCode}")
-                resultMessage.postValue("${urlConn.responseCode} ${urlConn.responseMessage}")
-                urlConn.inputStream.close()
-            } catch (e: Exception) {
-                resultMessage.postValue("testAccess() ERROR: ${e.message}")
-                Log.w(Cert4Android.TAG, "testAccess(): ERROR: ${e.message}")
             }
-        }
 
     }
 

@@ -85,17 +85,11 @@ publishing {
 
 dependencies {
     implementation(libs.kotlin.stdlib)
-
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.lifecycle.livedata)
-    implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.conscrypt)
 
     // Jetpack Compose
-    implementation(libs.androidx.activityCompose)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
-    implementation(libs.compose.runtime.livedata)
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.toolingPreview)
 
