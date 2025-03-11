@@ -174,13 +174,12 @@ class MainActivity : ComponentActivity() {
                         trustSystemCerts = trustSystemCerts,
                         viewModelScope,
                         getUserDecision = { cert ->
-                            // Reset user decision
                             val userDecision = CompletableDeferred<Boolean>()
 
                             // Show TrustDecisionDialog with certificate details to user
                             _pendingDecisionFlow.value = PendingDecision(
                                 certificateDetails = CertificateDetails.fromX509(cert),
-                                userDecision = userDecision
+                                userDecision = userDecision // Reset user decision
                             )
 
                             // Wait for user decision and return it
