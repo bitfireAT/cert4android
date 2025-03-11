@@ -79,7 +79,7 @@ fun TrustCertificateDialog(
 
                 if (sha1 != null)
                     Text(
-                        text = sha1,
+                        text = stringResource(R.string.trust_certificate_fingerprint_sha1, sha1),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = modifier
                             .fillMaxWidth()
@@ -88,7 +88,7 @@ fun TrustCertificateDialog(
 
                 if (sha256 != null)
                     Text(
-                        text = sha256,
+                        text = stringResource(R.string.trust_certificate_fingerprint_sha256, sha256),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = modifier
                             .fillMaxWidth()

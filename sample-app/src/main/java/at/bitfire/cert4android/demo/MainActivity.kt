@@ -170,7 +170,7 @@ class MainActivity : ComponentActivity() {
                             userDecision = CompletableDeferred()
 
                             // Show TrustDecisionDialog with certificate details to user
-                            _certificateDetailsFlow.value = CertificateDetails.create(cert)
+                            _certificateDetailsFlow.value = CertificateDetails.fromX509(cert)
 
                             // Wait for user decision and return it
                             userDecision.await()

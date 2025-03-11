@@ -8,6 +8,8 @@
     <string name="trust_certificate_validity_period">Validity period</string>
     <string name="trust_certificate_validity_period_value">%1$s – %2$s (will not be enforced)</string>
     <string name="trust_certificate_fingerprints">Fingerprints</string>
+    <string name="trust_certificate_fingerprint_sha1">SHA-1: %s</string>
+    <string name="trust_certificate_fingerprint_sha256">SHA-256: %s</string>
     <string name="trust_certificate_fingerprint_verified">I have manually verified the whole fingerprint.</string>
     <string name="trust_certificate_accept">Accept</string>
     <string name="trust_certificate_reject">Reject</string>

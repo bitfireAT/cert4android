@@ -6,8 +6,9 @@ import java.security.spec.MGF1ParameterSpec.SHA256
 import java.text.DateFormat
 
 /**
- * Certificate details.
- * Create with [CertificateDetails.create] and use with [TrustCertificateDialog]
+ * Human-readable certificate details.
+ *
+ * Usually created with [CertificateDetails.fromX509] and used by [TrustCertificateDialog].
  */
 data class CertificateDetails(
     val issuedFor: String? = null,
@@ -15,8 +16,9 @@ data class CertificateDetails(
     val validFrom: String? = null,
     val validTo: String? = null,
     val sha1: String? = null,
-    val sha256: String? = null,
+    val sha256: String? = null
 ) {
+
     companion object {
 
         /**
@@ -25,7 +27,7 @@ data class CertificateDetails(
          * @param cert X509Certificate
          * @return CertificateDetails
          */
-        fun create(cert: X509Certificate): CertificateDetails? {
+        fun fromX509(cert: X509Certificate): CertificateDetails {
             val subject = cert.subjectAlternativeNames?.let { altNames ->
                 val sb = StringBuilder()
                 for (altName in altNames) {
@@ -42,9 +44,10 @@ data class CertificateDetails(
                 issuedBy = cert.issuerDN.toString(),
                 validFrom = timeFormatter.format(cert.notBefore),
                 validTo = timeFormatter.format(cert.notAfter),
-                sha1 = "SHA1: " + CertUtils.fingerprint(cert, SHA1.digestAlgorithm),
-                sha256 = "SHA256: " + CertUtils.fingerprint(cert, SHA256.digestAlgorithm)
+                sha1 = CertUtils.fingerprint(cert, SHA1.digestAlgorithm),
+                sha256 = CertUtils.fingerprint(cert, SHA256.digestAlgorithm)
             )
         }
     }
+
 }
