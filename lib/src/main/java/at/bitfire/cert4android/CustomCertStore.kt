@@ -25,27 +25,6 @@ class CustomCertStore internal constructor(
     private val userTimeout: Long = 60000L
 ) {
 
-    companion object {
-
-        private const val KEYSTORE_DIR = "KeyStore"
-        private const val KEYSTORE_NAME = "KeyStore.bks"
-
-        @SuppressLint("StaticFieldLeak")    // we only store the applicationContext, so this is safe
-        private var instance: CustomCertStore? = null
-
-        @Synchronized
-        fun getInstance(context: Context): CustomCertStore {
-            instance?.let {
-                return it
-            }
-
-            val newInstance = CustomCertStore(context.applicationContext)
-            instance = newInstance
-            return newInstance
-        }
-
-    }
-
     /** system default TrustStore */
     private val systemKeyStore by lazy { Conscrypt.getDefaultX509TrustManager() }
 
@@ -197,6 +176,27 @@ class CustomCertStore internal constructor(
         } catch(e: Exception) {
             Cert4Android.log.log(Level.SEVERE, "Couldn't save custom certificate key store", e)
         }
+    }
+
+    companion object {
+
+        private const val KEYSTORE_DIR = "KeyStore"
+        private const val KEYSTORE_NAME = "KeyStore.bks"
+
+        @SuppressLint("StaticFieldLeak")    // we only store the applicationContext, so this is safe
+        private var instance: CustomCertStore? = null
+
+        @Synchronized
+        fun getInstance(context: Context): CustomCertStore {
+            instance?.let {
+                return it
+            }
+
+            val newInstance = CustomCertStore(context.applicationContext)
+            instance = newInstance
+            return newInstance
+        }
+
     }
 
 }
