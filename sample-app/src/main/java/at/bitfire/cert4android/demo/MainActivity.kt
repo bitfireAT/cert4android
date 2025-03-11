@@ -138,7 +138,7 @@ class MainActivity : ComponentActivity() {
 
         val resultMessage = MutableLiveData<String>()
 
-        data class PendingDecision(
+        class PendingDecision(
             val certificateDetails: CertificateDetails,
             val userDecision: CompletableDeferred<Boolean>
         )
