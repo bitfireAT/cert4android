@@ -15,10 +15,11 @@ import javax.net.ssl.X509TrustManager
 /**
  * TrustManager to handle custom certificates.
  *
- * Initializes Conscrypt when it is first loaded.
- *
  * @param trustSystemCerts whether system certificates will be trusted
- * @param getUserDecision  anonymous function to retrieve user decision on whether to trust a
+ * @param scope            coroutine scope which [getUserDecision] will be launched in. On
+ *                         cancellation of the scope waiting for a user decision is stopped.
+ *                         Cancelling the scope is responsibility of the creator
+ * @param getUserDecision  suspend function to retrieve user decision on whether to trust a
  *                         certificate; should return *true* if the user trusts the certificate
  */
 @SuppressLint("CustomX509TrustManager")

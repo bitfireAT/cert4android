@@ -76,6 +76,21 @@ class CustomCertStore internal constructor(
 
     /**
      * Determines whether a certificate chain is trusted.
+     *
+     * If system certificates are distrusted [getUserDecision] will be launched in [scope]. If the
+     * user does not make a decision within [userTimeout] (default: 1 minute), a warning is logged
+     * and *false* returned, meaning the certificate is not trusted.
+     *
+     * @param chain             certificate chain to check
+     * @param authType          the key exchange algorithm used; I.E. "RSA", "DHE_DSS" or other
+     * @param trustSystemCerts  whether to trust the android system certificates
+     * @param scope             coroutine scope in which [getUserDecision] is launched
+     * @param getUserDecision   suspend function to retrieve user decision on whether to trust a
+     *                          certificate
+     * @return                  *true* if the certificate chain is trusted by user, *false* if timed
+     *                          out or rejected
+     *
+     * @throws IllegalArgumentException if [chain] is empty
      */
     fun isTrusted(
         chain: Array<X509Certificate>,
