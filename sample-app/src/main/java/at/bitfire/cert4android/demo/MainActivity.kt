@@ -29,10 +29,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.Cert4Android
-import at.bitfire.cert4android.TrustCertificateDialog
 import at.bitfire.cert4android.CertificateDetails
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
+import at.bitfire.cert4android.TrustCertificateDialog
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val snackBarHostState = remember { SnackbarHostState() }
-            val certificateDetails = model.certificateDetailsFlow.collectAsStateWithLifecycle().value
+            val pendingDecision = model.pendingDecisionFlow.collectAsStateWithLifecycle().value
 
             Box(Modifier.fillMaxSize()) {
                 Column(
@@ -117,8 +117,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (certificateDetails != null)
-                    TrustCertificateDialog(certificateDetails, model::registerUserDecision)
+                if (pendingDecision != null)
+                    TrustCertificateDialog(
+                        certificateDetails = pendingDecision.certificateDetails,
+                        onSetTrustDecision = { actualDecision ->
+                            model.registerUserDecision(pendingDecision, actualDecision)
+                        }
+                    )
 
                 SnackbarHost(
                     snackBarHostState,
@@ -133,22 +138,25 @@ class MainActivity : ComponentActivity() {
 
         val resultMessage = MutableLiveData<String>()
 
-        private val _certificateDetailsFlow = MutableStateFlow<CertificateDetails?>(null)
-        val certificateDetailsFlow: StateFlow<CertificateDetails?> = _certificateDetailsFlow
-
-        @Volatile
-        private var userDecision: CompletableDeferred<Boolean> = CompletableDeferred()
-
-        fun registerUserDecision(decision: Boolean) {
-            userDecision.complete(decision)
-            _certificateDetailsFlow.value = null
-        }
-
+        class PendingDecision(
+            val certificateDetails: CertificateDetails,
+            val userDecision: CompletableDeferred<Boolean>
+        )
+        private val _pendingDecisionFlow = MutableStateFlow<PendingDecision?>(null)
+        val pendingDecisionFlow: StateFlow<PendingDecision?> = _pendingDecisionFlow
 
         init {
             // The default HostnameVerifier is called before our per-connection HostnameVerifier.
             @SuppressLint("AllowAllHostnameVerifier")
             HttpsURLConnection.setDefaultHostnameVerifier(AllowAllHostnameVerifier())
+        }
+
+        fun registerUserDecision(
+            pendingDecision: PendingDecision,
+            actualDecision: Boolean
+        ) {
+            pendingDecision.userDecision.complete(actualDecision)
+            _pendingDecisionFlow.value = null
         }
 
         fun reset() = viewModelScope.launch(Dispatchers.IO) {
@@ -167,10 +175,13 @@ class MainActivity : ComponentActivity() {
                         viewModelScope,
                         getUserDecision = { cert ->
                             // Reset user decision
-                            userDecision = CompletableDeferred()
+                            val userDecision = CompletableDeferred<Boolean>()
 
                             // Show TrustDecisionDialog with certificate details to user
-                            _certificateDetailsFlow.value = CertificateDetails.fromX509(cert)
+                            _pendingDecisionFlow.value = PendingDecision(
+                                certificateDetails = CertificateDetails.fromX509(cert),
+                                userDecision = userDecision
+                            )
 
                             // Wait for user decision and return it
                             userDecision.await()
