@@ -72,10 +72,10 @@ class UserDecisionRegistry private constructor(
                 // First decision for this certificate, add to map and show UI
                 pendingDecisions[cert] = mutableListOf(cont)
 
-                scope.launch {
+                scope.launch {  // launch asynchronously (scoped)
                     val userDecision = getUserDecision(cert)    // suspends until user decision is made
 
-                    // resume all coroutines that are waiting for a decision
+                    // register decision and resume all coroutines that are waiting for the decision
                     resumeOnUserDecision(cert, userDecision)
                 }
             }
@@ -94,15 +94,20 @@ class UserDecisionRegistry private constructor(
 
         // continue work that's waiting for decisions
         synchronized(pendingDecisions) {
-            pendingDecisions[cert]?.iterator()?.let { iter ->
+            pendingDecisions[cert]?.let { pendingDecisionsForCert ->
+                // go through all Continuations that are waiting for a decision about this certificate
+                val iter = pendingDecisionsForCert.iterator()
                 while (iter.hasNext()) {
+                    // resume work with the now known trustworthiness
                     iter.next().resume(trusted)
+
+                    // remove current Continuation (that hast just been resumed) from list
                     iter.remove()
                 }
-            }
 
-            // remove certificate from pendingDecisions so UI can be shown again in future
-            pendingDecisions.remove(cert)
+                // remove certificate from pendingDecisions so UI can be shown again in future
+                pendingDecisions -= cert
+            }
         }
     }
 
