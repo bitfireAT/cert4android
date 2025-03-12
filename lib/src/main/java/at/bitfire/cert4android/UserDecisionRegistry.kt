@@ -46,8 +46,10 @@ class UserDecisionRegistry private constructor(
      * Thread-safe, can handle multiple requests for various certificates and/or the same certificate at once.
      *
      * @param cert              certificate to ask user about
-     * @param getUserDecision   anonymous function to retrieve user decision
-     * @return *true* if the user explicitly trusts the certificate, *false* if unknown or untrusted
+     * @param scope             the coroutine scope within which [getUserDecision] is executed
+     * @param getUserDecision   suspendable function to retrieve user decision
+     * @return                  *true* if the user explicitly trusts the certificate; *false* if
+     *                          unknown or untrusted
      */
     suspend fun check(
         cert: X509Certificate,
