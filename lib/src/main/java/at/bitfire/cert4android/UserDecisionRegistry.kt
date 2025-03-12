@@ -31,6 +31,13 @@ class UserDecisionRegistry private constructor(
 
     }
 
+    /**
+     * Per-certificate map of pending decisions, which are [Continuation]s that are
+     *   - resumed when the callback returns a decision and
+     *   - cancelled when the scope is cancelled.
+     *
+     * Every call of [check] adds an entry to the [Continuation] list.
+     */
     internal val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
 
     /**
@@ -54,27 +61,28 @@ class UserDecisionRegistry private constructor(
             }
         }
 
-        val requestDecision: Boolean
         synchronized(pendingDecisions) {
             if (pendingDecisions.containsKey(cert)) {
                 // There are already pending decisions for this request, just add our request
                 pendingDecisions[cert]!! += cont
-                requestDecision = false
+
             } else {
-                // First decision for this certificate, show UI
+                // First decision for this certificate, add to map and show UI
                 pendingDecisions[cert] = mutableListOf(cont)
-                requestDecision = true
+
+                scope.launch {
+                    val userDecision = getUserDecision(cert)    // suspends until user decision is made
+
+                    // resume all coroutines that are waiting for a decision
+                    resumeOnUserDecision(cert, userDecision)
+                }
             }
         }
 
-        if (requestDecision)
-            scope.launch {
-                val userDecision = getUserDecision(cert) // Suspends until user decision is made
-                onUserDecision(cert, userDecision)
-            }
+        // Now the coroutine is suspended, and will be resumed when the user has made a decision using cont.resume()
     }
 
-    fun onUserDecision(cert: X509Certificate, trusted: Boolean) {
+    fun resumeOnUserDecision(cert: X509Certificate, trusted: Boolean) {
         // save decision
         val customCertStore = CustomCertStore.getInstance(context)
         if (trusted)
