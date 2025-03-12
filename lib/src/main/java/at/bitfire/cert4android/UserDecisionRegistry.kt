@@ -94,11 +94,8 @@ class UserDecisionRegistry private constructor(
 
         // continue work that's waiting for decisions
         synchronized(pendingDecisions) {
-            pendingDecisions[cert]?.iterator()?.let { iter ->
-                while (iter.hasNext()) {
-                    iter.next().resume(trusted)
-                    iter.remove()
-                }
+            pendingDecisions[cert]?.forEach { cont ->
+                cont.resume(trusted)
             }
 
             // remove certificate from pendingDecisions so UI can be shown again in future
