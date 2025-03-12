@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.cert.X509Certificate
+import java.util.Collections
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
@@ -32,13 +33,12 @@ class UserDecisionRegistry private constructor(
     }
 
     /**
-     * Per-certificate map of pending decisions, which are [Continuation]s that are
+     * Per-certificate list of pending decisions. Entries are pending decisions: [Continuation]s that are
+     *
      *   - resumed when the callback returns a decision and
      *   - cancelled when the scope is cancelled.
-     *
-     * Every call of [check] adds an entry to the [Continuation] list.
      */
-    internal val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
+    internal val pendingDecisions = Collections.synchronizedMap(mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>())
 
     /**
      * Tries to retrieve a trust decision from the user about a given certificate.
@@ -58,15 +58,14 @@ class UserDecisionRegistry private constructor(
     ): Boolean = suspendCancellableCoroutine { cont ->
         cont.invokeOnCancellation {
             // remove from pending decisions on cancellation
-            synchronized(pendingDecisions) {
-                pendingDecisions[cert]?.remove(cont)
-            }
+            pendingDecisions[cert]?.remove(cont)
         }
 
         synchronized(pendingDecisions) {
-            if (pendingDecisions.containsKey(cert)) {
+            val pendingDecisionsForCert = pendingDecisions[cert]
+            if (pendingDecisionsForCert != null) {
                 // There are already pending decisions for this request, just add our request
-                pendingDecisions[cert]!! += cont
+                pendingDecisionsForCert += cont
 
             } else {
                 // First decision for this certificate, add to map and show UI
@@ -92,21 +91,16 @@ class UserDecisionRegistry private constructor(
         else
             customCertStore.setUntrustedByUser(cert)
 
-        // continue work that's waiting for decisions
-        synchronized(pendingDecisions) {
-            pendingDecisions[cert]?.let { pendingDecisionsForCert ->
-                // go through all Continuations that are waiting for a decision about this certificate
-                val iter = pendingDecisionsForCert.iterator()
-                while (iter.hasNext()) {
-                    // resume work with the now known trustworthiness
-                    iter.next().resume(trusted)
+        // continue work that's waiting for a decision; remove from map so that getUserDecision can be called again
+        pendingDecisions.remove(cert)?.let { pendingDecisionsForCert ->
+            // go through list of all Continuations that are waiting for a decision about this certificate
+            val iter = pendingDecisionsForCert.iterator()
+            while (iter.hasNext()) {
+                // resume work with the now known trustworthiness
+                iter.next().resume(trusted)
 
-                    // remove current Continuation (that hast just been resumed) from list
-                    iter.remove()
-                }
-
-                // remove certificate from pendingDecisions so UI can be shown again in future
-                pendingDecisions -= cert
+                // remove current Continuation (that hast just been resumed) from list
+                iter.remove()
             }
         }
     }
