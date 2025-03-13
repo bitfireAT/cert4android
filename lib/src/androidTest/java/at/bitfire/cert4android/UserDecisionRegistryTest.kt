@@ -11,12 +11,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.security.cert.X509Certificate
 import java.util.Collections
 import java.util.concurrent.Semaphore
+import java.util.logging.Logger
 
 class UserDecisionRegistryTest {
 
@@ -26,6 +29,7 @@ class UserDecisionRegistryTest {
 
     private val testCert = TestCertificates.testCert
 
+    private val logger = Logger.getGlobal()
 
     @Before
     fun setUp() {
@@ -50,6 +54,33 @@ class UserDecisionRegistryTest {
     fun testCheck_FirstDecision_Positive() {
         assertTrue(runBlocking {
             registry.check(testCert, this) { true }
+        })
+    }
+
+    @Test
+    fun testCheck_MultipleDecisionsForSameCert_noPendingDecisionsAfterCancel() {
+        val getUserDecision: suspend (X509Certificate) -> Boolean = { _ ->
+            delay(3000) // block for a while
+            true
+        }
+
+        runBlocking(Dispatchers.Default) {
+            val job = launch { registry.check(testCert, this, getUserDecision) }
+            delay(1000)
+            job.cancel() // Cancel the job
+            delay(1000)
+        }
+
+        // pendingDecisions should be empty
+        synchronized(registry.pendingDecisions) {
+            logger.info("Before assert: "+ registry.pendingDecisions.toString())
+            assertFalse(registry.pendingDecisions.containsKey(testCert))
+        }
+
+        // Do another check
+        // runs forever if pendingDecisions is not empty; succeeds otherwise
+        assertTrue(runBlocking(Dispatchers.Default) {
+            registry.check(testCert, this, getUserDecision)
         })
     }
 
