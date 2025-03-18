@@ -57,8 +57,13 @@ class UserDecisionRegistry private constructor(
         getUserDecision: suspend (X509Certificate) -> Boolean
     ): Boolean = suspendCancellableCoroutine { cont ->
         cont.invokeOnCancellation {
-            // remove from pending decisions on cancellation
-            pendingDecisions[cert]?.remove(cont)
+            val decisionsList = pendingDecisions[cert]
+            // remove from pending decisions on cancellation from list
+            decisionsList?.remove(cont)
+
+            // Remove decisions list if empty
+            if (decisionsList?.isEmpty() == true)
+                pendingDecisions.remove(cert)
         }
 
         synchronized(pendingDecisions) {
