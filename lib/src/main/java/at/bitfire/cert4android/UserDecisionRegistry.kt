@@ -53,16 +53,16 @@ class UserDecisionRegistry private constructor(
             // User decision possible → remember request in pendingDecisions so that a later decision will be applied to this request
 
             cont.invokeOnCancellation {
-                val decisionsList = pendingDecisions[cert]
-
-                // remove from pending decisions on cancellation
                 synchronized(pendingDecisions) {
-                    decisionsList?.remove(cont)
-                }
+                    val decisionsList = pendingDecisions[cert]
 
-                // Remove decisions list if empty
-                if (decisionsList?.isEmpty() == true)
-                    pendingDecisions.remove(cert)
+                    // remove from pending decisions on cancellation
+                    decisionsList?.remove(cont)
+
+                    // Remove decisions list if empty
+                    if (decisionsList?.isEmpty() == true)
+                        pendingDecisions -= cert
+                }
 
                 val nm = NotificationUtils.createChannels(context)
                 nm.cancel(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION)
