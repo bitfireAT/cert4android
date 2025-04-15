@@ -1,15 +1,22 @@
 package at.bitfire.cert4android
 
+import androidx.core.app.NotificationManagerCompat
 import androidx.test.platform.app.InstrumentationRegistry
 import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.util.Collections
@@ -109,6 +116,37 @@ class UserDecisionRegistryTest {
         assertEquals(5, results.size)
         assertTrue(results.all { it })
         verify(exactly = 1) { registry.requestDecision(any(), any(), any()) }
+    }
+
+    @Test
+    fun testCheck_MultipleDecisionsForSameCert_cancel() {
+        val canSendFeedback = Semaphore(0)
+        val nm = mockk<NotificationManagerCompat>()
+        every { nm.cancel(any(), any()) } just runs
+        every { NotificationUtils.createChannels(any()) } returns nm
+        every { registry.requestDecision(testCert, any(), any()) } answers {
+            thread {
+                canSendFeedback.acquire()
+                registry.onUserDecision(testCert, false)
+            }
+        }
+        val results = Collections.synchronizedList(mutableListOf<Boolean>())
+        runBlocking {
+            repeat(5) {
+                val job = launch(Dispatchers.Default) {
+                    results += registry.check(testCert, true)
+                }
+                delay(1000)
+                job.cancel() // Cancel the job
+                delay(1000)
+            }
+            canSendFeedback.release()
+        }
+        synchronized(registry.pendingDecisions) {
+            assertFalse(registry.pendingDecisions.containsKey(testCert))
+        }
+        assertEquals(0, results.size)
+        verify(exactly = 5) { registry.requestDecision(any(), any(), any()) }
     }
 
     @Test
