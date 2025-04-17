@@ -12,7 +12,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "cert4android"
+rootProject.name = "root"
 include ':sample-app'
 include ':lib'
 project(':lib').name = 'cert4android'
