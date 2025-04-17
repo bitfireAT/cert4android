@@ -33,6 +33,15 @@ android {
         compose = true
     }
 
+    buildTypes {
+        release {
+            // Android libraries shouldn't be minified:
+            // https://developer.android.com/studio/projects/android-library#Considerations
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+    }
+
     lint {
         disable += listOf("MissingTranslation", "ExtraTranslation")
     }

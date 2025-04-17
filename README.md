@@ -5,14 +5,15 @@
 [![Latest Version](https://img.shields.io/jitpack/version/com.github.bitfireAT/cert4android)](https://jitpack.io/#bitfireAT/cert4android)
 
 
+_This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
+by Google LLC. Android is a trademark of Google LLC._
+
+
 # cert4android
 
 cert4android is a library for Android to manage custom certificates which has
 been developed for [DAVx⁵](https://www.davx5.com). Feel free to use
 it in your own open-source app.
-
-_This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
-by Google LLC. Android is a trademark of Google LLC._
 
 Generated KDoc: https://bitfireat.github.io/cert4android/
 
@@ -83,6 +84,9 @@ Example of initialzing an okhttp client:
 You can overwrite resources when you want, just have a look at the `res/strings`
 directory. Especially `certificate_notification_connection_security` and
 `trust_certificate_unknown_certificate_found` should contain your app name.
+
+To view the available gradle tasks for the library: `./gradlew cert4android:tasks`
+(the `cert4android` module is defined in `settings.gradle`).
 
 
 # License 
