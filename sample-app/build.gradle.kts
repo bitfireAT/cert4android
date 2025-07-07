@@ -54,5 +54,5 @@ dependencies {
     debugImplementation(libs.compose.ui.toolingPreview)
     implementation(libs.compose.runtime.livedata)
 
-    implementation(project(":cert4android"))
+    implementation(project(":lib"))
 }
