@@ -111,7 +111,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
-    androidTestImplementation(libs.okttp3.mockwebserver)
+    androidTestImplementation(libs.okhttp3.mockwebserver)
     androidTestImplementation(libs.mockk.android)
 
     testImplementation(libs.junit)
