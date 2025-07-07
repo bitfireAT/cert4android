@@ -9,7 +9,7 @@ plugins {
 android {
     namespace = "at.bitfire.cert4android"
 
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 21            // Android 5
