@@ -53,6 +53,7 @@ import java.security.spec.MGF1ParameterSpec.SHA1
 import java.security.spec.MGF1ParameterSpec.SHA256
 import java.text.DateFormat
 import java.util.logging.Level
+import java.util.logging.Logger
 
 class TrustCertificateActivity : ComponentActivity() {
 
@@ -78,7 +79,7 @@ class TrustCertificateActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            Cert4Android.theme {
+            ThemeManager.theme {
                 MainLayout(
                     onRegisterDecision = { trusted -> model.registerDecision(trusted) },
                     onFinish = { finish() }
@@ -304,6 +305,9 @@ class TrustCertificateActivity : ComponentActivity() {
 
     class Model(application: Application) : AndroidViewModel(application) {
 
+        private val logger
+            get() = Logger.getLogger(javaClass.name)
+
         private var cert: X509Certificate? = null
 
         var uiState by mutableStateOf(UiState())
@@ -337,7 +341,7 @@ class TrustCertificateActivity : ComponentActivity() {
                         )
                     }
                 } catch (e: CertificateParsingException) {
-                    Cert4Android.log.log(Level.WARNING, "Couldn't parse certificate", e)
+                    logger.log(Level.WARNING, "Couldn't parse certificate", e)
                 }
             }
         }

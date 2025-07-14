@@ -31,9 +31,9 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import at.bitfire.cert4android.Cert4Android
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
+import at.bitfire.cert4android.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
 
         setContent {
-            Cert4Android.theme {
+            ThemeManager.theme {
                 Column(Modifier
                     .padding(8.dp)
                     .verticalScroll(rememberScrollState())) {
@@ -125,6 +125,12 @@ class MainActivity : ComponentActivity() {
 
     class Model(application: Application): AndroidViewModel(application) {
 
+        companion object {
+
+            const val TAG = "cert4android.sample-app"
+
+        }
+
         val appInForeground = MutableStateFlow(true)
         val resultMessage = MutableLiveData<String>()
 
@@ -160,12 +166,12 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // access sample URL
-                Log.i(Cert4Android.TAG, "testAccess(): HTTP ${urlConn.responseCode}")
+                Log.i(TAG, "testAccess(): HTTP ${urlConn.responseCode}")
                 resultMessage.postValue("${urlConn.responseCode} ${urlConn.responseMessage}")
                 urlConn.inputStream.close()
             } catch (e: Exception) {
                 resultMessage.postValue("testAccess() ERROR: ${e.message}")
-                Log.w(Cert4Android.TAG, "testAccess(): ERROR: ${e.message}")
+                Log.w(TAG, "testAccess(): ERROR: ${e.message}")
             }
         }
 

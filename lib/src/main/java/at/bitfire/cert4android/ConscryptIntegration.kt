@@ -2,9 +2,13 @@ package at.bitfire.cert4android
 
 import org.conscrypt.Conscrypt
 import java.security.Security
+import java.util.logging.Logger
 import javax.net.ssl.SSLContext
 
 object ConscryptIntegration {
+
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
 
     private var initialized = false
 
@@ -17,11 +21,11 @@ object ConscryptIntegration {
         Security.insertProviderAt(Conscrypt.newProvider(), 1)
 
         val version = Conscrypt.version()
-        Cert4Android.log.info("Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
+        logger.info("Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
 
         val engine = SSLContext.getDefault().createSSLEngine()
-        Cert4Android.log.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
-        Cert4Android.log.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
+        logger.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
+        logger.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
 
         initialized = true
     }

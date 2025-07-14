@@ -9,6 +9,7 @@ import android.content.Context
 import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import java.util.logging.Logger
 import javax.net.ssl.SSLSession
 import javax.net.ssl.X509TrustManager
 
@@ -28,6 +29,9 @@ class CustomCertManager @JvmOverloads constructor(
     val trustSystemCerts: Boolean = true,
     var appInForeground: StateFlow<Boolean>?
 ): X509TrustManager {
+
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
 
     val certStore = CustomCertStore.getInstance(context)
 
@@ -67,7 +71,7 @@ class CustomCertManager @JvmOverloads constructor(
                 // default HostnameVerifier says trusted → OK
                 return true
 
-            Cert4Android.log.warning("Host name \"$hostname\" not verified, checking whether certificate is explicitly trusted")
+            logger.warning("Host name \"$hostname\" not verified, checking whether certificate is explicitly trusted")
             // Allow users to explicitly accept certificates that have a bad hostname here
             (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
                 // Check without trusting system certificates so that the user will be asked even for system-trusted certificates
