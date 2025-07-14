@@ -10,10 +10,14 @@ import java.security.MessageDigest
 import java.security.cert.X509Certificate
 import java.util.Locale
 import java.util.logging.Level
+import java.util.logging.Logger
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 object CertUtils {
+
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
 
     fun getTrustManager(keyStore: KeyStore?): X509TrustManager? {
         try {
@@ -23,7 +27,7 @@ object CertUtils {
                 .filterIsInstance<X509TrustManager>()
                 .forEach { return it }
         } catch(e: GeneralSecurityException) {
-            Cert4Android.log.log(Level.SEVERE, "Couldn't initialize trust manager", e)
+            logger.log(Level.SEVERE, "Couldn't initialize trust manager", e)
         }
         return null
     }

@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.cert.X509Certificate
+import java.util.logging.Logger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
@@ -32,6 +33,9 @@ class UserDecisionRegistry private constructor(
         }
 
     }
+
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
 
     internal val pendingDecisions = mutableMapOf<X509Certificate, MutableList<Continuation<Boolean>>>()
 
@@ -86,7 +90,7 @@ class UserDecisionRegistry private constructor(
 
         } else {
             // We're not able to retrieve user feedback, directly reject request
-            Cert4Android.log.warning("App not in foreground and missing notification permission, rejecting certificate")
+            logger.warning("App not in foreground and missing notification permission, rejecting certificate")
             cont.resume(false)
         }
     }

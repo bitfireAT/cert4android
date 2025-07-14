@@ -19,6 +19,7 @@ import java.security.KeyStore
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.util.logging.Level
+import java.util.logging.Logger
 
 class CustomCertStore internal constructor(
     private val context: Context,
@@ -46,6 +47,9 @@ class CustomCertStore internal constructor(
 
     }
 
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
+
     /** system default TrustStore */
     private val systemKeyStore by lazy { Conscrypt.getDefaultX509TrustManager() }
 
@@ -64,7 +68,7 @@ class CustomCertStore internal constructor(
 
     @Synchronized
     fun clearUserDecisions() {
-        Cert4Android.log.info("Clearing user-(dis)trusted certificates")
+        logger.info("Clearing user-(dis)trusted certificates")
 
         for (alias in userKeyStore.aliases())
             userKeyStore.deleteEntry(alias)
@@ -104,7 +108,7 @@ class CustomCertStore internal constructor(
         }
 
         if (appInForeground == null) {
-            Cert4Android.log.log(Level.INFO, "Certificate not known and running in non-interactive mode, rejecting")
+            logger.log(Level.INFO, "Certificate not known and running in non-interactive mode, rejecting")
             return false
         }
 
@@ -116,7 +120,7 @@ class CustomCertStore internal constructor(
                     ui.check(cert, appInForeground.value)
                 }
             } catch (_: TimeoutCancellationException) {
-                Cert4Android.log.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")
+                logger.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")
                 false
             }
         }
@@ -133,7 +137,7 @@ class CustomCertStore internal constructor(
     @Synchronized
     fun setTrustedByUser(cert: X509Certificate) {
         val alias = CertUtils.getTag(cert)
-        Cert4Android.log.info("Trusted by user: ${cert.subjectDN.name} ($alias)")
+        logger.info("Trusted by user: ${cert.subjectDN.name} ($alias)")
 
         userKeyStore.setCertificateEntry(alias, cert)
         saveUserKeyStore()
@@ -143,7 +147,7 @@ class CustomCertStore internal constructor(
 
     @Synchronized
     fun setUntrustedByUser(cert: X509Certificate) {
-        Cert4Android.log.info("Distrusted by user: ${cert.subjectDN.name}")
+        logger.info("Distrusted by user: ${cert.subjectDN.name}")
 
         // find certificate
         val alias = userKeyStore.getCertificateAlias(cert)
@@ -162,14 +166,14 @@ class CustomCertStore internal constructor(
         try {
             FileInputStream(userKeyStoreFile).use {
                 userKeyStore.load(it, null)
-                Cert4Android.log.fine("Loaded ${userKeyStore.size()} trusted certificate(s)")
+                logger.fine("Loaded ${userKeyStore.size()} trusted certificate(s)")
             }
         } catch(_: Exception) {
-            Cert4Android.log.fine("No key store for trusted certificates (yet); creating in-memory key store.")
+            logger.fine("No key store for trusted certificates (yet); creating in-memory key store.")
             try {
                 userKeyStore.load(null, null)
             } catch(e: Exception) {
-                Cert4Android.log.log(Level.SEVERE, "Couldn't initialize in-memory key store", e)
+                logger.log(Level.SEVERE, "Couldn't initialize in-memory key store", e)
             }
         }
     }
@@ -179,7 +183,7 @@ class CustomCertStore internal constructor(
         try {
             FileOutputStream(userKeyStoreFile).use { userKeyStore.store(it, null) }
         } catch(e: Exception) {
-            Cert4Android.log.log(Level.SEVERE, "Couldn't save custom certificate key store", e)
+            logger.log(Level.SEVERE, "Couldn't save custom certificate key store", e)
         }
     }
 
