@@ -23,7 +23,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
 
       - name: Build KDoc
-        run: ./gradlew --no-daemon --no-configuration-cache lib:dokkaHtml
+        run: ./gradlew --build-cache --configuration-cache lib:dokkaGenerate
 
       - name: Publish KDoc
         if: success()
