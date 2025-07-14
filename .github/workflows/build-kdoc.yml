@@ -23,7 +23,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
 
       - name: Build KDoc
-        run: ./gradlew --no-daemon --no-configuration-cache cert4android:dokkaHtml
+        run: ./gradlew --no-daemon --no-configuration-cache lib:dokkaHtml
 
       - name: Publish KDoc
         if: success()
