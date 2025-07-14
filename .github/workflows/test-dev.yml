@@ -18,7 +18,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
 
       - name: Check
-        run: ./gradlew cert4android:check
+        run: ./gradlew lib:check
 
   test_on_emulator:
     name: Tests with emulator
@@ -45,4 +45,4 @@ jobs:
           key: avd-${{ hashFiles('lib/build.gradle.kts') }}   # gradle-managed devices are defined there
 
       - name: Run device tests
-        run: ./gradlew --no-daemon virtualCheck
+        run: ./gradlew --no-daemon lib:virtualCheck

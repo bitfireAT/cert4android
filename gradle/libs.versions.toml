@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.0"
+agp = "8.11.1"
 androidx-activityCompose = "1.10.1"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.16.0"
@@ -7,15 +7,13 @@ androidx-lifecycle = "2.9.1"
 androidx-test-core = "1.6.1"
 androidx-test-runner = "1.6.2"
 androidx-test-rules = "1.6.1"
-# don't update to 2.5.3 / until https://github.com/google/conscrypt/issues/1268 is fixed
-#noinspection GradleDependency
-conscrypt = "2.5.2"
+conscrypt = "2.5.3"
 compose-bom = "2025.06.01"
 dokka = "1.9.20"
 junit = "4.13.2"
 kotlin = "2.2.0"
 mockk = "1.14.4"
-okhttp3 = "5.0.0"
+okhttp3 = "5.1.0"
 
 [libraries]
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }

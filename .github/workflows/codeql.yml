@@ -53,7 +53,7 @@ jobs:
     #   uses: github/codeql-action/autobuild@v2
 
     - name: Build
-      run: ./gradlew --no-daemon cert4android:assemble
+      run: ./gradlew --no-daemon lib:assemble
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
