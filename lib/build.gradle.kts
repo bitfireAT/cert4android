@@ -52,8 +52,9 @@ android {
             localDevices {
                 create("virtual") {
                     device = "Pixel 3"
-                    apiLevel = 35
+                    apiLevel = 33
                     systemImageSource = "aosp-atd"
+                    testedAbi = "x86_64"
                 }
             }
         }
