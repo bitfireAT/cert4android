@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="certificate_notification_connection_security">Forbindelses sikkerhed</string>
     <string name="certificate_notification_user_interaction">Gennemse certifikat</string>
-
     <string name="service_rejected_temporarily">Certifikat midlertidigt afvist</string>
-
     <string name="trust_certificate_unknown_certificate_found">cert4android er stødt på et ukendt certifikat. Skal det godkendes?</string>
     <string name="trust_certificate_x509_certificate_details">Detaljer for X509-certifikat</string>
     <string name="trust_certificate_issued_for">Udstedt til</string>
@@ -17,5 +14,5 @@
     <string name="trust_certificate_accept">Godkend</string>
     <string name="trust_certificate_reject">Afvis</string>
     <string name="trust_certificate_reset_info">Alle brugertilpasset certifikater kan nulstilles i programmets indstillinger.</string>
-
+    <string name="trust_certificate_press_back_to_reject">Tryk tilbage igen for at afvise certifikatet</string>
 </resources>
