@@ -6,6 +6,8 @@ package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -27,7 +29,7 @@ import javax.net.ssl.X509TrustManager
 class CustomCertManager @JvmOverloads constructor(
     context: Context,
     val trustSystemCerts: Boolean = true,
-    var appInForeground: StateFlow<Boolean>?
+    var launcher: ActivityResultLauncher<Intent>?
 ): X509TrustManager {
 
     private val logger
@@ -51,7 +53,7 @@ class CustomCertManager @JvmOverloads constructor(
      */
     @Throws(CertificateException::class)
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
-        if (!certStore.isTrusted(chain, authType, trustSystemCerts, appInForeground))
+        if (!certStore.isTrusted(chain, authType, trustSystemCerts, launcher))
             throw CertificateException("Certificate chain not trusted")
     }
 
@@ -75,7 +77,7 @@ class CustomCertManager @JvmOverloads constructor(
             // Allow users to explicitly accept certificates that have a bad hostname here
             (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
                 // Check without trusting system certificates so that the user will be asked even for system-trusted certificates
-                if (certStore.isTrusted(arrayOf(cert), "RSA", false, appInForeground))
+                if (certStore.isTrusted(arrayOf(cert), "RSA", false, launcher))
                     return true
             }
 

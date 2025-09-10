@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -48,10 +49,10 @@ class UserDecisionRegistry private constructor(
      * @param appInForeground   whether the app is currently in foreground = whether it can directly launch an Activity
      * @return *true* if the user explicitly trusts the certificate, *false* if unknown or untrusted
      */
-    suspend fun check(cert: X509Certificate, appInForeground: Boolean): Boolean = suspendCancellableCoroutine { cont ->
+    suspend fun check(cert: X509Certificate, launcher: ActivityResultLauncher<Intent>?): Boolean = suspendCancellableCoroutine { cont ->
         // check whether we're able to retrieve user feedback (= start an Activity and/or show a notification)
         val notificationsPermitted = NotificationUtils.notificationsPermitted(context)
-        val userDecisionPossible = appInForeground || notificationsPermitted
+        val userDecisionPossible = launcher != null || notificationsPermitted
 
         if (userDecisionPossible) {
             // User decision possible → remember request in pendingDecisions so that a later decision will be applied to this request
@@ -86,7 +87,7 @@ class UserDecisionRegistry private constructor(
             }
 
             if (requestDecision)
-                requestDecision(cert, launchActivity = appInForeground, showNotification = notificationsPermitted)
+                requestDecision(cert, launcher, showNotification = notificationsPermitted)
 
         } else {
             // We're not able to retrieve user feedback, directly reject request
@@ -108,8 +109,8 @@ class UserDecisionRegistry private constructor(
      * @throws IllegalArgumentException  when both [launchActivity] and [showNotification] are *false*
      */
     @SuppressLint("MissingPermission")
-    internal fun requestDecision(cert: X509Certificate, launchActivity: Boolean, showNotification: Boolean) {
-        if (!launchActivity && !showNotification)
+    internal fun requestDecision(cert: X509Certificate, launcher: ActivityResultLauncher<Intent>?, showNotification: Boolean) {
+        if (launcher == null && !showNotification)
             throw IllegalArgumentException("User decision requires certificate Activity and/or notification")
 
         val rawCert = cert.encoded
@@ -147,9 +148,9 @@ class UserDecisionRegistry private constructor(
             nm.notify(CertUtils.getTag(cert), NotificationUtils.ID_CERT_DECISION, notify)
         }
 
-        if (launchActivity) {
+        if (launcher != null) {
             decisionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(decisionIntent)
+            launcher.launch(decisionIntent)
         }
     }
 

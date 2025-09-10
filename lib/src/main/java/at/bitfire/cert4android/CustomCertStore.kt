@@ -6,6 +6,8 @@ package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.StateFlow
@@ -81,7 +83,7 @@ class CustomCertStore internal constructor(
     /**
      * Determines whether a certificate chain is trusted.
      */
-    fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean {
+    fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, launcher: ActivityResultLauncher<Intent>?): Boolean {
         if (chain.isEmpty())
             throw IllegalArgumentException("Certificate chain must not be empty")
         val cert = chain[0]
@@ -107,7 +109,7 @@ class CustomCertStore internal constructor(
                 }
         }
 
-        if (appInForeground == null) {
+        if (launcher == null) {
             logger.log(Level.INFO, "Certificate not known and running in non-interactive mode, rejecting")
             return false
         }
@@ -117,7 +119,7 @@ class CustomCertStore internal constructor(
 
             try {
                 withTimeout(userTimeout) {
-                    ui.check(cert, appInForeground.value)
+                    ui.check(cert, launcher)
                 }
             } catch (_: TimeoutCancellationException) {
                 logger.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")
