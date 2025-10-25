@@ -1,9 +1,7 @@
 
 [![License](https://img.shields.io/github/license/bitfireAT/cert4android)](https://github.com/bitfireAT/cert4android/blob/main/LICENSE)
-[![Tests](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml/badge.svg)](https://github.com/bitfireAT/cert4android/actions/workflows/test-dev.yml)
+[![Translation status](https://hosted.weblate.org/widget/cert4android/status-badge.png)](https://hosted.weblate.org/engage/cert4android/)
 [![KDoc](https://img.shields.io/badge/documentation-KDoc-informational)](https://bitfireat.github.io/cert4android/)
-[![Latest Version](https://img.shields.io/jitpack/version/com.github.bitfireAT/cert4android)](https://jitpack.io/#bitfireAT/cert4android)
-
 
 _This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
 by Google LLC. Android is a trademark of Google LLC._
@@ -27,6 +25,16 @@ Then make the changes in your own repository and send a pull request.
 * uses a service to manage custom certificates
 * supports multiple threads and multiple processes (for instance, if you have an UI
   and a separate `:sync` process which should share the certificate information)
+
+
+# Contributions
+
+Please help to [translate cert4android](https://hosted.weblate.org/engage/cert4android/):
+
+[![Translation status (big)](https://hosted.weblate.org/widget/cert4android/287x66-grey.png)](https://hosted.weblate.org/engage/cert4android/)
+
+For other topics, you can [create an issue](https://github.com/bitfireAT/cert4android/issues)
+or [submit a PR](https://github.com/bitfireAT/cert4android/pulls) over Github.
 
 
 # How to use
