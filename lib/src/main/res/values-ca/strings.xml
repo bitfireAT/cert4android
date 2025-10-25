@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="certificate_notification_connection_security">Seguretat de la connexió</string>
     <string name="certificate_notification_user_interaction">Si us plau, comprova el certificat</string>
-
     <string name="service_rejected_temporarily">Certificat temporalment rebutjat</string>
-
     <string name="trust_certificate_unknown_certificate_found">cert4android ha trobat un certificat desconegut. Vols confiar-hi?</string>
     <string name="trust_certificate_x509_certificate_details">Detalls del certificat X509</string>
     <string name="trust_certificate_issued_for">Emès per a</string>
@@ -16,5 +13,6 @@
     <string name="trust_certificate_accept">Acceptar</string>
     <string name="trust_certificate_reject">Rebutjar</string>
     <string name="trust_certificate_reset_info">Pots reinicialitzar els certificats personalitzats als ajustaments de l\'aplicació.</string>
-
+    <string name="trust_certificate_validity_period_value">%1$s - %2$s (no serà forçat)</string>
+    <string name="trust_certificate_press_back_to_reject">Ves enrere una altra vegada per a rebutjar el certificat</string>
 </resources>
