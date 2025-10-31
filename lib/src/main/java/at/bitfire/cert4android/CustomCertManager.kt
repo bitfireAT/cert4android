@@ -55,7 +55,7 @@ class CustomCertManager @JvmOverloads constructor(
             throw CertificateException("Certificate chain not trusted")
     }
 
-    override fun getAcceptedIssuers() = arrayOf<X509Certificate>()
+    override fun getAcceptedIssuers() = emptyArray<X509Certificate>()
 
 
     /**
