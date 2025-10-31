@@ -14,6 +14,10 @@ class OkhttpTest {
 
     private val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
 
+    init {
+        ConscryptIntegration.initialize()
+    }
+
     @Test
     fun testAccessICloudComWithCache() {
         val client = buildClient()
