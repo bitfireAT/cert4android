@@ -5,7 +5,9 @@
 package at.bitfire.cert4android
 
 import androidx.test.platform.app.InstrumentationRegistry
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -14,7 +16,7 @@ class CustomCertStoreTest {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
     val certStore = CustomCertStore.getInstance(context)
 
-    val testCert = TestCertificates.testCert
+    val testCert = TestCertificates.testCert()
 
     @Before
     fun clearKeys() {
