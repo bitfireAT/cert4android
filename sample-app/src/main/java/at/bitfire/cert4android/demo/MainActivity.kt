@@ -37,6 +37,7 @@ import at.bitfire.cert4android.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.CacheControl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.internal.tls.OkHostnameVerifier
@@ -155,6 +156,7 @@ class MainActivity : ComponentActivity() {
                 val call = client.newCall(
                     Request.Builder()
                         .get()
+                        .cacheControl(CacheControl.FORCE_NETWORK)
                         .url(url)
                         .build()
                 )
