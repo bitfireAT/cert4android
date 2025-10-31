@@ -1,0 +1,26 @@
+version: 2
+updates:
+
+  # CI / GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "[CI]"
+    groups:
+      ci-actions:
+        patterns: ["*"]
+
+  # library and sample app
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+    groups:
+      lib-and-app:
+        patterns: ["*"]
