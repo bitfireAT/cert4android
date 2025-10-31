@@ -43,16 +43,17 @@ android {
 dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
-
     implementation(libs.androidx.appcompat)
-
     implementation(libs.androidx.activityCompose)
+
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.base)
     implementation(libs.compose.ui.graphics)
     debugImplementation(libs.compose.ui.toolingPreview)
     implementation(libs.compose.runtime.livedata)
+
+    implementation(libs.okhttp)
 
     implementation(project(":lib"))
 }

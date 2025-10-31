@@ -67,6 +67,7 @@ android {
     packaging {
         resources {
             excludes.add("META-INF/*.md")
+            excludes.add("META-INF/versions/*/OSGI-INF/MANIFEST.MF")
         }
     }
 

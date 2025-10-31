@@ -13,7 +13,7 @@ dokka = "2.0.0"
 junit = "4.13.2"
 kotlin = "2.2.0"
 mockk = "1.14.4"
-okhttp3 = "5.1.0"
+okhttp = "5.3.0"
 
 [libraries]
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -36,7 +36,8 @@ conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscry
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
-okhttp3-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp3" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp3-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver3", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
