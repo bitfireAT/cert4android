@@ -3,8 +3,8 @@ package at.bitfire.cert4android.demo
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
-import android.net.SSLCertificateSocketFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -37,10 +37,12 @@ import at.bitfire.cert4android.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.internal.tls.OkHostnameVerifier
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier
-import org.apache.http.conn.ssl.StrictHostnameVerifier
-import java.net.URL
 import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
 
 class MainActivity : ComponentActivity() {
 
@@ -66,15 +68,15 @@ class MainActivity : ComponentActivity() {
                     }
 
                     Button(onClick = {
-                        model.testAccess("https://www.github.com")
+                        model.testAccess("https://icloud.com")
                     }, modifier = Modifier.padding(top = 16.dp)) {
-                        Text("Access normal URL with trusted system certs")
+                        Text("Access icloud.com with trusted system certs")
                     }
 
                     Button(onClick = {
-                        model.testAccess("https://www.github.com", trustSystemCerts = false)
+                        model.testAccess("https://icloud.com", trustSystemCerts = false)
                     }, modifier = Modifier.padding(top = 16.dp)) {
-                        Text("Access normal URL with distrusted system certs")
+                        Text("Access icloud.com with distrusted system certs")
                     }
 
                     Button(onClick = {
@@ -125,11 +127,8 @@ class MainActivity : ComponentActivity() {
 
     class Model(application: Application): AndroidViewModel(application) {
 
-        companion object {
-
-            const val TAG = "cert4android.sample-app"
-
-        }
+        val context: Context
+            get() = getApplication()
 
         val appInForeground = MutableStateFlow(true)
         val resultMessage = MutableLiveData<String>()
@@ -141,7 +140,7 @@ class MainActivity : ComponentActivity() {
         }
 
         fun reset() = viewModelScope.launch(Dispatchers.IO) {
-            CustomCertStore.getInstance(getApplication()).clearUserDecisions()
+            CustomCertStore.getInstance(context).clearUserDecisions()
         }
 
         fun setInForeground(foreground: Boolean) {
@@ -150,31 +149,57 @@ class MainActivity : ComponentActivity() {
 
         fun testAccess(url: String, trustSystemCerts: Boolean = true) = viewModelScope.launch(Dispatchers.IO) {
             try {
-                val urlConn = URL(url).openConnection() as HttpsURLConnection
-
-                // set cert4android TrustManager and HostnameVerifier
-                val certMgr = CustomCertManager(
-                    getApplication(),
-                    trustSystemCerts = trustSystemCerts,
-                    appInForeground = appInForeground
-                )
-                urlConn.hostnameVerifier = certMgr.HostnameVerifier(StrictHostnameVerifier())
-                urlConn.sslSocketFactory = object : SSLCertificateSocketFactory(/* handshakeTimeoutMillis = */ 1000) {
-                    init {
-                        setTrustManagers(arrayOf(certMgr))
-                    }
-                }
+                val client = buildClient(trustSystemCerts)
 
                 // access sample URL
-                Log.i(TAG, "testAccess(): HTTP ${urlConn.responseCode}")
-                resultMessage.postValue("${urlConn.responseCode} ${urlConn.responseMessage}")
-                urlConn.inputStream.close()
+                val call = client.newCall(
+                    Request.Builder()
+                        .get()
+                        .url(url)
+                        .build()
+                )
+                call.execute().use { response ->
+                    // log result
+                    Log.i(TAG, "testAccess(): HTTP ${response.code}")
+                    resultMessage.postValue("${response.code} ${response.message}")
+                }
             } catch (e: Exception) {
                 resultMessage.postValue("testAccess() ERROR: ${e.message}")
                 Log.w(TAG, "testAccess(): ERROR: ${e.message}")
             }
         }
 
+        fun buildClient(trustSystemCerts: Boolean): OkHttpClient {
+            val builder = OkHttpClient.Builder()
+
+            // set cert4android TrustManager and HostnameVerifier
+            val certManager = CustomCertManager(
+                context,
+                trustSystemCerts = trustSystemCerts,
+                appInForeground = appInForeground
+            )
+
+            val sslContext = SSLContext.getInstance("TLS")
+            sslContext.init(
+                /* km = */ null,
+                /* tm = */ arrayOf(certManager),
+                /* random = */ null
+            )
+            builder
+                .sslSocketFactory(sslContext.socketFactory, certManager)
+                .hostnameVerifier(certManager.HostnameVerifier(OkHostnameVerifier))
+
+            // add cache
+            //builder.cache(Cache(context.cacheDir, 10 * 1024 * 1024))
+
+            return builder.build()
+        }
+
+    }
+
+
+    companion object {
+        const val TAG = "cert4android.sample-app"
     }
 
 }
