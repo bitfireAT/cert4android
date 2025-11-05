@@ -2,29 +2,15 @@ package at.bitfire.cert4android
 
 import okhttp3.internal.tls.BasicCertificateChainCleaner
 import okhttp3.internal.tls.BasicTrustRootIndex
-import org.conscrypt.Conscrypt
 import org.junit.Before
 import org.junit.Test
-import java.security.Security
-import java.util.logging.Logger
-import javax.net.ssl.SSLContext
 
 class ConscryptIntegrationTest {
-
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
 
     @Before
     fun setUp() {
         // initialize Conscrypt
-        Security.insertProviderAt(Conscrypt.newProvider(), 1)
-
-        val version = Conscrypt.version()
-        logger.info("Using Conscrypt/${version.major()}.${version.minor()}.${version.patch()} for TLS")
-
-        val engine = SSLContext.getDefault().createSSLEngine()
-        logger.info("Enabled protocols: ${engine.enabledProtocols.joinToString(", ")}")
-        logger.info("Enabled ciphers: ${engine.enabledCipherSuites.joinToString(", ")}")
+        ConscryptIntegration.initialize()
     }
 
 

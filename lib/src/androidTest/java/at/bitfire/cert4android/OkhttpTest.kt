@@ -7,10 +7,17 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.internal.tls.OkHostnameVerifier
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import javax.net.ssl.SSLContext
 
 class OkhttpTest {
+
+    @Before
+    fun setUp() {
+        // initialize Conscrypt
+        ConscryptIntegration.initialize()
+    }
 
     private val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
 
