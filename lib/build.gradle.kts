@@ -100,7 +100,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.livedata)
     implementation(libs.androidx.lifecycle.viewmodel)
-    implementation(libs.conscrypt)
 
     // Jetpack Compose
     implementation(libs.androidx.activityCompose)
@@ -113,6 +112,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.conscrypt)
     androidTestImplementation(libs.okhttp3.mockwebserver)
     androidTestImplementation(libs.mockk.android)
 
