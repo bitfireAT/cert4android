@@ -5,20 +5,21 @@ import okhttp3.Cache
 import okhttp3.CacheControl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.internal.tls.BasicCertificateChainCleaner
-import okhttp3.internal.tls.BasicTrustRootIndex
 import okhttp3.internal.tls.OkHostnameVerifier
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import javax.net.ssl.SSLContext
 
 class OkhttpTest {
 
-    private val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
-
-    init {
+    @Before
+    fun setUp() {
+        // initialize Conscrypt
         ConscryptIntegration.initialize()
     }
+
+    private val context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
 
     @Test
     fun testAccessICloudComWithCache() {
@@ -41,20 +42,6 @@ class OkhttpTest {
             assertEquals(200, response.code)
         }
     }
-
-    @Test
-    fun testBasicCertificateChainCleaner() {
-        val cleaner = BasicCertificateChainCleaner(BasicTrustRootIndex())
-
-        // See https://github.com/bitfireAT/cert4android/issues/72
-        // CRASHES with Conscrypt 2.5.3:
-        // cleaner.clean(listOf(TestCertificates.crashCert()), "doesn't matter")
-
-        // This is relevant, because okhttp creates such a BasicCertificateChainManager
-        // when using a custom X509TrustManager. However when the trust manager extends
-        // X509ExtendedTrustManager, AndroidCertificateChainManager is used on Android.
-    }
-
 
     fun buildClient(useCache: Boolean): OkHttpClient {
         val builder = OkHttpClient.Builder()

@@ -16,8 +16,6 @@ import javax.net.ssl.X509TrustManager
 /**
  * TrustManager to handle custom certificates.
  *
- * Initializes Conscrypt when it is first loaded.
- *
  * @param trustSystemCerts whether system certificates will be trusted
  * @param appInForeground  - `true`: if needed, directly launches [TrustCertificateActivity] and shows notification (if possible)
  *                         - `false`: if needed, shows notification (if possible)
@@ -80,16 +78,6 @@ class CustomCertManager @JvmOverloads constructor(
             }
 
             return false
-        }
-
-    }
-
-
-    companion object {
-
-        init {
-            // On first load of this class, initialize Conscrypt.
-            ConscryptIntegration.initialize()
         }
 
     }

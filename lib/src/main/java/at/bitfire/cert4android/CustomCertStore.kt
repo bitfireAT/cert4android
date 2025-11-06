@@ -11,7 +11,6 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import org.conscrypt.Conscrypt
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -20,6 +19,8 @@ import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.util.logging.Level
 import java.util.logging.Logger
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 class CustomCertStore internal constructor(
     private val context: Context,
@@ -51,7 +52,15 @@ class CustomCertStore internal constructor(
         get() = Logger.getLogger(javaClass.name)
 
     /** system default TrustStore */
-    private val systemKeyStore by lazy { Conscrypt.getDefaultX509TrustManager() }
+    private val systemKeyStore by lazy {
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).run {
+            init(null as KeyStore?) // null means "use system default trust store"
+            trustManagers
+                .filterIsInstance<X509TrustManager>()
+                .firstOrNull()
+                ?: throw IllegalStateException("No X509TrustManager found")
+        }
+    }
 
     /** custom TrustStore */
     @VisibleForTesting
