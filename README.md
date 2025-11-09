@@ -101,6 +101,6 @@ To view the available gradle tasks for the library: `./gradlew cert4android:task
 
 Copyright (C) Ricki Hirner and [contributors](https://github.com/bitfireAT/cert4android/graphs/contributors).
 
-This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome
-to redistribute it under the conditions of the [GNU GPL v3](LICENSE).
-
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
