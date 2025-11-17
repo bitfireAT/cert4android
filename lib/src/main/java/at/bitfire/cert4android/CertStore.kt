@@ -1,0 +1,34 @@
+package at.bitfire.cert4android
+
+import kotlinx.coroutines.flow.StateFlow
+import java.security.cert.X509Certificate
+
+interface CertStore {
+
+    /**
+     * Removes user (dis-)trust decisions for all certificates.
+     */
+    fun clearUserDecisions()
+
+    /**
+     * Determines whether a certificate chain is trusted.
+     */
+    fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean
+
+    /**
+     * Determines whether a certificate has been explicitly accepted by the user. In this case,
+     * we can ignore an invalid host name for that certificate.
+     */
+    fun isTrustedByUser(cert: X509Certificate): Boolean
+
+    /**
+     * Sets this certificate as trusted.
+     */
+    fun setTrustedByUser(cert: X509Certificate)
+
+    /**
+     * Sets this certificate as untrusted.
+     */
+    fun setUntrustedByUser(cert: X509Certificate)
+
+}
