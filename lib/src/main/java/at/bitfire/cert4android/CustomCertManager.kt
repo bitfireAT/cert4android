@@ -11,7 +11,6 @@
 package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
-import android.content.Context
 import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -29,16 +28,13 @@ import javax.net.ssl.X509TrustManager
  */
 @SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
-    context: Context,
+    private val certStore: CertStore,
     val trustSystemCerts: Boolean = true,
     var appInForeground: StateFlow<Boolean>?
 ): X509TrustManager {
 
     private val logger
         get() = Logger.getLogger(javaClass.name)
-
-    val certStore = CustomCertStore.getInstance(context)
-
 
     @Throws(CertificateException::class)
     override fun checkClientTrusted(chain: Array<X509Certificate>?, authType: String?) {

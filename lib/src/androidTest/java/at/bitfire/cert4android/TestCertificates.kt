@@ -10,13 +10,8 @@
 
 package at.bitfire.cert4android
 
-import android.net.SSLCertificateSocketFactory
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier
-import java.net.URL
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.X509TrustManager
 
 /**
  * Provides certificates for testing.
@@ -70,40 +65,5 @@ object TestCertificates {
             "-----END CERTIFICATE-----\n"
 
     fun testCert() = certFactory.generateCertificate(RAW_TEST_CERT.byteInputStream()) as X509Certificate
-
-
-    /**
-     * Get the certificates of a site (bypassing all trusted checks).
-     *
-     * @param url the URL to get the certificates from
-     * @return the certificates of the site
-     */
-    fun getSiteCertificates(url: URL): List<X509Certificate> {
-        val conn = url.openConnection() as HttpsURLConnection
-        try {
-            conn.hostnameVerifier = AllowAllHostnameVerifier()
-            conn.sslSocketFactory = object : SSLCertificateSocketFactory(1000) {
-                init {
-                    setTrustManagers(arrayOf(object : X509TrustManager {
-                        override fun checkClientTrusted(
-                            chain: Array<out X509Certificate?>?,
-                            authType: String?
-                        ) { /* OK */ }
-                        override fun checkServerTrusted(
-                            chain: Array<out X509Certificate?>?,
-                            authType: String?
-                        ) { /* OK */ }
-                        override fun getAcceptedIssuers(): Array<out X509Certificate?>? = emptyArray()
-                    }))
-                }
-            }
-            conn.inputStream.read()
-            val certs = mutableListOf<X509Certificate>()
-            conn.serverCertificates.forEach { certs += it as X509Certificate }
-            return certs
-        } finally {
-            conn.disconnect()
-        }
-    }
 
 }
