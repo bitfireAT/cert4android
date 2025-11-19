@@ -10,7 +10,6 @@
 
 package at.bitfire.cert4android
 
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier
 import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
@@ -19,6 +18,7 @@ import java.net.URL
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
@@ -100,7 +100,7 @@ class CustomCertManagerTest {
     fun getSiteCertificates(url: URL): List<X509Certificate> {
         val conn = url.openConnection() as HttpsURLConnection
         try {
-            conn.hostnameVerifier = AllowAllHostnameVerifier()
+            conn.hostnameVerifier = HostnameVerifier { _, _ -> true }
             conn.sslSocketFactory = SSLContext.getInstance("TLS").apply {
                 init(
                     null,
