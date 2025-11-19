@@ -100,6 +100,8 @@ class CustomCertManagerTest {
     fun getSiteCertificates(url: URL): List<X509Certificate> {
         val conn = url.openConnection() as HttpsURLConnection
         try {
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
             conn.hostnameVerifier = HostnameVerifier { _, _ -> true }
             conn.sslSocketFactory = SSLContext.getInstance("TLS").apply {
                 init(
