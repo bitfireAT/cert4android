@@ -10,19 +10,16 @@
 
 package at.bitfire.cert4android
 
+import android.net.SSLCertificateSocketFactory
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier
 import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Socket
 import java.net.URL
-import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocket
-import javax.net.ssl.TrustManager
+import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.X509TrustManager
 
 class CustomCertManagerTest {
@@ -99,35 +96,30 @@ class CustomCertManagerTest {
      * @return the certificates of the site
      */
     fun getSiteCertificates(url: URL): List<X509Certificate> {
-        val port = if (url.port != -1) url.port else 443
-        val host = url.host
-
-        // Create a TrustManager which accepts all certificates
-        val trustAll = object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-            override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-        }
-
-        // Create an SSLContext using the trust-all manager
-        val sslContext = SSLContext.getInstance("TLS").apply {
-            init(null, arrayOf<TrustManager>(trustAll), SecureRandom())
-        }
-
-        // Create an SSL socket and force a TLS handshake
-        val socket = Socket().apply {
-            soTimeout = 5000 // read timeout
-            connect(
-                InetSocketAddress(host, port),
-                5000 // connect timeout
-            )
-        }
-        sslContext.socketFactory.createSocket(socket, host, port, true).use { socket ->
-            val sslSocket = socket as SSLSocket
-            // Explicitly start the handshake (gets certificate)
-            sslSocket.startHandshake()
-            // server certificates now available in SSLSession
-            return sslSocket.session.peerCertificates.map { it as X509Certificate }
+        val conn = url.openConnection() as HttpsURLConnection
+        try {
+            conn.hostnameVerifier = AllowAllHostnameVerifier()
+            conn.sslSocketFactory = object : SSLCertificateSocketFactory(1000) {
+                init {
+                    setTrustManagers(arrayOf(object : X509TrustManager {
+                        override fun checkClientTrusted(
+                            chain: Array<out X509Certificate?>?,
+                            authType: String?
+                        ) { /* OK */ }
+                        override fun checkServerTrusted(
+                            chain: Array<out X509Certificate?>?,
+                            authType: String?
+                        ) { /* OK */ }
+                        override fun getAcceptedIssuers(): Array<out X509Certificate?>? = emptyArray()
+                    }))
+                }
+            }
+            conn.inputStream.read()
+            val certs = mutableListOf<X509Certificate>()
+            conn.serverCertificates.forEach { certs += it as X509Certificate }
+            return certs
+        } finally {
+            conn.disconnect()
         }
     }
 
