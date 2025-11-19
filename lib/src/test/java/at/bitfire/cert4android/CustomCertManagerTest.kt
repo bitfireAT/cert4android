@@ -10,18 +10,16 @@
 
 package at.bitfire.cert4android
 
-import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.flow.StateFlow
 import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Socket
 import java.net.URL
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.TrustManager
@@ -117,9 +115,14 @@ class CustomCertManagerTest {
         }
 
         // Create an SSL socket and force a TLS handshake
-        // (HttpsURLConnection performs the handshake lazily and sometimes the handshake is not
-        // executed before this method gets called)
-        sslContext.socketFactory.createSocket(host, port).use { socket ->
+        val socket = Socket().apply {
+            soTimeout = 5000 // read timeout
+            connect(
+                InetSocketAddress(host, port),
+                5000 // connect timeout
+            )
+        }
+        sslContext.socketFactory.createSocket(socket, host, port, true).use { socket ->
             val sslSocket = socket as SSLSocket
             // Explicitly start the handshake (gets certificate)
             sslSocket.startHandshake()
