@@ -176,7 +176,7 @@ class MainActivity : ComponentActivity() {
 
             // set cert4android TrustManager and HostnameVerifier
             val certManager = CustomCertManager(
-                context,
+                certStore = CustomCertStore.getInstance(context),
                 trustSystemCerts = trustSystemCerts,
                 appInForeground = appInForeground
             )

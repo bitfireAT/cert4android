@@ -31,28 +31,7 @@ import javax.net.ssl.X509TrustManager
 class CustomCertStore internal constructor(
     private val context: Context,
     private val userTimeout: Long = 60000L
-) {
-
-    companion object {
-
-        private const val KEYSTORE_DIR = "KeyStore"
-        private const val KEYSTORE_NAME = "KeyStore.bks"
-
-        @SuppressLint("StaticFieldLeak")    // we only store the applicationContext, so this is safe
-        private var instance: CustomCertStore? = null
-
-        @Synchronized
-        fun getInstance(context: Context): CustomCertStore {
-            instance?.let {
-                return it
-            }
-
-            val newInstance = CustomCertStore(context.applicationContext)
-            instance = newInstance
-            return newInstance
-        }
-
-    }
+): CertStore {
 
     private val logger
         get() = Logger.getLogger(javaClass.name)
@@ -82,7 +61,7 @@ class CustomCertStore internal constructor(
     }
 
     @Synchronized
-    fun clearUserDecisions() {
+    override fun clearUserDecisions() {
         logger.info("Clearing user-(dis)trusted certificates")
 
         for (alias in userKeyStore.aliases())
@@ -96,7 +75,7 @@ class CustomCertStore internal constructor(
     /**
      * Determines whether a certificate chain is trusted.
      */
-    fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean {
+    override fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean {
         if (chain.isEmpty())
             throw IllegalArgumentException("Certificate chain must not be empty")
         val cert = chain[0]
@@ -146,11 +125,11 @@ class CustomCertStore internal constructor(
      * we can ignore an invalid host name for that certificate.
      */
     @Synchronized
-    fun isTrustedByUser(cert: X509Certificate): Boolean =
+    override fun isTrustedByUser(cert: X509Certificate): Boolean =
         userKeyStore.getCertificateAlias(cert) != null
 
     @Synchronized
-    fun setTrustedByUser(cert: X509Certificate) {
+    override fun setTrustedByUser(cert: X509Certificate) {
         val alias = CertUtils.getTag(cert)
         logger.info("Trusted by user: ${cert.subjectDN.name} ($alias)")
 
@@ -161,7 +140,7 @@ class CustomCertStore internal constructor(
     }
 
     @Synchronized
-    fun setUntrustedByUser(cert: X509Certificate) {
+    override fun setUntrustedByUser(cert: X509Certificate) {
         logger.info("Distrusted by user: ${cert.subjectDN.name}")
 
         // find certificate
@@ -200,6 +179,27 @@ class CustomCertStore internal constructor(
         } catch(e: Exception) {
             logger.log(Level.SEVERE, "Couldn't save custom certificate key store", e)
         }
+    }
+
+    companion object {
+
+        private const val KEYSTORE_DIR = "KeyStore"
+        private const val KEYSTORE_NAME = "KeyStore.bks"
+
+        @SuppressLint("StaticFieldLeak")    // we only store the applicationContext, so this is safe
+        private var instance: CustomCertStore? = null
+
+        @Synchronized
+        fun getInstance(context: Context): CustomCertStore {
+            instance?.let {
+                return it
+            }
+
+            val newInstance = CustomCertStore(context.applicationContext)
+            instance = newInstance
+            return newInstance
+        }
+
     }
 
 }

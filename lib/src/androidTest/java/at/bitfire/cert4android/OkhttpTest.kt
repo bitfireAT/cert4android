@@ -58,7 +58,7 @@ class OkhttpTest {
 
         // set cert4android TrustManager and HostnameVerifier
         val certManager = CustomCertManager(
-            context,
+            CustomCertStore.getInstance(context),
             trustSystemCerts = true,
             appInForeground = null
         )
