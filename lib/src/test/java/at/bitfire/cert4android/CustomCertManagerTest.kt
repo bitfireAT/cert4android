@@ -114,10 +114,12 @@ class CustomCertManagerTest {
                     SecureRandom()
                 )
             }.socketFactory
-            conn.inputStream.read()
-            val certs = mutableListOf<X509Certificate>()
-            conn.serverCertificates.forEach { certs += it as X509Certificate }
-            return certs
+            conn.inputStream.use {
+                it.read()
+                val certs = mutableListOf<X509Certificate>()
+                conn.serverCertificates.forEach { certs += it as X509Certificate }
+                return certs
+            }
         } finally {
             conn.disconnect()
         }
