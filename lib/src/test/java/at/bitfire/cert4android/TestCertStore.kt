@@ -16,7 +16,7 @@ import java.security.cert.X509Certificate
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class TestCertStore(): CertStore {
+class TestCertStore: CertStore {
 
     private val logger
         get() = Logger.getLogger(javaClass.name)
