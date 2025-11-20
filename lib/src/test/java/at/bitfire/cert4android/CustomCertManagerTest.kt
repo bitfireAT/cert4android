@@ -10,11 +10,8 @@
 
 package at.bitfire.cert4android
 
-import org.junit.AssumptionViolatedException
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
-import java.io.IOException
 import java.net.URL
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -22,6 +19,9 @@ import javax.net.ssl.HttpsURLConnection
 
 class CustomCertManagerTest {
 
+    private val siteCerts: List<X509Certificate> by lazy {
+        getSiteCertificates(URL("https://www.davx5.com"))
+    }
     private lateinit var certStore: CertStore
     private lateinit var certManager: CustomCertManager
     private lateinit var paranoidCertManager: CustomCertManager
@@ -77,34 +77,19 @@ class CustomCertManagerTest {
         certStore.setUntrustedByUser(siteCerts.first())
     }
 
-    companion object {
-        private lateinit var siteCerts: List<X509Certificate>
-
-        @JvmStatic
-        @BeforeClass
-        fun setUp() {
-            siteCerts = try {
-                getSiteCertificates(URL("https://www.davx5.com"))
-            } catch (_: IOException) {
-                // Skip all tests if the certs can't be fetched
-                throw AssumptionViolatedException("Couldn't load certificate from Web")
+    fun getSiteCertificates(url: URL): List<X509Certificate> {
+        val conn = url.openConnection() as HttpsURLConnection
+        try {
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            conn.inputStream.use { stream ->
+                stream.read()
+                val certs = mutableListOf<X509Certificate>()
+                conn.serverCertificates.forEach { certs += it as X509Certificate }
+                return certs
             }
-        }
-
-        fun getSiteCertificates(url: URL): List<X509Certificate> {
-            val conn = url.openConnection() as HttpsURLConnection
-            try {
-                conn.connectTimeout = 5000
-                conn.readTimeout = 5000
-                conn.inputStream.use { stream ->
-                    stream.read()
-                    val certs = mutableListOf<X509Certificate>()
-                    conn.serverCertificates.forEach { certs += it as X509Certificate }
-                    return certs
-                }
-            } finally {
-                conn.disconnect()
-            }
+        } finally {
+            conn.disconnect()
         }
     }
 
