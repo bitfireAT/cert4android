@@ -82,11 +82,8 @@ class CustomCertManagerTest {
         try {
             conn.connectTimeout = 5000
             conn.readTimeout = 5000
-            conn.inputStream.use { stream ->
-                stream.read()
-                val certs = mutableListOf<X509Certificate>()
-                conn.serverCertificates.forEach { certs += it as X509Certificate }
-                return certs
+            conn.inputStream.use {
+                return conn.serverCertificates.filterIsInstance<X509Certificate>()
             }
         } finally {
             conn.disconnect()
