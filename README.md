@@ -71,8 +71,9 @@ or [submit a PR](https://github.com/bitfireAT/cert4android/pulls) over Github.
 5. Close the instance when it's not required anymore (will disconnect from the
    `CustomCertService`, thus allowing it to be destroyed).
 
-Example of initialzing an okhttp client:
+Example of initializing an okhttp client:
 
+    ```kotlin
     val keyManager = ...
     CustomCertManager(...).use { trustManager ->
         val sslContext = SSLContext.getInstance("TLS")
@@ -87,7 +88,7 @@ Example of initialzing an okhttp client:
         val httpClient = builder.build()
         // use httpClient
     }
-
+    ```
 
 You can overwrite resources when you want, just have a look at the `res/strings`
 directory. Especially `certificate_notification_connection_security` and
