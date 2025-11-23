@@ -73,22 +73,22 @@ or [submit a PR](https://github.com/bitfireAT/cert4android/pulls) over Github.
 
 Example of initializing an okhttp client:
 
-    ```kotlin
-    val keyManager = ...
-    CustomCertManager(...).use { trustManager ->
-        val sslContext = SSLContext.getInstance("TLS")
-        sslContext.init(
-            if (keyManager != null) arrayOf(keyManager) else null,
-            arrayOf(trustManager),
-            null
-        )
-        val builder = OkHttpClient.Builder()
-        builder.sslSocketFactory(sslContext.socketFactory, trustManager)
-               .hostnameVerifier(hostnameVerifier)
-        val httpClient = builder.build()
-        // use httpClient
-    }
-    ```
+```kotlin
+val keyManager = ...
+CustomCertManager(...).use { trustManager ->
+    val sslContext = SSLContext.getInstance("TLS")
+    sslContext.init(
+        if (keyManager != null) arrayOf(keyManager) else null,
+        arrayOf(trustManager),
+        null
+    )
+    val builder = OkHttpClient.Builder()
+    builder.sslSocketFactory(sslContext.socketFactory, trustManager)
+           .hostnameVerifier(hostnameVerifier)
+    val httpClient = builder.build()
+    // use httpClient
+}
+```
 
 You can overwrite resources when you want, just have a look at the `res/strings`
 directory. Especially `certificate_notification_connection_security` and
