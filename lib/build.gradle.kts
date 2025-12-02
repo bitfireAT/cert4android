@@ -12,7 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 21            // Android 5
+        minSdk = 23            // Android 6
 
         aarMetadata {
             minCompileSdk = 29
