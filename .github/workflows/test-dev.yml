@@ -39,7 +39,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Cache AVD
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.config/.android/avd
           key: avd-${{ hashFiles('lib/build.gradle.kts') }}   # gradle-managed devices are defined there
