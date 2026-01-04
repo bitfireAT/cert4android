@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--
+    Since Mockk 1.14.7 it's required to use minSdk 26. We use 23 (because DAVx5 is still on 24), so override for tests.
+    -->
+    <uses-sdk tools:overrideLibrary="io.mockk.android,io.mockk.proxy.android" />
 
 </manifest>
