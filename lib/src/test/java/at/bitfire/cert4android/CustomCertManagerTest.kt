@@ -11,13 +11,20 @@
 package at.bitfire.cert4android
 
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
 import java.net.URL
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.HttpsURLConnection
 
 class CustomCertManagerTest {
+
+    @Rule
+    @JvmField
+    val timeout = Timeout(10, TimeUnit.SECONDS)
 
     private val siteCerts: List<X509Certificate> by lazy {
         getSiteCertificates(URL("https://www.davx5.com"))
