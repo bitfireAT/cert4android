@@ -11,7 +11,7 @@
 package at.bitfire.cert4android
 
 /**
- * Provides settings for cert4android.
+ * Provides settings for cert4android. Implementations can override the getters.
  *
  * Usually implemented by the app which uses cert4android, and then passed to cert4android classes
  * which need it.
@@ -19,19 +19,19 @@ package at.bitfire.cert4android
 interface SettingsProvider {
 
     /**
-     * Returns the app foreground status:
+     * The app foreground status:
      *
      * - `true`: foreground – directly launch UI ([TrustCertificateActivity]) and show notification (if possible)
      * - `false`: background – only show notification (if possible)
      * - `null`: non-interactive mode – don't show notification or launch activity
      */
-    fun appInForeground(): Boolean?
+    val appInForeground: Boolean?
 
     /**
-     * Returns whether system certificates shall be trusted.
+     * Whether system certificates shall be trusted.
      *
      * @return `true` if system certificates are considered trustworthy, `false` otherwise
      */
-    fun trustSystemCerts(): Boolean
+    val trustSystemCerts: Boolean
 
 }

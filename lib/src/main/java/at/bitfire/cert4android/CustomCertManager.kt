@@ -50,8 +50,8 @@ class CustomCertManager @JvmOverloads constructor(
         if (!certStore.isTrusted(
                 chain,
                 authType,
-                trustSystemCerts = settings.trustSystemCerts(),
-                appInForeground = settings.appInForeground()
+                trustSystemCerts = settings.trustSystemCerts,
+                appInForeground = settings.appInForeground
             )
         )
             throw CertificateException("Certificate chain not trusted")
@@ -81,7 +81,7 @@ class CustomCertManager @JvmOverloads constructor(
                         arrayOf(cert),
                         "RSA",
                         trustSystemCerts = false,
-                        appInForeground = settings.appInForeground()
+                        appInForeground = settings.appInForeground
                     )
                 )
                     return true
