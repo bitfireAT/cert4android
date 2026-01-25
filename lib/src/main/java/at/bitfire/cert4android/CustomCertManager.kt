@@ -11,7 +11,6 @@
 package at.bitfire.cert4android
 
 import android.annotation.SuppressLint
-import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.util.logging.Logger
@@ -21,16 +20,13 @@ import javax.net.ssl.X509TrustManager
 /**
  * TrustManager to handle custom certificates.
  *
- * @param trustSystemCerts whether system certificates will be trusted
- * @param appInForeground  - `true`: if needed, directly launches [TrustCertificateActivity] and shows notification (if possible)
- *                         - `false`: if needed, shows notification (if possible)
- *                         - `null`: non-interactive mode: does not show notification or launch activity
+ * @param certStore certificate store with (un)trusted certificates
+ * @param settings  settings provider to get settings from
  */
 @SuppressLint("CustomX509TrustManager")
 class CustomCertManager @JvmOverloads constructor(
     private val certStore: CertStore,
-    val trustSystemCerts: Boolean = true,
-    var appInForeground: StateFlow<Boolean>?
+    private val settings: SettingsProvider
 ): X509TrustManager {
 
     private val logger
@@ -51,7 +47,13 @@ class CustomCertManager @JvmOverloads constructor(
      */
     @Throws(CertificateException::class)
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
-        if (!certStore.isTrusted(chain, authType, trustSystemCerts, appInForeground))
+        if (!certStore.isTrusted(
+                chain,
+                authType,
+                trustSystemCerts = settings.trustSystemCerts(),
+                appInForeground = settings.appInForeground()
+            )
+        )
             throw CertificateException("Certificate chain not trusted")
     }
 
@@ -75,7 +77,13 @@ class CustomCertManager @JvmOverloads constructor(
             // Allow users to explicitly accept certificates that have a bad hostname here
             (session.peerCertificates.firstOrNull() as? X509Certificate)?.let { cert ->
                 // Check without trusting system certificates so that the user will be asked even for system-trusted certificates
-                if (certStore.isTrusted(arrayOf(cert), "RSA", false, appInForeground))
+                if (certStore.isTrusted(
+                        arrayOf(cert),
+                        "RSA",
+                        trustSystemCerts = false,
+                        appInForeground = settings.appInForeground()
+                    )
+                )
                     return true
             }
 
