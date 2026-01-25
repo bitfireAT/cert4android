@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -57,27 +58,24 @@ class UserDecisionRegistryTest {
 
 
     @Test
-    fun testCheck_FirstDecision_Negative() {
+    fun testCheck_FirstDecision_Negative() = runTest {
         every { registry.requestDecision(testCert, any(), any()) } answers {
             registry.onUserDecision(testCert, false)
         }
-        assertFalse(runBlocking {
-            registry.check(testCert, true)
-        })
+        assertFalse(registry.check(testCert, true))
     }
 
     @Test
-    fun testCheck_FirstDecision_Positive() {
+    fun testCheck_FirstDecision_Positive() = runTest {
         every { registry.requestDecision(testCert, any(), any()) } answers {
             registry.onUserDecision(testCert, true)
         }
-        assertTrue(runBlocking {
-            registry.check(testCert, true)
-        })
+        assertTrue(registry.check(testCert, true))
     }
 
     @Test
     fun testCheck_MultipleDecisionsForSameCert_Negative() {
+        // Keep runBlocking for complex concurrency test with Semaphore and threads
         val canSendFeedback = Semaphore(0)
         every { registry.requestDecision(testCert, any(), any()) } answers {
             thread {
@@ -104,6 +102,7 @@ class UserDecisionRegistryTest {
 
     @Test
     fun testCheck_MultipleDecisionsForSameCert_Positive() {
+        // Keep runBlocking for complex concurrency test with Semaphore and threads
         val canSendFeedback = Semaphore(0)
         every { registry.requestDecision(testCert, any(), any()) } answers {
             thread {
@@ -130,6 +129,7 @@ class UserDecisionRegistryTest {
 
     @Test
     fun testCheck_MultipleDecisionsForSameCert_cancel() {
+        // Keep runBlocking for complex concurrency test with Semaphore, threads, and job cancellation
         val canSendFeedback = Semaphore(0)
         val nm = mockk<NotificationManagerCompat>()
         every { nm.cancel(any(), any()) } just runs
@@ -160,12 +160,10 @@ class UserDecisionRegistryTest {
     }
 
     @Test
-    fun testCheck_UserDecisionImpossible() {
+    fun testCheck_UserDecisionImpossible() = runTest {
         every { NotificationUtils.notificationsPermitted(any()) } returns false
-        assertFalse(runBlocking {
-            // should return instantly
-            registry.check(testCert, false)
-        })
+        // should return instantly
+        assertFalse(registry.check(testCert, false))
         verify(inverse = true) {
             registry.requestDecision(any(), any(), any())
         }

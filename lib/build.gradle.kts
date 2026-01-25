@@ -1,3 +1,13 @@
+/*
+ * Copyright © All Contributors. See LICENSE and AUTHORS in the root directory for details.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.compiler)
@@ -113,6 +123,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.conscrypt)
+    androidTestImplementation(libs.kotlin.coroutines.test)
     androidTestImplementation(libs.okhttp3.mockwebserver)
     androidTestImplementation(libs.mockk.android)
 
