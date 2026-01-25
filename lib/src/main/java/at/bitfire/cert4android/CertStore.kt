@@ -10,7 +10,6 @@
 
 package at.bitfire.cert4android
 
-import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.X509Certificate
 
 interface CertStore {
@@ -23,7 +22,7 @@ interface CertStore {
     /**
      * Determines whether a certificate chain is trusted.
      */
-    fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean
+    fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: Boolean?): Boolean
 
     /**
      * Determines whether a certificate has been explicitly accepted by the user. In this case,

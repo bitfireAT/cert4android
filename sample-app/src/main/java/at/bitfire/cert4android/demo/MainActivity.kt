@@ -1,3 +1,13 @@
+/*
+ * Copyright © All Contributors. See LICENSE and AUTHORS in the root directory for details.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 package at.bitfire.cert4android.demo
 
 import android.Manifest
@@ -33,6 +43,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import at.bitfire.cert4android.CustomCertManager
 import at.bitfire.cert4android.CustomCertStore
+import at.bitfire.cert4android.SettingsProvider
 import at.bitfire.cert4android.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +73,7 @@ class MainActivity : ComponentActivity() {
                     .padding(8.dp)
                     .verticalScroll(rememberScrollState())) {
                     Row {
-                        Checkbox(model.appInForeground.collectAsState().value, onCheckedChange = { foreground ->
+                        Checkbox(model.foreground.collectAsState().value, onCheckedChange = { foreground ->
                             model.setInForeground(foreground)
                         })
                         Text("App in foreground")
@@ -131,7 +142,8 @@ class MainActivity : ComponentActivity() {
         val context: Context
             get() = getApplication()
 
-        val appInForeground = MutableStateFlow(true)
+        val foreground = MutableStateFlow(true)
+
         val resultMessage = MutableLiveData<String>()
 
         init {
@@ -145,7 +157,7 @@ class MainActivity : ComponentActivity() {
         }
 
         fun setInForeground(foreground: Boolean) {
-            appInForeground.value = foreground
+            this.foreground.value = foreground
         }
 
         fun testAccess(url: String, trustSystemCerts: Boolean = true) = viewModelScope.launch(Dispatchers.IO) {
@@ -177,8 +189,12 @@ class MainActivity : ComponentActivity() {
             // set cert4android TrustManager and HostnameVerifier
             val certManager = CustomCertManager(
                 certStore = CustomCertStore.getInstance(context),
-                trustSystemCerts = trustSystemCerts,
-                appInForeground = appInForeground
+                settings = object : SettingsProvider {
+                    override val appInForeground
+                        get() = foreground.value
+                    override val trustSystemCerts
+                        get() = trustSystemCerts
+                }
             )
 
             val sslContext = SSLContext.getInstance("TLS")
