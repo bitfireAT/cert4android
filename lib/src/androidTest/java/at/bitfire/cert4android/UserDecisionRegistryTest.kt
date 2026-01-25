@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -57,13 +58,11 @@ class UserDecisionRegistryTest {
 
 
     @Test
-    fun testCheck_FirstDecision_Negative() {
+    fun testCheck_FirstDecision_Negative() = runTest {
         every { registry.requestDecision(testCert, any(), any()) } answers {
             registry.onUserDecision(testCert, false)
         }
-        assertFalse(runBlocking {
-            registry.check(testCert, true)
-        })
+        assertFalse(registry.check(testCert, true))
     }
 
     @Test
