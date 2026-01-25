@@ -11,7 +11,6 @@
 package at.bitfire.cert4android
 
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.flow.StateFlow
 import java.security.cert.X509Certificate
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -43,7 +42,7 @@ class TestCertStore: CertStore {
     /**
      * Determines whether a certificate chain is trusted.
      */
-    override fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean {
+    override fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: Boolean?): Boolean {
         if (chain.isEmpty())
             throw IllegalArgumentException("Certificate chain must not be empty")
         val cert = chain[0]

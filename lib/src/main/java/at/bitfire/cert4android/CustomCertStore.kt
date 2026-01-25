@@ -14,7 +14,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import java.io.File
@@ -75,7 +74,7 @@ class CustomCertStore internal constructor(
     /**
      * Determines whether a certificate chain is trusted.
      */
-    override fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: StateFlow<Boolean>?): Boolean {
+    override fun isTrusted(chain: Array<X509Certificate>, authType: String, trustSystemCerts: Boolean, appInForeground: Boolean?): Boolean {
         if (chain.isEmpty())
             throw IllegalArgumentException("Certificate chain must not be empty")
         val cert = chain[0]
@@ -111,7 +110,7 @@ class CustomCertStore internal constructor(
 
             try {
                 withTimeout(userTimeout) {
-                    ui.check(cert, appInForeground.value)
+                    ui.check(cert, appInForeground)
                 }
             } catch (_: TimeoutCancellationException) {
                 logger.log(Level.WARNING, "User timeout while waiting for certificate decision, rejecting")

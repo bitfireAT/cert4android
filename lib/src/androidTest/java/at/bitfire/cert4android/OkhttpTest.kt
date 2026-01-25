@@ -59,8 +59,10 @@ class OkhttpTest {
         // set cert4android TrustManager and HostnameVerifier
         val certManager = CustomCertManager(
             CustomCertStore.getInstance(context),
-            trustSystemCerts = true,
-            appInForeground = null
+            object : SettingsProvider {
+                override val appInForeground = null
+                override val trustSystemCerts = true
+            }
         )
 
         val sslContext = SSLContext.getInstance("TLS")

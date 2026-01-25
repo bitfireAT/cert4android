@@ -36,8 +36,14 @@ class CustomCertManagerTest {
     @Before
     fun createCertManager() {
         certStore = TestCertStore()
-        certManager = CustomCertManager(certStore, true, null)
-        paranoidCertManager = CustomCertManager(certStore, false, null)
+        certManager = CustomCertManager(certStore, object : SettingsProvider {
+            override val appInForeground = null
+            override val trustSystemCerts = true
+        })
+        paranoidCertManager = CustomCertManager(certStore, object : SettingsProvider {
+            override val appInForeground = null
+            override val trustSystemCerts = false
+        })
     }
 
 
