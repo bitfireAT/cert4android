@@ -10,13 +10,13 @@
 
 package at.bitfire.cert4android
 
+/**
+ * Provides settings for cert4android.
+ *
+ * Usually implemented by the app which uses cert4android, and then passed to cert4android classes
+ * which need it.
+ */
 interface SettingsProvider {
-
-    /*
-     * @param trustSystemCerts
- * @param appInForeground
-
-     */
 
     /**
      * Returns the app foreground status:
