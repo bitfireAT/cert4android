@@ -12,7 +12,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.dokka)
-    alias(libs.plugins.kotlin.android)
     `maven-publish`
 }
 
