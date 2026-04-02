@@ -20,7 +20,7 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Build KDoc
         run: ./gradlew --build-cache --configuration-cache lib:dokkaGenerate
@@ -40,4 +40,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
