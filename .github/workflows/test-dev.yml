@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 21   # keep in sync with gradle/gradle-daemon-jvm.properties
           cache: gradle
       - uses: gradle/actions/setup-gradle@v6
 
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 21   # keep in sync with gradle/gradle-daemon-jvm.properties
           cache: gradle
       - uses: gradle/actions/setup-gradle@v6
 
