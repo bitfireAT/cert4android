@@ -14,5 +14,5 @@
     <string name="trust_certificate_accept">Accept</string>
     <string name="trust_certificate_reject">Reject</string>
     <string name="trust_certificate_reset_info">You can reset all custom certificates in the app settings.</string>
-    <string name="trust_certificate_press_back_to_reject">Press Back again to reject certificate</string>
+    <string name="trust_certificate_press_back_to_reject">Press Back again to reject the certificate</string>
 </resources>
