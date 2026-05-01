@@ -27,7 +27,7 @@ jobs:
 
       - name: Publish KDoc
         if: success()
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: lib/build/dokka/html
 
