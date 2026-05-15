@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    </resources>
+    <string name="certificate_notification_connection_security">Bağlantı güvenliği</string>
+    <string name="certificate_notification_user_interaction">Lütfen sertifikayı kontrol edin</string>
+    <string name="service_rejected_temporarily">Sertifika geçici olarak reddedildi</string>
+    <string name="trust_certificate_unknown_certificate_found">cert4android bilinmeyen bir sertifika ile karşılaştı. Güvenmek istiyor musunuz?</string>
+    <string name="trust_certificate_x509_certificate_details">X509 sertifika detayları</string>
+    <string name="trust_certificate_validity_period">Geçerlilik süresi</string>
+    <string name="trust_certificate_fingerprints">Parmak izleri</string>
+    <string name="trust_certificate_fingerprint_verified">Manuel olarak tüm parmak izini doğruladım.</string>
+    <string name="trust_certificate_accept">Kabul et</string>
+    <string name="trust_certificate_reject">Reddet</string>
+    <string name="trust_certificate_reset_info">Uygulama ayarlarından tüm özel sertifikaları sıfırlayabilirsin.</string>
+    <string name="trust_certificate_press_back_to_reject">Sertifikayı reddetmek için tekrar Geri tuşuna basın</string>
+</resources>
