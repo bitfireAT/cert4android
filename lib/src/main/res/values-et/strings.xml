@@ -13,6 +13,6 @@
     <string name="trust_certificate_x509_certificate_details">X.509 sertifikaadi üksikasjad</string>
     <string name="trust_certificate_issued_for">Kelle väljaantud</string>
     <string name="trust_certificate_issued_by">Väljastaja</string>
-    <string name="trust_certificate_validity_period">Kehtivise ajavahemik</string>
+    <string name="trust_certificate_validity_period">Kehtivuse ajavahemik</string>
     <string name="trust_certificate_validity_period_value">%1$s - %2$s (ei kuulu jõustamisele)</string>
 </resources>
