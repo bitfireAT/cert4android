@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="certificate_notification_connection_security">Seguridad de conexión</string>
     <string name="certificate_notification_user_interaction">Por favor, revisa el certificado</string>
-
     <string name="service_rejected_temporarily">Certificado rechazado temporalmente</string>
-
     <string name="trust_certificate_unknown_certificate_found">cert4android ha encontrado un certificado desconocido. ¿Quieres que sea válido?</string>
     <string name="trust_certificate_x509_certificate_details">Detalles del certificado X509</string>
     <string name="trust_certificate_issued_for">Expedido para</string>
@@ -17,5 +14,5 @@
     <string name="trust_certificate_accept">Aceptar</string>
     <string name="trust_certificate_reject">Rechazar</string>
     <string name="trust_certificate_reset_info">Puedes reiniciar todos los certificados particulares en los ajustes de la app.</string>
-
+    <string name="trust_certificate_press_back_to_reject">Presiona Atrás nuevamente para rechazar el certificado</string>
 </resources>
