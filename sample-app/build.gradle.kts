@@ -5,7 +5,8 @@ plugins {
 
 android {
     namespace = "at.bitfire.cert4android.demo"
-    compileSdk = 36
+
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "at.bitfire.cert4android.demo"
