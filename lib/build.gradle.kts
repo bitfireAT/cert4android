@@ -18,7 +18,7 @@ plugins {
 android {
     namespace = "at.bitfire.cert4android"
 
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 23            // Android 6
