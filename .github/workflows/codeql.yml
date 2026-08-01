@@ -12,6 +12,6 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Analyze code with CodeQL
-      uses: github/codeql-action/analyze@v4
+      uses: github/codeql-action/analyze@v4.37.3
       with:
         category: "security"
