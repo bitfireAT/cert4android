@@ -15,6 +15,10 @@ plugins {
     `maven-publish`
 }
 
+// Translations are maintained in davx5-translations and pulled in as the l10n submodule.
+// The English original strings stay in core/src/main/res/values/strings.xml.
+val translationsDir = file("$rootDir/l10n/translations/ose")
+
 android {
     namespace = "at.bitfire.cert4android"
 
@@ -80,6 +84,12 @@ android {
         }
     }
 
+    sourceSets {
+        getByName("main") {
+            res.directories += translationsDir.path
+        }
+    }
+
     publishing {
         // Configure publish variant
         singleVariant("release") {
@@ -127,4 +137,20 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
 
     testImplementation(libs.junit)
+}
+
+// AGP silently ignores a resource directory that doesn't exist, so a clone without submodules
+// would build a perfectly fine English-only app. Fail such builds instead.
+val verifyTranslations by tasks.registering {
+    val dir = translationsDir   // local copy: the check below must not capture the build script
+
+    doLast {
+        require(!dir.list().isNullOrEmpty()) {
+            "l10n/translations/cert4android is missing or empty.\nRun: git submodule update --init --recursive"
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn(verifyTranslations)
 }
