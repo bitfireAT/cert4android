@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: recursive   # translations live in the l10n submodule
 
       - name: Create davx5-translations token
         id: app-token
