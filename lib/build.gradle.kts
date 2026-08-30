@@ -17,7 +17,7 @@ plugins {
 
 // Translations are maintained in davx5-translations and pulled in as the l10n submodule.
 // The English original strings stay in core/src/main/res/values/strings.xml.
-val translationsDir = file("$rootDir/l10n/translations/ose")
+val translationsDir = file("$rootDir/l10n/translations/cert4android")
 
 android {
     namespace = "at.bitfire.cert4android"
