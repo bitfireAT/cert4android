@@ -1,5 +1,8 @@
-name: Development tests
-on: push
+name: Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -50,3 +53,22 @@ jobs:
 
       - name: Run device tests
         run: ./gradlew  --configuration-cache --build-cache lib:virtualCheck
+
+  # Required status check for the default branch (see repository ruleset)
+  tests:
+    name: Tests
+    needs: [test, test_on_emulator]
+    if: ${{ !cancelled() }}   # otherwise this job is skipped on failure, which counts as passed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Combine test results
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "Tests without emulator did not pass (result: ${{ needs.test.result }})"
+            exit 1
+          fi
+          if [ "${{ needs.test_on_emulator.result }}" != "success" ]; then
+            echo "Tests with emulator did not pass (result: ${{ needs.test_on_emulator.result }})"
+            exit 1
+          fi
+          echo "All required tests passed"
