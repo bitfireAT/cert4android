@@ -28,6 +28,7 @@ jobs:
   test_on_emulator:
     name: Tests with emulator
     runs-on: ubuntu-latest
+    timeout-minutes: 30   # emulator tests used to hang until the 6 h limit
     steps:
       - uses: actions/checkout@v7
         with:
@@ -38,6 +39,15 @@ jobs:
           java-version: 21   # keep in sync with gradle/gradle-daemon-jvm.properties
           cache: gradle
       - uses: gradle/actions/setup-gradle@v6
+
+      # Gradle and Android SDK often take more space than what is available on the default runner.
+      # We try to free a few GB here to make gradle-managed devices more reliable.
+      - name: Free some disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: false          # we need the Android SDK
+          large-packages: false   # apt takes too long
+          swap-storage: false     # Gradle needs much memory
 
       - name: Enable KVM group perms
         run: |
@@ -52,7 +62,7 @@ jobs:
           key: avd-${{ hashFiles('lib/build.gradle.kts') }}   # gradle-managed devices are defined there
 
       - name: Run device tests
-        run: ./gradlew  --configuration-cache --build-cache lib:virtualCheck
+        run: ./gradlew  --configuration-cache --build-cache lib:virtualDebugAndroidTest
 
   # Required status check for the default branch (see repository ruleset)
   tests:
