@@ -65,9 +65,8 @@ android {
             localDevices {
                 create("virtual") {
                     device = "Pixel 3"
-                    apiLevel = 33
+                    apiLevel = 34   // same as davx5-ose
                     systemImageSource = "aosp-atd"
-                    testedAbi = "x86_64"
                 }
             }
         }
